@@ -29,7 +29,9 @@
     introMeta: document.getElementById("chapterIntroMeta"),
   };
 
-  const STORAGE_KEY = "nini-yuan-save-v1";
+  const Storage = window.NiniYuanStorage;
+  const Audio = window.NiniYuanAudio;
+  const Hud = window.NiniYuanHud;
   const TILE = 48;
   const FIXED_DT = 1 / 120;
   const PICKUP_REACH_X = 10;
@@ -43,19 +45,10 @@
   const NINI_GLIDE_FALL_SPEED = 190;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
+  const snap = (n) => Math.round(n);
   const rectsOverlap = (a, b) =>
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
-  const defaultSave = {
-    selected: "nini",
-    unlocked: 1,
-    totalCoins: 0,
-    bestTimes: {},
-    levelStars: {},
-    settings: { volume: 70, touch: 98, fx: true },
-  };
-
-  let save = loadSave();
   let view = { w: 1280, h: 720, dpr: 1 };
   let screen = "menu";
   let mode = "menu";
@@ -79,6 +72,7 @@
   };
   let last = performance.now();
   let accumulator = 0;
+  let pageHidden = document.hidden;
   let toastTimer = 0;
   let introTimer = 0;
   let projectiles = [];
@@ -128,8 +122,18 @@
     nini: loadSprite("./assets/characters/nini-v2.png"),
     yuan: loadSprite("./assets/characters/yuan-v2.png"),
   };
+  const characterAtlases = {
+    nini: loadAtlas("./assets/characters/nini/atlas.json"),
+    yuan: loadAtlas("./assets/characters/yuan/atlas.json"),
+  };
 
   const levels = buildLevels();
+  let save = loadSave();
+  const audioBus = Audio.createAudioBus({
+    getVolume: () => save.settings.volume,
+    getBgmVolume: () => save.settings.bgmVolume,
+  });
+  audioBus.setBgmSource("./assets/audio/fairy-adventure.ogg");
 
   function loadSprite(src) {
     const image = new Image();
@@ -138,29 +142,34 @@
     return image;
   }
 
+  function loadAtlas(src) {
+    const atlas = { ready: false, data: null };
+    fetch(src)
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        atlas.ready = Boolean(data);
+        atlas.data = data;
+      })
+      .catch(() => {
+        atlas.ready = false;
+      });
+    return atlas;
+  }
+
+  function storageOptions() {
+    return {
+      levelCount: levels.length,
+      levelIds: levels.map((level) => level.id),
+      onError: () => toastMsg("本地存档暂不可用，本次进度仍可继续游玩"),
+    };
+  }
+
   function loadSave() {
-    try {
-      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      return {
-        ...defaultSave,
-        ...raw,
-        settings: { ...defaultSave.settings, ...(raw.settings || {}) },
-        bestTimes: { ...(raw.bestTimes || {}) },
-        levelStars: { ...(raw.levelStars || {}) },
-      };
-    } catch {
-      return structuredClone(defaultSave);
-    }
+    return Storage.loadSave(storageOptions());
   }
 
   function persist() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(save));
-      return true;
-    } catch {
-      toastMsg("本地存档暂不可用，本次进度仍可继续游玩");
-      return false;
-    }
+    return Storage.persist(save, storageOptions());
   }
 
   function buildLevels() {
@@ -344,6 +353,8 @@
     canvas.width = Math.floor(view.w * dpr);
     canvas.height = Math.floor(view.h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
   }
 
   function showScreen(name) {
@@ -404,6 +415,7 @@
     modal.classList.remove("active");
     showScreen("");
     showChapterIntro();
+    audioBus.playBgm();
   }
 
   function cloneLevel(level) {
@@ -513,7 +525,7 @@
     const playerRect = bodyRect(player);
     for (const w of activeLevel.wind) {
       if (rectsOverlap(playerRect, w)) {
-        player.vx += w.force * dt;
+        player.vx = clamp(player.vx + w.force * dt, -ch.speed * 1.6, ch.speed * 1.6);
         spawnWind(player.x + player.w / 2, player.y + player.h / 2, Math.sign(w.force));
       }
     }
@@ -656,10 +668,7 @@
     const targetW = player.bigTimer > 0 ? 43 : player.baseW;
     const targetH = player.bigTimer > 0 ? 72 : player.baseH;
     if (player.w === targetW && player.h === targetH) return;
-    const oldX = player.x;
-    const oldY = player.y;
-    const oldW = player.w;
-    const oldH = player.h;
+    const snapshot = { x: player.x, y: player.y, w: player.w, h: player.h };
     const oldBottom = player.y + player.h;
     const oldCenter = player.x + player.w / 2;
     player.w = targetW;
@@ -667,11 +676,8 @@
     player.x = clamp(oldCenter - player.w / 2, 0, activeLevel.width - player.w);
     player.y = oldBottom - player.h;
     const blocked = allSolids().some((p) => !p.broken && rectsOverlap(bodyRect(player), p));
-    if (blocked && (targetW > oldW || targetH > oldH)) {
-      player.x = oldX;
-      player.y = oldY;
-      player.w = oldW;
-      player.h = oldH;
+    if (blocked && (targetW > snapshot.w || targetH > snapshot.h)) {
+      Object.assign(player, snapshot);
     }
   }
 
@@ -964,11 +970,13 @@
       renderAttract();
       return;
     }
-    const shakeX = camera.shake ? (Math.random() - 0.5) * camera.shake : 0;
-    const shakeY = camera.shake ? (Math.random() - 0.5) * camera.shake : 0;
-    renderBackground(activeLevel, camera.x, camera.y);
+    const shakeX = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
+    const shakeY = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
+    const camX = snap(camera.x);
+    const camY = snap(camera.y);
+    renderBackground(activeLevel, camX, camY);
     ctx.save();
-    ctx.translate(-camera.x + shakeX, -camera.y + shakeY);
+    ctx.translate(-camX + shakeX, -camY + shakeY);
     renderWorld(activeLevel);
     renderParticles();
     renderPlayer();
@@ -1286,7 +1294,7 @@
       ctx.stroke();
       ctx.restore();
     }
-    drawCharacterArt(save.selected, player.x + player.w / 2, player.y + player.h, player.facing, 0.72 * (player.h / player.baseH), {
+    drawCharacterArt(save.selected, snap(player.x + player.w / 2), snap(player.y + player.h), player.facing, 0.72 * (player.h / player.baseH), {
       vx: player.vx,
       vy: player.vy,
       onGround: player.onGround,
@@ -1401,6 +1409,9 @@
   function drawCharacterSprite(id, x, y, facing, scale, pose = null) {
     const image = characterSprites[id];
     if (!image || !image.complete || !image.naturalWidth) return false;
+    const atlas = characterAtlases[id]?.data;
+    const animName = characterAnimName(id, pose);
+    const sourceFrame = atlasFrame(atlas, animName, image);
     const targetH = (id === "nini" ? 238 : 232) * scale;
     const targetW = targetH * (image.naturalWidth / image.naturalHeight);
     const movement = pose ? clamp((pose.vx || 0) / characters[id].speed, -1, 1) : 0;
@@ -1413,15 +1424,52 @@
     const stretchY = 1 + (pose && !pose.onGround ? 0.025 : 0) - turning * 0.025;
     const lift = targetH * (id === "nini" ? 0.045 : 0.03);
     ctx.save();
-    ctx.translate(x, y + lift + bob);
+    ctx.translate(snap(x), snap(y + lift + bob));
     ctx.scale(facing, 1);
     ctx.rotate(lean);
     ctx.scale(stretchX, stretchY);
     ctx.shadowColor = characters[id].accent;
     ctx.shadowBlur = 14 * scale;
-    ctx.drawImage(image, -targetW / 2, -targetH, targetW, targetH);
+    ctx.drawImage(
+      image,
+      sourceFrame.sx,
+      sourceFrame.sy,
+      sourceFrame.sw,
+      sourceFrame.sh,
+      -targetW / 2,
+      -targetH,
+      targetW,
+      targetH
+    );
     ctx.restore();
     return true;
+  }
+
+  function characterAnimName(id, pose) {
+    if (!pose) return "idle";
+    if (player?.hurtFlash > 0) return "hurt";
+    if (id === "nini" && player?.glide > 0) return "skill";
+    if (id === "yuan" && player?.skillTimer > 0) return "skill";
+    if (!pose.onGround) return pose.vy > 120 ? "fall" : "jump";
+    return Math.abs(pose.vx || 0) > characters[id].speed * 0.18 ? "run" : "idle";
+  }
+
+  function atlasFrame(atlas, animName, image) {
+    if (!atlas?.frame || !atlas.animations) return { sx: 0, sy: 0, sw: image.naturalWidth, sh: image.naturalHeight };
+    const frameW = Number(atlas.frame.w) || image.naturalWidth;
+    const frameH = Number(atlas.frame.h) || image.naturalHeight;
+    if (frameW <= 1 || frameH <= 1) return { sx: 0, sy: 0, sw: image.naturalWidth, sh: image.naturalHeight };
+    const anim = atlas.animations[animName] || atlas.animations.idle;
+    const frames = anim?.frames?.length ? anim.frames : [0];
+    const fps = Number(anim.fps) || 1;
+    const frame = frames[Math.floor((performance.now() / 1000) * fps) % frames.length];
+    const columns = Math.max(1, Math.floor(image.naturalWidth / frameW));
+    return {
+      sx: (frame % columns) * frameW,
+      sy: Math.floor(frame / columns) * frameH,
+      sw: frameW,
+      sh: frameH,
+    };
   }
 
   function ellipse(x, y, rx, ry, rot) {
@@ -1520,28 +1568,13 @@
     ctx.restore();
   }
 
-  let audioCtx = null;
   function beep(freq, duration) {
-    if (!save.settings.volume) return;
-    try {
-      audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.value = freq;
-      osc.type = "triangle";
-      gain.gain.value = save.settings.volume / 1000;
-      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
-    } catch {
-      // Audio is optional and may be blocked before user gesture.
-    }
+    audioBus.beep(freq, duration);
   }
 
   function updateHud() {
     hudEls.character.textContent = characters[save.selected].name;
-    hudEls.health.textContent = Math.max(0, player.health);
+    hudEls.health.textContent = heartLabel(player.health, player.maxHealth);
     hudEls.coins.textContent = player.coins;
     hudEls.ammo.textContent = player.ammo;
     hudEls.time.textContent = formatTime(player.elapsed);
@@ -1552,17 +1585,23 @@
     hudEls.bar.style.width = `${progress * 100}%`;
   }
 
+  function heartLabel(health, maxHealth) {
+    const hearts = Math.max(0, Math.ceil(health));
+    if (maxHealth > 5 || hearts > 5) return `×${hearts}`;
+    return "❤".repeat(hearts) || "0";
+  }
+
   function showChapterIntro() {
     const ch = characters[save.selected];
     introTimer = 2.7;
     hudEls.introEyebrow.textContent = `${currentLevelIndex + 1} / ${levels.length} · ${activeLevel.vibe}`;
     hudEls.introTitle.textContent = activeLevel.name;
     hudEls.introText.textContent = activeLevel.hint;
-    hudEls.introMeta.innerHTML = [
-      `<span>${ch.name}：${ch.skillName}</span>`,
-      `<span>${ch.projectileName}</span>`,
-      `<span>${activeLevel.coins.length} 处星露</span>`,
-    ].join("");
+    Hud.renderChapterIntroMeta(hudEls.introMeta, [
+      `${ch.name}：${ch.skillName}`,
+      ch.projectileName,
+      `${activeLevel.coins.length} 处星露`,
+    ]);
     hudEls.intro.classList.add("active");
   }
 
@@ -1605,7 +1644,8 @@
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalText").textContent = text;
     const box = document.getElementById("modalActions");
-    box.innerHTML = "";
+    if (typeof box.replaceChildren === "function") box.replaceChildren();
+    else box.textContent = "";
     for (const [label, fn, type] of actions) {
       const btn = document.createElement("button");
       if (type) btn.className = type;
@@ -1617,13 +1657,14 @@
     hud.classList.remove("active");
     hudEls.intro.classList.remove("active");
     touchControls.classList.remove("playing");
+    audioBus.pauseBgm();
   }
 
   function pauseGame() {
     if (mode !== "play") return;
     const ch = characters[save.selected];
     openModal("暂停", `${activeLevel.name} · ${ch.skillName} · ${ch.projectileName}。键盘：方向/WASD 移动，空格跳跃，J 技能，K 发射。`, [
-      ["继续", () => { mode = "play"; modal.classList.remove("active"); hud.classList.add("active"); touchControls.classList.add("playing"); }, "primary"],
+      ["继续", () => { mode = "play"; modal.classList.remove("active"); hud.classList.add("active"); touchControls.classList.add("playing"); audioBus.playBgm(); }, "primary"],
       ["重新开始", () => startLevel(currentLevelIndex)],
       ["返回菜单", backToMenu],
     ]);
@@ -1636,30 +1677,17 @@
     introTimer = 0;
     hudEls.intro.classList.remove("active");
     modal.classList.remove("active");
+    audioBus.pauseBgm();
     showScreen("menu");
   }
 
   function renderMenus() {
     document.querySelectorAll(".character-card").forEach((card) => card.classList.toggle("selected", card.dataset.character === save.selected));
-    document.getElementById("saveStrip").innerHTML = [
-      `<div class="save-chip">已解锁章节<br><strong>${Math.min(save.unlocked, levels.length)} / ${levels.length}</strong></div>`,
-      `<div class="save-chip">当前角色<br><strong>${characters[save.selected].name}</strong></div>`,
-      `<div class="save-chip">累计星露<br><strong>${save.totalCoins}</strong></div>`,
-    ].join("");
     const levelList = document.getElementById("levelList");
-    levelList.innerHTML = "";
-    levels.forEach((level, i) => {
-      const locked = i >= save.unlocked;
-      const btn = document.createElement("button");
-      btn.className = `level-item${locked ? " locked" : ""}`;
-      btn.disabled = locked;
-      const stars = save.levelStars[level.id] || 0;
-      const best = save.bestTimes[level.id] ? formatTime(save.bestTimes[level.id]) : "--:--";
-      btn.innerHTML = `<span><strong>${level.name}</strong>${level.vibe}<br>${level.hint}</span><span>${"★".repeat(stars)}${"☆".repeat(3 - stars)} · 最佳 ${best}</span>`;
-      btn.addEventListener("click", () => startLevel(i));
-      levelList.appendChild(btn);
-    });
+    Hud.renderSaveStrip(document.getElementById("saveStrip"), save, characters, levels);
+    Hud.renderLevelList(levelList, { levels, save, startLevel, formatTime });
     document.getElementById("volumeRange").value = save.settings.volume;
+    document.getElementById("bgmRange").value = save.settings.bgmVolume;
     document.getElementById("touchRange").value = save.settings.touch;
     document.getElementById("fxToggle").checked = save.settings.fx;
     document.documentElement.style.setProperty("--touch-size", `${save.settings.touch}px`);
@@ -1676,7 +1704,7 @@
       if (action === "back") showScreen("menu");
       if (action === "pause") pauseGame();
       if (action === "reset" && confirm("确定清除所有本地存档？")) {
-        save = structuredClone(defaultSave);
+        save = Storage.cloneDefaultSave();
         const stored = persist();
         renderMenus();
         if (stored) toastMsg("存档已清除");
@@ -1692,6 +1720,12 @@
     });
     document.getElementById("volumeRange").addEventListener("input", (e) => {
       save.settings.volume = Number(e.target.value);
+      audioBus.syncBgmVolume();
+      persist();
+    });
+    document.getElementById("bgmRange").addEventListener("input", (e) => {
+      save.settings.bgmVolume = Number(e.target.value);
+      audioBus.syncBgmVolume();
       persist();
     });
     document.getElementById("touchRange").addEventListener("input", (e) => {
@@ -1722,6 +1756,7 @@
     });
 
     const touchState = new Map();
+    const hapticTouches = new Set(["jump", "skill", "shoot"]);
     for (const btn of document.querySelectorAll("[data-touch]")) {
       const name = btn.dataset.touch;
       const down = (e) => {
@@ -1732,6 +1767,7 @@
         if (!keys[name] && name === "skill") inputs.skillPressed = true;
         if (!keys[name] && name === "shoot") inputs.shootPressed = true;
         keys[name] = true;
+        if (hapticTouches.has(name)) haptic();
         btn.classList.add("active");
       };
       const up = (e) => {
@@ -1751,10 +1787,40 @@
     window.addEventListener("blur", () => { keys = Object.create(null); });
   }
 
+  function haptic(duration = 8) {
+    try {
+      if ("vibrate" in navigator) navigator.vibrate(duration);
+    } catch {
+      // Haptics are optional and unavailable on many desktop browsers.
+    }
+  }
+
+  function handleVisibilityChange() {
+    pageHidden = document.hidden === true;
+    keys = Object.create(null);
+    accumulator = 0;
+    last = performance.now();
+    if (pageHidden) audioBus.suspend();
+    else audioBus.resume();
+  }
+
+  function registerServiceWorker() {
+    const localHost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
+    if (!("serviceWorker" in navigator) || (location.protocol !== "https:" && !localHost)) return;
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  }
+
   function loop(now) {
+    if (pageHidden) {
+      last = now;
+      accumulator = 0;
+      render();
+      requestAnimationFrame(loop);
+      return;
+    }
     const frameDt = clamp((now - last) / 1000, 0, 0.08);
     last = now;
-    accumulator += frameDt;
+    accumulator = Math.min(accumulator + frameDt, FIXED_DT * 4);
     while (accumulator >= FIXED_DT) {
       update(FIXED_DT);
       accumulator -= FIXED_DT;
@@ -1766,8 +1832,16 @@
   function init() {
     resize();
     window.addEventListener("resize", resize);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", () => {
+      pageHidden = true;
+      accumulator = 0;
+      audioBus.suspend();
+    });
+    window.addEventListener("pageshow", handleVisibilityChange);
     bindUi();
     bindControls();
+    registerServiceWorker();
     showScreen("menu");
     requestAnimationFrame(loop);
   }

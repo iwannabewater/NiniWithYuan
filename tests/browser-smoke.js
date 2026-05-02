@@ -101,7 +101,7 @@ async function run() {
       "storage unavailable",
       async (page) => {
         await page.getByText("选择角色").click();
-        await page.getByText("选择源源").click();
+        await page.locator('[data-pick="yuan"]').click();
         await page.waitForTimeout(250);
         const state = await page.evaluate(() => ({
           selected: !!document.querySelector('.character-card.selected[data-character="yuan"]'),
@@ -152,7 +152,67 @@ async function run() {
       { page: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
     );
 
-    console.log("browser-smoke: 4 passed");
+    await withPage(
+      "landscape mobile controls fit",
+      async (page) => {
+        const menuState = await page.evaluate(() => {
+          const panel = document.querySelector("#menu.panel");
+          const panelRect = panel.getBoundingClientRect();
+          const actions = [...document.querySelectorAll(".menu-actions button")].map((button) => {
+            const rect = button.getBoundingClientRect();
+            return { top: Math.round(rect.top), width: rect.width };
+          });
+          const hero = document.querySelector(".menu-heroes").getBoundingClientRect();
+          return {
+            panelWithinViewport: panelRect.left >= -1 && panelRect.right <= innerWidth + 1 && panelRect.top >= -1 && panelRect.bottom <= innerHeight + 1,
+            panelNoOverflow: panel.scrollWidth <= panel.clientWidth + 1 && panel.scrollHeight <= panel.clientHeight + 1,
+            actionsSingleRow: new Set(actions.map((rect) => rect.top)).size === 1,
+            actionsReadable: actions.every((rect) => rect.width >= 86),
+            heroWithinPanel: hero.left >= panelRect.left && hero.right <= panelRect.right && hero.top >= panelRect.top && hero.bottom <= panelRect.bottom,
+            panel: { left: panelRect.left, right: panelRect.right, top: panelRect.top, bottom: panelRect.bottom, scrollWidth: panel.scrollWidth, clientWidth: panel.clientWidth, scrollHeight: panel.scrollHeight, clientHeight: panel.clientHeight },
+            actions,
+          };
+        });
+        if (!menuState.panelWithinViewport || !menuState.panelNoOverflow || !menuState.actionsSingleRow || !menuState.actionsReadable || !menuState.heroWithinPanel) {
+          throw new Error(`Landscape menu layout invalid: ${JSON.stringify(menuState)}`);
+        }
+
+        await page.getByText("继续冒险").tap();
+        await page.waitForTimeout(500);
+        const state = await page.evaluate(() => {
+          const rectOf = (el) => {
+            const rect = el.getBoundingClientRect();
+            return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, height: rect.height };
+          };
+          const controls = [...document.querySelectorAll(".touch-btn")].map(rectOf);
+          const hudRects = [...document.querySelectorAll(".top-hud > *")].map(rectOf);
+          const intro = rectOf(document.querySelector("#chapterIntro"));
+          const bossbar = rectOf(document.querySelector("#chapterBar"));
+          const controlsTop = Math.min(...controls.map((rect) => rect.top));
+          const hudBottom = Math.max(...hudRects.map((rect) => rect.bottom));
+          return {
+            hud: document.querySelector("#overlay").classList.contains("active"),
+            introActive: document.querySelector("#chapterIntro").classList.contains("active"),
+            touchDisplay: getComputedStyle(document.querySelector("#touchControls")).display,
+            tipsDisplay: getComputedStyle(document.querySelector("#controlTips")).display,
+            allControlsVisible: controls.every((rect) => rect.left >= -1 && rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1),
+            hudAboveControls: hudBottom <= controlsTop - 8,
+            introWithinViewport: intro.left >= -1 && intro.right <= innerWidth + 1 && intro.bottom <= controlsTop - 8,
+            bossbarWithinViewport: bossbar.left >= -1 && bossbar.right <= innerWidth + 1,
+            controls,
+            hudRects,
+            intro,
+            bossbar,
+          };
+        });
+        if (!state.hud || !state.introActive || state.touchDisplay === "none" || state.tipsDisplay !== "none" || !state.allControlsVisible || !state.hudAboveControls || !state.introWithinViewport || !state.bossbarWithinViewport) {
+          throw new Error(`Landscape mobile layout invalid: ${JSON.stringify(state)}`);
+        }
+      },
+      { page: { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
+    );
+
+    console.log("browser-smoke: 5 passed");
   } finally {
     server.kill();
   }

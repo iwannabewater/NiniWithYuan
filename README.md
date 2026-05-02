@@ -1,36 +1,22 @@
-# Nini & Yuan
+# 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` / `妮妮源源历险记` is a Chinese fantasy platformer inspired by classic side-scrolling adventure games. It runs as a static Canvas web game and can also be packaged into an Android WebView APK.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The v1.1.0 release contains two playable characters, five handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
-## Features
+## Gameplay
 
-- Two playable characters: Nini and Yuan, with distinct movement, skills, projectiles, and visual identity.
-- Five progression-based levels with moving platforms, hazards, enemies, wind zones, power-ups, collectibles, and saved progress.
-- Responsive keyboard and touch controls.
-- Chinese UI, local save support, character selection, level selection, settings, and Android launcher polish.
-- Android adaptive launcher icon, splash/loading fallback, and WebView wrapper.
-
-## Project Structure
-
-```text
-.
-├── index.html                 # Web entry
-├── styles.css                 # UI and HUD styling
-├── src/game.js                # Canvas game engine and gameplay logic
-├── assets/                    # Character art and local fonts
-├── android/app/src/main/      # Android wrapper source and launcher resources
-├── scripts/build-android.sh   # Manual APK build script
-└── tests/                     # Mechanics, browser, and Android wrapper regression tests
-```
+- Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes.
+- Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes.
+- The game ships five chapters: Starlight Garden, Moon-Mirror Ruins, Cloudsea Sails, Radiant Forge, and Aurora Citadel.
+- The application runs offline. It does not require login, networking, advertising SDKs, analytics SDKs, or server storage.
+- Desktop play uses arrow keys or WASD. Android starts in landscape and uses on-screen controls.
+- The bundled background track is a local CC0 Vorbis file with an independent volume control.
 
 ## Requirements
 
 - Node.js 20 or newer.
 - npm.
-- Playwright Chromium for browser smoke tests.
-- For Android builds: Android SDK platform `android-36`, build-tools `36.0.0`, and JDK 17 or newer.
-
-The Android build script reads `ANDROID_HOME` if set. If it is not set, it defaults to `$HOME/Android`.
+- Playwright Chromium for browser regression tests.
+- Android SDK platform `android-36`, Android build-tools `36.0.0`, and JDK 17 or newer for APK builds.
 
 ## Setup
 
@@ -39,7 +25,7 @@ npm ci
 npx playwright install chromium
 ```
 
-## Run The Web Game
+Run the web version:
 
 ```bash
 npm start
@@ -57,47 +43,72 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite checks:
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports.
 
-- JavaScript syntax.
-- Jump and physics balance.
-- Pickup, dash, and glide gameplay mechanics.
-- Android wrapper startup compatibility.
-- Browser smoke coverage for desktop and mobile layouts.
-
-## Build Android APK
+## Android APK
 
 ```bash
 ANDROID_HOME="$HOME/Android" npm run build:android
 ```
 
-Output:
+The build output is:
 
 ```text
 dist/NiniYuan.apk
 ```
 
-The script creates a local debug keystore if needed. That keystore is intentionally ignored by git and is not suitable for store releases.
+The build script creates a local debug keystore when one is not present. The keystore is ignored by git and is valid only for local testing. Store releases require a production signing key and an App Bundle or release package prepared through the target store workflow.
 
-## Android Emulator Install
+The Android entry point uses `sensorLandscape`, so phones start in landscape and may rotate between the two landscape orientations.
 
-Copy `dist/NiniYuan.apk` to a Windows-local folder, then install it from Windows PowerShell:
+## Store Assets
 
-```powershell
-$adb = "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe"
-$apk = "$env:USERPROFILE\Downloads\NiniYuan\NiniYuan.apk"
+Generate store screenshots and a 1024 x 500 feature graphic:
 
-& $adb uninstall com.iwannabewater.niniyuan
-& $adb install -r $apk
-& $adb shell am start -n com.iwannabewater.niniyuan/.MainActivity
+```bash
+npm run capture:store
 ```
 
-If the launcher caches an old icon, cold boot or restart the emulator.
+The generated files are written to:
 
-## Release Notes
+```text
+dist/store-assets/
+```
 
-This repository currently produces a debug-signed APK for testing. For a real app store release, create a release keystore, increment version metadata, produce store screenshots, and review the privacy policy.
+## Project Structure
 
-## Copyright
+```text
+.
+├── index.html                 # Web entry
+├── styles.css                 # Interface, HUD, motion, and responsive styling
+├── src/
+│   ├── game.js                # Canvas game loop and gameplay logic
+│   ├── core/                  # Storage and audio helpers
+│   └── render/                # DOM rendering helpers
+├── assets/
+│   ├── characters/            # Character PNGs and atlas placeholders
+│   ├── audio/                 # Bundled CC0 BGM and provenance notice
+│   ├── fonts/                 # Local LXGW WenKai subsets
+│   └── icons/                 # PWA icons
+├── android/app/src/main/      # Android wrapper source and resources
+├── scripts/                   # APK build and store asset capture scripts
+├── docs/                      # Design, motion, GDD, atlas, and Android testing notes
+└── tests/                     # Unit, browser, E2E, and wrapper checks
+```
 
-Copyright © iwannabewater.
+## Documentation
+
+- [Game Design Document](docs/GDD.md)
+- [Design System](docs/DESIGN.md)
+- [Motion Guide](docs/MOTION.md)
+- [Character Atlas](docs/CHARACTER_ATLAS.md)
+- [Android Testing](docs/ANDROID_TESTING.md)
+- [Privacy Policy](PRIVACY.md)
+
+## Privacy
+
+The game is offline. Save data remains in localStorage on the player's device and is not transmitted to a server. See [PRIVACY.md](PRIVACY.md).
+
+## License
+
+Code is MIT © iwannabewater. The bundled BGM is CC0 1.0; see [assets/audio/NOTICE.md](assets/audio/NOTICE.md).
