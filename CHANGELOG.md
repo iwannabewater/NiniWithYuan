@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.0
+
+- Reworked the visual layer into the **Aurora Inkwash · Night Atlas Cinematic** direction across web and Android WebView surfaces, without touching gameplay, save schema, audio routing, or controls.
+- Re-architected `styles.css` into cascade layers (reset, tokens, base, surface, type, component, motion, responsive, a11y) and introduced a 9-step night ramp, a 6-step gold cartography ramp, and aurora gradient stops.
+- Added performance-tuned signature details: brand brushwork reveal on first menu, static aurora halo around the menu heroes, character-card selection glow, a featured-chapter atlas ring, and a slower breathing aura on touch action buttons.
+- Re-typeset menu, character grid, level grid, settings, modal, HUD pills, chapter intro, control tips, and toast surfaces with refined hairlines, OKLCH color tokens, gilded panel edges, and corner atlas notches.
+- Removed full-screen animated blur, backdrop-filter surfaces, and duplicated menu Canvas character draws so the visual pass stays lighter on low-end WebView devices.
+- Honored `prefers-reduced-motion` for touch breath and entry transitions, and added a `prefers-contrast: more` enhancement layer for hairlines and ink.
+- Updated PWA manifest theme/background to the new night palette and bumped the service worker cache to `nini-yuan-v1.2.0-aurora` so existing players pick up the refreshed assets.
+- Updated Android `windowBackground`, `colorAccent`, splash background, and tip color to match the refreshed palette.
+- Bumped `versionCode` to 3 and `versionName` to `1.2.0`.
+
 ## v1.1.0
 
 - Added save schema validation, migration, and localStorage tampering recovery.

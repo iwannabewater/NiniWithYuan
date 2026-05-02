@@ -33,7 +33,7 @@ public class MainActivity extends Activity {
         FrameLayout root = new FrameLayout(this);
         webView = new WebView(this);
         webView.setAlpha(0f);
-        webView.setBackgroundColor(0xff10182a);
+        webView.setBackgroundColor(0xff0e1530);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -56,11 +56,11 @@ public class MainActivity extends Activity {
         loadingView.setTextSize(18);
         loadingView.setGravity(Gravity.CENTER);
         loadingView.setLineSpacing(7, 1.0f);
-        loadingView.setBackgroundColor(0xff10182a);
+        loadingView.setBackgroundColor(0xff0e1530);
 
         tipView = new TextView(this);
         tipView.setText("Yuan loves Nini❤");
-        tipView.setTextColor(0xffffd36d);
+        tipView.setTextColor(0xfff2d389);
         tipView.setTextSize(12);
         tipView.setGravity(Gravity.START);
         tipView.setPadding(18, 16, 18, 10);

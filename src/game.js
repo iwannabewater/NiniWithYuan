@@ -994,12 +994,6 @@
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, view.w, view.h);
     drawSkyMotifs(t, 0.3);
-    ctx.save();
-    ctx.translate(view.w * 0.54, view.h * 0.58 + Math.sin(t * 1.4) * 10);
-    ctx.scale(Math.min(view.w, view.h) / 440, Math.min(view.w, view.h) / 440);
-    drawCharacterArt("nini", -80, 0, 1, 1.7);
-    drawCharacterArt("yuan", 78, 8, -1, 1.72);
-    ctx.restore();
     renderVignette();
   }
 
