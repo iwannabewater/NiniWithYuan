@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#10182a" />
+    <title>妮妮源源历险记 | Nini & Yuan</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="shell">
+      <canvas id="game" aria-label="妮妮源源历险记游戏画面"></canvas>
+
+      <section id="menu" class="panel screen active">
+        <div class="brand">
+          <span class="eyebrow">Nini & Yuan</span>
+          <h1>妮妮源源历险记</h1>
+          <p>双角色幻想平台跳跃 · 五大章节 · 自动存档</p>
+        </div>
+        <div class="menu-heroes" aria-hidden="true">
+          <div class="hero-card nini-hero"></div>
+          <div class="hero-card yuan-hero"></div>
+        </div>
+        <div class="menu-actions">
+          <button class="primary" data-action="play">继续冒险</button>
+          <button data-action="levels">选择关卡</button>
+          <button data-action="characters">选择角色</button>
+          <button data-action="settings">设置</button>
+        </div>
+        <div class="save-strip" id="saveStrip"></div>
+      </section>
+
+      <section id="characterScreen" class="panel screen">
+        <div class="screen-head">
+          <button class="icon" data-action="back" aria-label="返回">‹</button>
+          <div>
+            <span class="eyebrow">双主角</span>
+            <h2>选择你的冒险者</h2>
+          </div>
+        </div>
+        <div class="character-grid">
+          <article class="character-card" data-character="nini">
+            <div class="portrait nini"></div>
+            <h3>妮妮</h3>
+            <p>轻盈、二段跳、滞空滑翔，适合精细跳台与收集路线。</p>
+            <dl class="ability-list">
+              <div><dt>主动技能</dt><dd>星羽滑翔：空中缓降并微调落点</dd></div>
+              <div><dt>弹药</dt><dd>星露弹：射速快、轻微追踪</dd></div>
+              <div><dt>食物强化</dt><dd>星莓变大、月糖无敌、晶核强化弹药</dd></div>
+            </dl>
+            <button data-pick="nini">选择妮妮</button>
+          </article>
+          <article class="character-card" data-character="yuan">
+            <div class="portrait yuan"></div>
+            <h3>源源</h3>
+            <p>冲刺、破晶、落地冲击，适合速度通关和危险突破。</p>
+            <dl class="ability-list">
+              <div><dt>主动技能</dt><dd>青岚冲刺：高速突进并击碎晶块</dd></div>
+              <div><dt>弹药</dt><dd>青岚弹：射速慢、可穿透一次</dd></div>
+              <div><dt>食物强化</dt><dd>风铃果缩短冷却，月糖可撞击敌人</dd></div>
+            </dl>
+            <button data-pick="yuan">选择源源</button>
+          </article>
+        </div>
+      </section>
+
+      <section id="levelScreen" class="panel screen">
+        <div class="screen-head">
+          <button class="icon" data-action="back" aria-label="返回">‹</button>
+          <div>
+            <span class="eyebrow">章节</span>
+            <h2>一步一步通关</h2>
+          </div>
+        </div>
+        <div id="levelList" class="level-list"></div>
+      </section>
+
+      <section id="settingsScreen" class="panel screen">
+        <div class="screen-head">
+          <button class="icon" data-action="back" aria-label="返回">‹</button>
+          <div>
+            <span class="eyebrow">系统</span>
+            <h2>设置</h2>
+          </div>
+        </div>
+        <div class="settings-list">
+          <label>
+            <span>音效强度</span>
+            <input id="volumeRange" type="range" min="0" max="100" value="70" />
+          </label>
+          <label>
+            <span>触控按键大小</span>
+            <input id="touchRange" type="range" min="82" max="124" value="98" />
+          </label>
+          <label class="toggle-row">
+            <span>高帧率视觉特效</span>
+            <input id="fxToggle" type="checkbox" checked />
+          </label>
+          <div class="copyright">Copyright © Winston</div>
+          <button class="danger" data-action="reset">清除存档</button>
+        </div>
+      </section>
+
+      <section id="overlay" class="hud">
+        <div class="top-hud">
+          <div class="hud-pill"><span id="hudCharacter">妮妮</span></div>
+          <div class="hud-pill">生命 <span id="hudHealth">3</span></div>
+          <div class="hud-pill">星露 <span id="hudCoins">0</span></div>
+          <div class="hud-pill">星弹 <span id="hudAmmo">12</span></div>
+          <div class="hud-pill">时间 <span id="hudTime">00:00</span></div>
+          <div class="hud-pill status" id="hudStatus">普通</div>
+          <div class="hud-pill skill-state" id="hudSkill">技能 就绪</div>
+          <button class="hud-button" data-action="pause" aria-label="暂停">Ⅱ</button>
+        </div>
+        <div class="bossbar" id="chapterBar"><span></span></div>
+        <div id="chapterIntro" class="chapter-intro" aria-live="polite">
+          <span id="chapterIntroEyebrow">第一章</span>
+          <strong id="chapterIntroTitle">星露花庭</strong>
+          <p id="chapterIntroText">学习二段跳、冲刺和踩踏敌人。</p>
+          <div id="chapterIntroMeta" class="chapter-intro-meta"></div>
+        </div>
+        <div id="controlTips" class="control-tips">
+          <span>移动 A/D 或 ←/→</span>
+          <span>跳跃 空格 / 跳</span>
+          <span>技能 J / 技</span>
+          <span>发射 K / 弹</span>
+          <span>暂停 Esc / Ⅱ</span>
+        </div>
+        <div id="toast" class="toast"></div>
+      </section>
+
+      <section id="modal" class="modal">
+        <div class="modal-card">
+          <span class="eyebrow" id="modalEyebrow">暂停</span>
+          <h2 id="modalTitle">暂停</h2>
+          <p id="modalText"></p>
+          <div class="modal-actions" id="modalActions"></div>
+        </div>
+      </section>
+
+      <nav id="touchControls" aria-label="触屏控制">
+        <div class="touch-left">
+          <button class="touch-btn" data-touch="left" aria-label="左移">‹</button>
+          <button class="touch-btn" data-touch="right" aria-label="右移">›</button>
+        </div>
+        <div class="touch-right">
+          <button class="touch-btn jump" data-touch="jump" aria-label="跳跃">跳</button>
+          <button class="touch-btn skill" data-touch="skill" aria-label="技能">技</button>
+          <button class="touch-btn shoot" data-touch="shoot" aria-label="发射">弹</button>
+        </div>
+      </nav>
+    </main>
+    <script src="./src/game.js"></script>
+  </body>
+</html>

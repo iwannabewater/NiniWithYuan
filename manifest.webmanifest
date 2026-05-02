@@ -1,0 +1,11 @@
+{
+  "name": "妮妮源源历险记",
+  "short_name": "Nini & Yuan",
+  "description": "双角色幻想平台跳跃游戏",
+  "start_url": "./index.html",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#10182a",
+  "theme_color": "#10182a",
+  "icons": []
+}

@@ -1,0 +1,17 @@
+{
+  "name": "nini-yuan-adventure",
+  "version": "1.0.0",
+  "private": true,
+  "description": "妮妮源源历险记 / Nini & Yuan",
+  "scripts": {
+    "start": "npx http-server . -p 4173 -c-1",
+    "test": "node --check src/game.js && node tests/physics-balance.js && node tests/mechanics-balance.js && node tests/android-wrapper.js && node tests/browser-smoke.js",
+    "build:android": "bash scripts/build-android.sh"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-sc": "^5.2.9"
+  },
+  "devDependencies": {
+    "playwright": "^1.59.1"
+  }
+}

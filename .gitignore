@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Test and build output
+build/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Android generated output and local signing material
+android/app/src/main/assets/
+android/debug.keystore
+*.idsig
+
+# Downloaded local compiler fallback
+tools/
+
+# Local OS/editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Temporary files
+tmp/
+*.log
