@@ -560,7 +560,7 @@
     }
 
     if (save.selected === "yuan" && player.skillTimer > 0) {
-      if (dashEdgeBlocked()) {
+      if (dashShouldStopAtEdge()) {
         player.skillTimer = 0;
         player.vx = moveToward(player.vx, 0, 5200 * dt);
         burst(player.x + player.w / 2, player.y + player.h, "#7ff1ba", 8);
@@ -713,7 +713,7 @@
     };
   }
 
-  function dashEdgeBlocked() {
+  function dashShouldStopAtEdge() {
     if (!player.onGround || inputs.jump || player.vy < -40) return false;
     const probe = {
       x: player.dashDir > 0 ? player.x + player.w + 8 : player.x - 26,

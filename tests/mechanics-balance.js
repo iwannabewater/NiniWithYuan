@@ -52,7 +52,7 @@ if (yuanDashDistance < yuanDashMinDistance || yuanDashDistance > yuanDashMaxDist
   );
 }
 
-if (!source.includes("function dashEdgeBlocked()") || !source.includes("inputs.jump")) {
+if (!source.includes("function dashShouldStopAtEdge()") || !source.includes("inputs.jump")) {
   throw new Error("Yuan ground dash needs edge braking unless the player is intentionally jumping");
 }
 
