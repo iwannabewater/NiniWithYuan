@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.2.3-starlit-whispers-r3";
+const CACHE = "nini-yuan-v1.2.4-aurora-cartography";
 const ASSETS = [
   "./",
   "./index.html",

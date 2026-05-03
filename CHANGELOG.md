@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.2.4
+
+- Replaced the static featured-chapter atlas ring with a slow rotating gold compass and added a hairline meridian rail that reveals on grid hover so the four ordinary chapters and the featured chapter read as one inked map; the featured-chapter star is upgraded to a four-point compass mark.
+- Added a brand sub-aurora brushwork stroke that sweeps gold/rose/jade/cyan under the wordmark on first menu paint and then settles, deepening the v1.2.0 brushwork title reveal.
+- Added two-axis pointer parallax on the cover hero region driven by a fine-pointer hook in `src/render/cursor-trail.js` (`--mx` / `--my` custom properties); touch devices receive a slow 7 s breath tilt fallback so the heroes feel alive without parallax.
+- Added one-shot HUD ink-bloom pulses on the character pill and the skill-state pill, fired only when the character name or the cooling state actually flips, via a new `pulseHudPill` helper in `src/render/hud.js` and a 420 ms `hud-pulse` keyframe.
+- Replaced the bossbar's flat 3-stop fill with a slow auroral wash (`bossbar-shimmer`) and added a leading-edge gleam pseudo so chapter progress feels gilded rather than mechanical.
+- Added a chapter-intro orchestration layer: when `.chapter-intro.active` is on, the bossbar and control tips arrive in a coordinated 0 ms / 60 ms / 160 ms stagger via `body:has(.chapter-intro.active) …` rules.
+- Added refined inline-SVG glyph marks above the `跳 / 技 / 弹` touch labels — a star-arrow for jump, an aurora swirl for skill, and a diamond burst for shoot — using mask-image data URLs so no new asset files are introduced; the existing accessibility labels and aria are unchanged.
+- Added a paper grain (SVG-data-URL `feTurbulence` overlay, ~5 % opacity) and a small gold atlas seal in the lower-right corner of the pause/completion modal, breathing gently via a 9 s `seal-breathe` keyframe.
+- Added gold rune chips and a hairline ribbon notch to the four settings rows via `data-rune` attributes (♪ / ♬ / ◐ / ✦) so the settings panel reads as inked stationery rather than a generic form.
+- Added a sixth hidden Yuan-to-Nini surprise — the **constellation hunt**: clicking all six ambient sparks across both rails within eight seconds opens a fourth letter modal and flashes a heart. The hunt is fine-pointer only so the existing five surprises remain the public surface on phones.
+- Added a single composite-add gold halo particle on coin and gem pickup bursts and gilded the float-text with a low-alpha italic gold underprint; both are gated by the existing `settings.fx` toggle so the FX off path is preserved.
+- Bumped the web package to `1.2.4`, Android `versionCode` to 7 / `versionName` to `1.2.4`, and the service worker cache to `nini-yuan-v1.2.4-aurora-cartography`. The PWA manifest description is unchanged because the v1.2.3 copy still applies.
+- Reduced-motion contract: every new keyframe is paused under `prefers-reduced-motion: reduce` (compass rotation, aurora sweep, HUD pulse, bossbar shimmer, hero breath, modal seal breathe, spark lit, chapter-intro stagger). Glyph masks remain visible because they carry no animation.
+- Added `tests/aesthetic-polish-v1_2_4.js` and wired it into `tests/run-all.js`. Updated `tests/menu-polish-v1_2_3.js` so the version pins accept v1.2.4 metadata and the new cache key while keeping every structural assertion from v1.2.3 green.
+
 ## v1.2.3
 
 - Restored gilded readability on chapter cards: filled stars now glow gold, empty stars sit muted, and the best-time value is set in tabular gold so the score line stays visible against the ink-vellum surface; the v1.2.2 left-aligned chapter-card layout is preserved.

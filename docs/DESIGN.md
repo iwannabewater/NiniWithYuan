@@ -60,7 +60,7 @@ Pills are pill-shaped with translucent night fill, hairline edge, and tabular nu
 
 ### Chapter Cards
 
-The featured chapter carries a static atlas ring and a star at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens.
+The featured chapter carries an **atlas compass** — a gold conic ring that rotates at 18 s per revolution and a four-point compass mark (`✦`) at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens. On grid hover, a hairline **meridian rail** (a single decorative `.level-list::after`) traces between the four ordinary chapters and the featured chapter, surfacing the level grid as one inked map without any DOM-shape change.
 
 The chapter score line is built from three readable groups: filled stars set in `--c-gold-200` with a soft gold halo, empty stars dropped to a low-contrast ivory tint, and the best-time value rendered in tabular gold (`<strong class="level-best-value">`) so the metric stays legible against the ink-vellum surface. Locked chapters drop the gold tint to a near-white muted tone to keep visual hierarchy without reusing the live state.
 
@@ -76,6 +76,24 @@ Visibility is gated by `body:has(.screen.active)` and forced off immediately und
 ### Touch Controls
 
 Each touch button is a 50 % radius coin with a tactile inner specular and a deep drop shadow. The jump, skill, and shoot buttons emit a slow breath-pulse aura when ready (paused under reduced-motion). Press collapses the button and lights a gold halo.
+
+Each action button also carries a refined inline-SVG glyph mark above its label (jump → star arrow, skill → aurora swirl, shoot → diamond burst). The glyph is rendered via `mask-image: url("data:image/svg+xml,…")` and `background-color: currentColor`, so it inherits the button's gradient and adds no asset payload to the service worker cache.
+
+### Pause and Completion Modal
+
+The modal card carries a paper grain layer (a low-opacity `feTurbulence` SVG-data-URL noise blended `overlay`) and a 56 px gold **atlas seal** in the lower-right corner that breathes gently at 9 s. The seal uses a conic gradient mixing gold, rose, jade, and cyan and is masked into a circular form with a hairline rim, mirroring the cartography rail aesthetic. Reduced-motion stills the seal.
+
+### Settings Panel
+
+Each settings row carries a `data-rune` attribute (♪ / ♬ / ◐ / ✦) that the CSS reads via `attr()` to render a 22 px gold rune chip with a hairline ribbon stub leading into the row. The rune chip is decorative; the underlying input IDs, names, and `for` linkage are unchanged so existing accessibility scans and the storage path remain green.
+
+### HUD Pulses
+
+`.hud-pill.character` and `.hud-pill.skill-state` pulse once via the `hud-pulse` 420 ms keyframe whenever the character name actually flips or the skill `cooling` state actually flips. The pulse is fired by a `pulseHudPill` helper exposed from `src/render/hud.js`, which `src/game.js` calls from `updateHud` only when the cached previous value differs from the current value. Reduced-motion replaces the keyframe with no animation so the pill remains visually stable.
+
+### Bossbar
+
+The chapter progress bar (`.bossbar span`) carries a layered auroral wash (`cyan → jade → gold → rose` over a `200 %` background) animated by `bossbar-shimmer` at 7 s linear, plus a soft leading-edge gleam pseudo at the 100 % end. Width still transitions over `var(--d-base)` so the existing game-loop progress wiring remains untouched. Reduced-motion forces the shimmer off and zeroes the gleam opacity.
 
 ## Layout
 
@@ -96,6 +114,14 @@ Motion uses `transform` and `opacity`. Expensive full-screen animated filters, m
 - `ambient-constellation-pulse` — connected six-star glyph pulse, 8 s ease-soft infinite.
 - `cursor-spark-fade` — pointer stardust trail particle lift-and-fade, 960 ms ease-out forwards.
 - `love-heart-beat` — easter-egg constellation heart, 1.6 s ease-soft infinite while shown.
+- `compass-rotate` — featured-chapter atlas compass, 18 s linear infinite (paused under reduced-motion).
+- `aurora-sweep` — sub-aurora brushwork under the wordmark, 1.4 s ease-out 220 ms forwards (hidden under reduced-motion).
+- `hud-pulse` — one-shot 420 ms ink-bloom on character/skill HUD pills.
+- `bossbar-shimmer` — bossbar auroral wash, 7 s linear infinite.
+- `bossbar-rise` and `tips-rise` — chapter intro orchestration entrance, 420 ms / 480 ms ease-out.
+- `hero-breath` — touch-only cover-hero tilt, 7 s ease-soft infinite.
+- `seal-breathe` — modal atlas seal pulse, 9 s ease-soft infinite.
+- `spark-lit` — constellation-hunt spark feedback, 1.4 s ease-soft forwards.
 
 The pointer stardust layer is a fixed full-viewport overlay above the active menu panel, with pointer events disabled. It is scoped by JS to pointer movement over `.menu-heroes` and `#menu .brand h1`, interpolates particles along fast movement so the trail stays continuous, and lets particles escape their source boxes without affecting gameplay hit targets.
 

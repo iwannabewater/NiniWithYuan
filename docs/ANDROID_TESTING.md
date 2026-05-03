@@ -52,3 +52,12 @@ Start-Sleep -Seconds 5
 - Nini glide starts when the skill button is held in the air.
 - Yuan dash stops at short platform edges.
 - Save data persists after closing and reopening the application.
+- v1.2.4 — the featured chapter card shows a slow rotating gold compass ring; on grid hover (desktop browser review) the four ordinary chapter cards reveal a hairline meridian rail with four small gold/jade/rose/cyan dots between them.
+- v1.2.4 — the brand wordmark gains a soft gold/rose/jade brushwork stroke on first paint that settles after about 1.5 s.
+- v1.2.4 — on touch the cover heroes do a slow 7 s breath tilt; on desktop fine-pointer review they parallax against the cursor without crossing each other.
+- v1.2.4 — entering a chapter shows the bossbar, chapter intro card, and control tips arrive in a coordinated stagger rather than all at once.
+- v1.2.4 — when the player picks up coins or gems, the canvas burst shows a gold halo ring and the floating "+1" text reads as gilded; toggling the high-frame-rate FX setting off removes both effects.
+- v1.2.4 — the touch action buttons (`跳 / 技 / 弹`) carry a refined glyph mark above the existing label; the labels are still announced as `跳跃 / 技能 / 发射` on TalkBack.
+- v1.2.4 — the pause modal card shows a small gold atlas seal in the lower-right corner that breathes slowly, plus a faint paper grain across the card body.
+- v1.2.4 — the settings rows are prefixed with rune chips (♪ / ♬ / ◐ / ✦) without changing the slider/checkbox positions.
+- v1.2.4 hidden surprise — on desktop fine-pointer review only, clicking all six ambient sparks within eight seconds opens a fourth letter modal and a heart; on Android touch this surprise stays inactive so the existing five surprises are the public phone surface.
