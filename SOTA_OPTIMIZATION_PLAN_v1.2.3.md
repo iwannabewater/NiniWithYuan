@@ -44,7 +44,7 @@ The v1.2.3 release is a small menu-surface aesthetic-and-interaction pass. It ke
 ### Hidden Yuan-to-Nini Easter Eggs — `src/render/easter-eggs.js` and `styles.css`
 
 - Add a `NiniYuanLove` script that registers six discoverable triggers without changing any visible UI:
-  1. **Konami sequence** `↑↑↓↓←→←→ N Y` opens a centered letter modal (`.love-letter`) with a hand-signed message and triggers the constellation heart.
+  1. **Konami sequence** `↑↑↓↓←→←→ N Y` opens a centered letter modal (`.love-letter`) with a hand-signed message and triggers the constellation heart. The shorter spoken form `↑↑↓↓←→ N Y` is accepted as an alias because the Chinese phrase "上上下下左右 N Y" is easy to read that way.
   2. **Number sequence** `5 → 2 → 0` opens a second letter modal.
   3. **Long-press** on the brand block (`.brand`) for 1.5 s shows a brief "Yuan ❤ Nini" toast and the constellation heart.
   4. **Tap counter** on the brand `<h1>`: three taps shows a rotating star-quote toast; seven taps opens a third letter modal.
@@ -58,7 +58,7 @@ The v1.2.3 release is a small menu-surface aesthetic-and-interaction pass. It ke
 
 - Bump `package.json` and `package-lock.json` to `1.2.3`.
 - Bump Android `versionCode` to 6 and `versionName` to `1.2.3`.
-- Bump the service worker cache to `nini-yuan-v1.2.3-starlit-whispers-r2` and add the two new render scripts to the asset list.
+- Bump the service worker cache to `nini-yuan-v1.2.3-starlit-whispers-r3` and add the two new render scripts to the asset list.
 - Update the install-prompt manifest description from the legacy platform-jump phrase to the same star-atlas adventure copy used in the cover.
 
 ### Documentation
@@ -94,6 +94,7 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 - chapter cards show gold filled stars, muted empty stars, and a gold tabular best-time value while keeping the v1.2.2 left-aligned copy;
 - the empty viewport zones to the left, right, and below the menu panel are now occupied by a low-opacity ambient layer that disappears as soon as gameplay begins;
 - on desktop, moving the cursor quickly over the cover and the brand title leaves a continuous gold/rose/jade/cyan stardust trail that does not affect gameplay or persist into the HUD;
+- both `↑↑↓↓←→ N Y` and `↑↑↓↓←→←→ N Y` open the second hidden letter and rose-gold heart;
 - rapid clicking or long-pressing the brand title, menu buttons, and Android touch controls does not create text-selection highlights or WebView callout handles;
 - triggering any one of the six easter eggs surfaces a letter modal, a heart, or a toast and dismisses cleanly without affecting save data or audio routing;
 - the Android APK builds with the new `versionCode` 6 and `versionName` 1.2.3 and the WebView gameplay surface is visually identical to v1.2.2.
@@ -121,10 +122,10 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 ### Verification
 
 - `npm test` passed locally on 2026-05-03.
-  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, ambient z-layer above the canvas shell, visible cursor-trail particles on a fine pointer, non-selectable interaction targets, and functional 520/Konami keyboard surprises.
+  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, ambient z-layer above the canvas shell, visible cursor-trail particles on a fine pointer, non-selectable interaction targets, and functional 520/full-and-short-Konami keyboard surprises.
 - `npm run build:android` passed locally on 2026-05-03 and produced `dist/NiniYuan.apk` (~6.2 MB).
   - APK badging: `versionCode=6`, `versionName=1.2.3`, `compileSdkVersion=36`, `min-sdk-version=23`, `targetSdkVersion=36`.
-  - APK assets contain the updated `service-worker.js` cache name `nini-yuan-v1.2.3-starlit-whispers-r2`, the ambient DOM in `assets/index.html`, and both `assets/src/render/cursor-trail.js` and `assets/src/render/easter-eggs.js`.
+  - APK assets contain the updated `service-worker.js` cache name `nini-yuan-v1.2.3-starlit-whispers-r3`, the ambient DOM in `assets/index.html`, and both `assets/src/render/cursor-trail.js` and `assets/src/render/easter-eggs.js`.
 
 ### Residual Notes
 
@@ -135,7 +136,7 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 ### Post-Review Correction
 
 - Root cause found during the v1.2.3 review: the ambient DOM existed and its opacity toggled on, but `z-index: 0` placed it behind the full-screen `#shell`/canvas stack; cursor particles were created but their layer sat below the active menu surface; the 520 and Konami letter indices were reversed in `src/render/easter-eggs.js`.
-- Fix applied: ambient now uses `z-index: 2`, `.cursor-trail` is a fixed full-viewport layer at `z-index: 9`, `5 → 2 → 0` opens the first letter, and `↑↑↓↓←→←→ N Y` opens the second letter plus the rose-gold heart.
+- Fix applied: ambient now uses `z-index: 2`, `.cursor-trail` is a fixed full-viewport layer at `z-index: 9`, `5 → 2 → 0` opens the first letter, and both `↑↑↓↓←→ N Y` and `↑↑↓↓←→←→ N Y` open the second letter plus the rose-gold heart.
 - Regression coverage added to `tests/browser-smoke.js` and `tests/menu-polish-v1_2_3.js` so the review checks real pointer movement, real keyboard input, layer ordering, and letter order instead of only checking that scripts and DOM nodes exist.
 - Follow-up interaction polish: the cursor trail now interpolates along fast pointer movement, uses a 960 ms tail with a 56-particle cap, adds a cyan aurora tone, and disables text selection/callout only on rapid-click and long-press targets.
-- The service worker cache key is refreshed to `nini-yuan-v1.2.3-starlit-whispers-r2` so local review browsers that cached the first v1.2.3 build pick up the corrected CSS and render scripts.
+- The service worker cache key is refreshed to `nini-yuan-v1.2.3-starlit-whispers-r3` so local review browsers that cached earlier v1.2.3 builds pick up the corrected CSS and render scripts.

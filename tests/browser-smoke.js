@@ -212,19 +212,22 @@ async function run() {
         await page.locator(".love-letter-close").click();
         await page.waitForSelector(".love-letter", { state: "detached" });
 
-        for (const key of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyN", "KeyY"]) {
-          await page.keyboard.press(key);
+        for (const sequence of [
+          ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "KeyN", "KeyY"],
+          ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyN", "KeyY"],
+        ]) {
+          for (const key of sequence) await page.keyboard.press(key);
+          await page.waitForSelector(".love-letter.show");
+          const konamiState = await page.evaluate(() => ({
+            sign: document.querySelector(".love-letter-sign")?.textContent.trim(),
+            hearts: document.querySelectorAll(".love-heart.show").length,
+          }));
+          if (konamiState.sign !== "—— 源源" || konamiState.hearts < 1) {
+            throw new Error(`Konami code should open the second letter and heart: ${JSON.stringify(konamiState)}`);
+          }
+          await page.keyboard.press("Escape");
+          await page.waitForSelector(".love-letter", { state: "detached" });
         }
-        await page.waitForSelector(".love-letter.show");
-        const konamiState = await page.evaluate(() => ({
-          sign: document.querySelector(".love-letter-sign")?.textContent.trim(),
-          hearts: document.querySelectorAll(".love-heart.show").length,
-        }));
-        if (konamiState.sign !== "—— 源源" || konamiState.hearts < 1) {
-          throw new Error(`Konami code should open the second letter and heart: ${JSON.stringify(konamiState)}`);
-        }
-        await page.keyboard.press("Escape");
-        await page.waitForSelector(".love-letter", { state: "detached" });
 
         await page.getByText("选择关卡").click();
         await page.waitForTimeout(150);

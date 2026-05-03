@@ -2,6 +2,7 @@
   "use strict";
 
   const KONAMI = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","ArrowLeft","ArrowRight","KeyN","KeyY"];
+  const KONAMI_SHORT = ["ArrowUp","ArrowUp","ArrowDown","ArrowDown","ArrowLeft","ArrowRight","KeyN","KeyY"];
   const NUMBER_CODE = ["Digit5","Digit2","Digit0"];
   const HEART_PATH = "M256 432 L96 272 C32 208 64 112 152 112 C200 112 232 144 256 184 C280 144 312 112 360 112 C448 112 480 208 416 272 Z";
   const QUOTE_LINES = [
@@ -145,20 +146,29 @@
 
   function bindKeyboardCodes() {
     let konamiCursor = 0;
+    let konamiShortCursor = 0;
     let numberCursor = 0;
     let yyCursor = 0;
     const yyPattern = ["KeyY","KeyN","KeyY","KeyN"];
+    const advanceSequence = (code, pattern, cursor) => {
+      if (code === pattern[cursor]) {
+        const next = cursor + 1;
+        return next === pattern.length ? { cursor: 0, matched: true } : { cursor: next, matched: false };
+      }
+      return { cursor: code === pattern[0] ? 1 : 0, matched: false };
+    };
     document.addEventListener("keydown", (event) => {
+      if (event.repeat) return;
       const code = event.code;
-      if (code === KONAMI[konamiCursor]) {
-        konamiCursor += 1;
-        if (konamiCursor === KONAMI.length) {
-          konamiCursor = 0;
-          openLetter(SECRET_LINES[1]);
-          flashHeart();
-        }
-      } else {
-        konamiCursor = code === KONAMI[0] ? 1 : 0;
+      const konami = advanceSequence(code, KONAMI, konamiCursor);
+      konamiCursor = konami.cursor;
+      const shortKonami = advanceSequence(code, KONAMI_SHORT, konamiShortCursor);
+      konamiShortCursor = shortKonami.cursor;
+      if (konami.matched || shortKonami.matched) {
+        konamiCursor = 0;
+        konamiShortCursor = 0;
+        openLetter(SECRET_LINES[1]);
+        flashHeart();
       }
       if (code === NUMBER_CODE[numberCursor]) {
         numberCursor += 1;

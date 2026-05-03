@@ -14,7 +14,7 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 assert.equal(pkg.version, "1.2.3", "package.json version should be 1.2.3");
 assert.equal(lock.version, "1.2.3", "package-lock.json root version should be 1.2.3");
-assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers-r2"/, "service worker cache should be bumped to the post-review v1.2.3 cache");
+assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers-r3"/, "service worker cache should be bumped to the post-review v1.2.3 cache");
 assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
 assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
 assert.ok(/versionCode="6"/.test(androidManifest), "Android versionCode should be 6");
@@ -64,12 +64,14 @@ assert.ok(cursor.includes("container = options.container || document.body"), "cu
 assert.ok(/button,[\s\S]*?\.brand h1,[\s\S]*?#touchControls,[\s\S]*?user-select: none;/.test(css), "interactive text should not be selectable during rapid clicks or long press");
 
 assert.ok(eggs.includes("KONAMI"), "easter-eggs script should declare a Konami sequence");
+assert.ok(eggs.includes("KONAMI_SHORT"), "easter-eggs script should also accept the shorter up-up-down-down-left-right-N-Y sequence");
+assert.ok(eggs.includes("event.repeat"), "easter-eggs keyboard listener should ignore held-key repeats");
 assert.ok(eggs.includes("Digit5") && eggs.includes("Digit2") && eggs.includes("Digit0"), "easter-eggs script should declare a 5-2-0 number sequence");
 assert.ok(eggs.includes("flashHeart"), "easter-eggs script should expose the flashHeart helper");
 assert.ok(eggs.includes("openLetter"), "easter-eggs script should expose the openLetter helper");
 assert.ok(eggs.includes("rotateAmbientQuote"), "easter-eggs script should rotate the ambient quote line");
 assert.ok(eggs.includes("dateSurprise"), "easter-eggs script should declare a calendar trigger");
-assert.ok(/konamiCursor === KONAMI\.length\)[\s\S]*?openLetter\(SECRET_LINES\[1\]\);[\s\S]*?flashHeart/.test(eggs), "Konami should open the second letter and flash the heart");
+assert.ok(/konami\.matched \|\| shortKonami\.matched[\s\S]*?openLetter\(SECRET_LINES\[1\]\);[\s\S]*?flashHeart/.test(eggs), "Konami variants should open the second letter and flash the heart");
 assert.ok(/numberCursor === NUMBER_CODE\.length\)[\s\S]*?openLetter\(SECRET_LINES\[0\]\);/.test(eggs), "520 should open the first letter");
 assert.ok(/@keyframes love-heart-beat/.test(css), "love-heart-beat keyframe should exist");
 assert.ok(/\.love-letter,[\s\S]*?\.love-heart,[\s\S]*?\.love-toast\s*{[\s\S]*?z-index: 60;/.test(css), "love overlays should share z-index 60 above the menu");
