@@ -94,10 +94,12 @@ Motion uses `transform` and `opacity`. Expensive full-screen animated filters, m
 - `ambient-drift` — calligraphic rune slow drift, 18 s ease-soft infinite.
 - `ambient-twinkle` — spark and gold-mark scale-and-opacity blink, 4.6 s ease-soft infinite.
 - `ambient-constellation-pulse` — connected six-star glyph pulse, 8 s ease-soft infinite.
-- `cursor-spark-fade` — pointer stardust trail particle lift-and-fade, 720 ms ease-out forwards.
+- `cursor-spark-fade` — pointer stardust trail particle lift-and-fade, 960 ms ease-out forwards.
 - `love-heart-beat` — easter-egg constellation heart, 1.6 s ease-soft infinite while shown.
 
-The pointer stardust layer is a fixed full-viewport overlay above the active menu panel, with pointer events disabled. It is scoped by JS to pointer movement over `.menu-heroes` and `#menu .brand h1`, so the particles can escape their source boxes without affecting gameplay hit targets.
+The pointer stardust layer is a fixed full-viewport overlay above the active menu panel, with pointer events disabled. It is scoped by JS to pointer movement over `.menu-heroes` and `#menu .brand h1`, interpolates particles along fast movement so the trail stays continuous, and lets particles escape their source boxes without affecting gameplay hit targets.
+
+High-frequency interaction targets disable text selection and WebKit touch callout: buttons, the long-press title, the hero cover, and touch controls. Ordinary descriptive copy remains selectable.
 
 Under `prefers-reduced-motion: reduce`, animation and transition durations collapse to ~0 ms; touch breath is hidden and the aurora remains static.
 

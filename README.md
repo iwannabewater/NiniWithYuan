@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.2.3 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual pass from v1.2.0, the v1.2.1 gameplay fixes, and the v1.2.2 menu polish, then adds the v1.2.3 **Starlit Whispers** aesthetic-and-interaction pass: gilded chapter score metadata, an ambient star-rune side layer that reclaims the empty viewport zones, a soft pointer stardust trail on the cover, and a small set of hidden Yuan-to-Nini surprises. The v1.1.0 content baseline is unchanged: two playable characters, five handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.2.3 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual pass from v1.2.0, the v1.2.1 gameplay fixes, and the v1.2.2 menu polish, then adds the v1.2.3 **Starlit Whispers** aesthetic-and-interaction pass: gilded chapter score metadata, an ambient star-rune side layer that reclaims the empty viewport zones, a responsive pointer stardust trail on the cover, and a small set of hidden Yuan-to-Nini surprises. The v1.1.0 content baseline is unchanged: two playable characters, five handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
 ## Gameplay
 
@@ -43,7 +43,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3 smoke path also verifies the ambient layer stacking, fine-pointer stardust trail, and functional 520/Konami hidden-surprise triggers.
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3 smoke path also verifies the ambient layer stacking, fine-pointer stardust trail, non-selectable interaction targets, and functional 520/Konami hidden-surprise triggers.
 
 ## Android APK
 

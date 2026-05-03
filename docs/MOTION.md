@@ -29,7 +29,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 4 | `.level-item.featured::before` | Static | Atlas ring marks the next available chapter with a hairline arc and star core. |
 | 5 | `.touch-btn.jump/.skill/.shoot::before` | Idle | Breath aura ring scales 0.96 -> 1.04 over 3.2 s; cancels instantly on press. |
 | 6 | `.ambient-rune` / `.ambient-spark` / `.ambient-constellation` | Menu surfaces only | Calligraphic rune drift, sparkle twinkle, and connected six-star glyph pulse fill the empty viewport zones outside the panel and pause during gameplay. |
-| 7 | `.cursor-spark` | Pointer move on cover or title (`(hover: hover) and (pointer: fine)`) | Throttled gold/rose/jade stardust trail emits ~one particle per 28 ms into a fixed full-viewport layer above the active menu panel, lifts 22 px, and fades over 720 ms; capped at 32 active sparks; disabled under reduced-motion. |
+| 7 | `.cursor-spark` | Pointer move on cover or title (`(hover: hover) and (pointer: fine)`) | Distance-interpolated gold/rose/jade/cyan stardust emits into a fixed full-viewport layer above the active menu panel, fills fast pointer movement at roughly 18 px intervals, lifts 30-54 px, and fades over 960 ms; capped at 56 active sparks; disabled under reduced-motion. |
 | 8 | `.love-letter` / `.love-heart` / `.love-toast` | Hidden Yuan-to-Nini surprises | A discovered easter egg fades a centered letter card, a beating constellation heart, or a top-center toast in for a few seconds, then fades back out. The heart beats at 1.6 s and pauses under reduced-motion. |
 
 ## Continuous Motion

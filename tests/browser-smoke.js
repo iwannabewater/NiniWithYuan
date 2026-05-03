@@ -183,10 +183,24 @@ async function run() {
         });
         if (
           trailState.sparks < 1 ||
-          !trailState.layers.length ||
+          trailState.layers.length !== 1 ||
           !trailState.layers.every((layer) => layer.width >= trailState.viewport.width - 1 && layer.height >= trailState.viewport.height - 1 && layer.zIndex >= 9)
         ) {
           throw new Error(`Cursor trail did not render above the menu surface: ${JSON.stringify(trailState)}`);
+        }
+
+        const titleBox = await page.locator("#menu .brand h1").boundingBox();
+        await page.mouse.move(titleBox.x + 12, titleBox.y + 18);
+        await page.mouse.down();
+        await page.mouse.move(titleBox.x + titleBox.width - 16, titleBox.y + titleBox.height * 0.58, { steps: 6 });
+        await page.mouse.up();
+        const selectionState = await page.evaluate(() => ({
+          selectedText: String(getSelection()),
+          titleUserSelect: getComputedStyle(document.querySelector("#menu .brand h1")).userSelect,
+          playUserSelect: getComputedStyle(document.querySelector('[data-action="play"]')).userSelect,
+        }));
+        if (selectionState.selectedText || selectionState.titleUserSelect !== "none" || selectionState.playUserSelect !== "none") {
+          throw new Error(`Interactive menu text should not become selected: ${JSON.stringify(selectionState)}`);
         }
 
         for (const key of ["Digit5", "Digit2", "Digit0"]) await page.keyboard.press(key);

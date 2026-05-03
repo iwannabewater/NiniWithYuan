@@ -465,15 +465,28 @@
 
   .cursor-spark {
     position: absolute;
-    width: 8px;
-    height: 8px;
-    margin: -4px 0 0 -4px;
+    width: var(--size, 9px);
+    height: var(--size, 9px);
+    margin: 0;
     border-radius: 50%;
     background:
       radial-gradient(circle, rgba(255, 247, 213, 0.95) 0 22%, rgba(242, 211, 137, 0.6) 38%, transparent 70%);
-    box-shadow: 0 0 14px rgba(242, 211, 137, 0.55);
+    box-shadow:
+      0 0 2px rgba(255, 247, 213, 0.8),
+      0 0 16px rgba(242, 211, 137, 0.62),
+      0 0 28px rgba(242, 211, 137, 0.18);
+    mix-blend-mode: screen;
     will-change: transform, opacity;
-    animation: cursor-spark-fade 720ms var(--ease-out) forwards;
+    animation: cursor-spark-fade 960ms var(--ease-out) forwards;
+  }
+
+  .cursor-spark::after {
+    content: "";
+    position: absolute;
+    inset: 36%;
+    border-radius: inherit;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 8px rgba(255, 247, 213, 0.7);
   }
 
   .cursor-spark.tone-rose {
@@ -486,6 +499,15 @@
     background:
       radial-gradient(circle, rgba(216, 255, 233, 0.95) 0 22%, rgba(130, 227, 184, 0.6) 38%, transparent 70%);
     box-shadow: 0 0 14px rgba(130, 227, 184, 0.55);
+  }
+
+  .cursor-spark.tone-cyan {
+    background:
+      radial-gradient(circle, rgba(220, 250, 255, 0.95) 0 22%, rgba(109, 214, 238, 0.58) 38%, transparent 70%);
+    box-shadow:
+      0 0 2px rgba(220, 250, 255, 0.8),
+      0 0 16px rgba(109, 214, 238, 0.6),
+      0 0 28px rgba(109, 214, 238, 0.18);
   }
 
   /* Romantic easter-egg overlays */
@@ -673,6 +695,19 @@
     transition-duration: var(--d-fast);
     transition-timing-function: var(--ease-out);
     -webkit-tap-highlight-color: transparent;
+  }
+
+  button,
+  button *,
+  .brand h1,
+  .brand h1 *,
+  .menu-heroes,
+  .menu-heroes *,
+  #touchControls,
+  #touchControls * {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
   }
 
   button::after {
@@ -2171,15 +2206,15 @@
   @keyframes cursor-spark-fade {
     0% {
       opacity: 0.95;
-      transform: translate3d(0, 0, 0) scale(1);
+      transform: translate(-50%, -50%) translate3d(0, 0, 0) scale(1);
     }
     60% {
       opacity: 0.6;
-      transform: translate3d(0, -10px, 0) scale(0.78);
+      transform: translate(-50%, -50%) translate3d(var(--drift-mid, 0px), var(--rise-mid, -16px), 0) scale(0.76);
     }
     100% {
       opacity: 0;
-      transform: translate3d(0, -22px, 0) scale(0.4);
+      transform: translate(-50%, -50%) translate3d(var(--drift, 0px), var(--rise, -36px), 0) scale(0.28);
     }
   }
 

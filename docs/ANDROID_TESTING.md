@@ -42,7 +42,8 @@ Start-Sleep -Seconds 5
 - Main-menu subtitle reads naturally, the cover hero includes subtle star-chart detail without visual crowding, and chapter-card text starts from a consistent left edge across the first four chapters.
 - The chapter score line on each card reads as gold filled stars, muted empty stars, and a gold tabular best-time value; locked chapters drop the gold tint without breaking layout.
 - The empty viewport zones to the left, right, and below the menu panel show low-opacity drifting calligraphic runes, twinkling sparks, a small connected six-star glyph on the right, and a footer placard with version, scope, a star-quote line, and credit; the layer disappears as soon as gameplay begins.
-- On desktop/fine-pointer browser review, moving the pointer over the cover hero or main title leaves visible gold/rose/jade stardust above the menu surface; touch and coarse-pointer WebView review should still show no pointer trail.
+- On desktop/fine-pointer browser review, moving the pointer quickly over the cover hero or main title leaves visible gold/rose/jade/cyan stardust above the menu surface with no obvious gaps; touch and coarse-pointer WebView review should still show no pointer trail.
+- Rapid clicking or long-pressing the title, menu buttons, and Android touch controls should not create blue text-selection highlights or WebView callout selection handles.
 - Hidden-surprise review: `5 → 2 → 0` opens the first letter, and `↑↑↓↓←→←→ N Y` opens the second letter plus a rose-gold heart.
 - Touch ambient layer hides the side rails on portrait phones and keeps a compact strip in landscape; the strip never overlaps gameplay HUD or touch buttons.
 - Chapter 3 and chapter 5 wind fields show clear directional arrows that move with the wind direction, visibly push the player, change landing positions, and remain enterable while holding movement plus jump into the wind on the shared WebView gameplay build.

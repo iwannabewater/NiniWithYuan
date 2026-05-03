@@ -14,7 +14,7 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 assert.equal(pkg.version, "1.2.3", "package.json version should be 1.2.3");
 assert.equal(lock.version, "1.2.3", "package-lock.json root version should be 1.2.3");
-assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers"/, "service worker cache should be bumped to v1.2.3");
+assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers-r2"/, "service worker cache should be bumped to the post-review v1.2.3 cache");
 assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
 assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
 assert.ok(/versionCode="6"/.test(androidManifest), "Android versionCode should be 6");
@@ -52,9 +52,16 @@ assert.ok(html.includes('src="./src/render/easter-eggs.js"'), "index.html should
 assert.ok(/@keyframes cursor-spark-fade/.test(css), "cursor-spark-fade keyframe should exist");
 assert.ok(/\.cursor-trail\s*{[\s\S]*?pointer-events: none;/.test(css), "cursor-trail layer should ignore pointer events");
 assert.ok(/\.cursor-trail\s*{[\s\S]*?inset: 0;[\s\S]*?width: 100vw;[\s\S]*?height: 100vh;[\s\S]*?z-index: 9;/.test(css), "cursor-trail layer should cover the viewport above the menu panel");
+assert.ok(/animation: cursor-spark-fade 960ms/.test(css), "cursor sparks should have a slightly longer tail");
+assert.ok(/\.cursor-spark\.tone-cyan/.test(css), "cursor sparks should include an aurora cyan tone");
 assert.ok(cursor.includes("(hover: hover) and (pointer: fine)"), "cursor trail should gate on fine-pointer hover devices");
 assert.ok(cursor.includes("prefers-reduced-motion"), "cursor trail should bail under reduced-motion");
-assert.ok(cursor.includes("MAX_PARTICLES"), "cursor trail should cap concurrent particles");
+assert.ok(cursor.includes("MAX_PARTICLES = 56"), "cursor trail should cap concurrent particles at the refreshed budget");
+assert.ok(cursor.includes("MIN_INTERVAL_MS = 12"), "cursor trail should be responsive enough for quick pointer movement");
+assert.ok(cursor.includes("TRAIL_STEP_PX"), "cursor trail should interpolate particles along fast pointer movement");
+assert.ok(cursor.includes("sharedLayer") && cursor.includes("activeParticles"), "cursor trail should use one shared layer with a global particle budget");
+assert.ok(cursor.includes("container = options.container || document.body"), "cursor trail should render in the body-level viewport overlay");
+assert.ok(/button,[\s\S]*?\.brand h1,[\s\S]*?#touchControls,[\s\S]*?user-select: none;/.test(css), "interactive text should not be selectable during rapid clicks or long press");
 
 assert.ok(eggs.includes("KONAMI"), "easter-eggs script should declare a Konami sequence");
 assert.ok(eggs.includes("Digit5") && eggs.includes("Digit2") && eggs.includes("Digit0"), "easter-eggs script should declare a 5-2-0 number sequence");

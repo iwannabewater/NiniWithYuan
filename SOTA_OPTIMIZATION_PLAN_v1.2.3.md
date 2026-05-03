@@ -37,7 +37,7 @@ The v1.2.3 release is a small menu-surface aesthetic-and-interaction pass. It ke
 ### Pointer Stardust Trail — `src/render/cursor-trail.js` and `styles.css`
 
 - Add a small `NiniYuanCursorTrail` script that hooks `pointermove` on `.menu-heroes` and on the brand `<h1>` only.
-- Spawn at most one `.cursor-spark` particle every 28 ms with up to 32 active particles; each particle drifts up 22 px and fades over 720 ms via the `cursor-spark-fade` keyframe.
+- Spawn `.cursor-spark` particles no more often than every 12 ms, interpolate along fast pointer movement at roughly 18 px intervals, and cap the trail at 56 active particles; each particle drifts up 30-54 px and fades over 960 ms via the `cursor-spark-fade` keyframe.
 - Particles cycle through gold, rose, and jade tones to match Yuan and Nini's palette accents.
 - Skip activation entirely on `(hover: none)` or `(pointer: coarse)` and on `prefers-reduced-motion: reduce`. The trail self-cleans by removing each particle on `animationend`.
 
@@ -58,7 +58,7 @@ The v1.2.3 release is a small menu-surface aesthetic-and-interaction pass. It ke
 
 - Bump `package.json` and `package-lock.json` to `1.2.3`.
 - Bump Android `versionCode` to 6 and `versionName` to `1.2.3`.
-- Bump the service worker cache to `nini-yuan-v1.2.3-starlit-whispers` and add the two new render scripts to the asset list.
+- Bump the service worker cache to `nini-yuan-v1.2.3-starlit-whispers-r2` and add the two new render scripts to the asset list.
 - Update the install-prompt manifest description from the legacy platform-jump phrase to the same star-atlas adventure copy used in the cover.
 
 ### Documentation
@@ -93,7 +93,8 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 
 - chapter cards show gold filled stars, muted empty stars, and a gold tabular best-time value while keeping the v1.2.2 left-aligned copy;
 - the empty viewport zones to the left, right, and below the menu panel are now occupied by a low-opacity ambient layer that disappears as soon as gameplay begins;
-- on desktop, moving the cursor over the cover and the brand title leaves a brief gold/rose/jade stardust trail that does not affect gameplay or persist into the HUD;
+- on desktop, moving the cursor quickly over the cover and the brand title leaves a continuous gold/rose/jade/cyan stardust trail that does not affect gameplay or persist into the HUD;
+- rapid clicking or long-pressing the brand title, menu buttons, and Android touch controls does not create text-selection highlights or WebView callout handles;
 - triggering any one of the six easter eggs surfaces a letter modal, a heart, or a toast and dismisses cleanly without affecting save data or audio routing;
 - the Android APK builds with the new `versionCode` 6 and `versionName` 1.2.3 and the WebView gameplay surface is visually identical to v1.2.2.
 
@@ -120,10 +121,10 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 ### Verification
 
 - `npm test` passed locally on 2026-05-03.
-  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, ambient z-layer above the canvas shell, visible cursor-trail particles on a fine pointer, and functional 520/Konami keyboard surprises.
+  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, ambient z-layer above the canvas shell, visible cursor-trail particles on a fine pointer, non-selectable interaction targets, and functional 520/Konami keyboard surprises.
 - `npm run build:android` passed locally on 2026-05-03 and produced `dist/NiniYuan.apk` (~6.2 MB).
   - APK badging: `versionCode=6`, `versionName=1.2.3`, `compileSdkVersion=36`, `min-sdk-version=23`, `targetSdkVersion=36`.
-  - APK assets contain the updated `service-worker.js` cache name `nini-yuan-v1.2.3-starlit-whispers`, the ambient DOM in `assets/index.html`, and both `assets/src/render/cursor-trail.js` and `assets/src/render/easter-eggs.js`.
+  - APK assets contain the updated `service-worker.js` cache name `nini-yuan-v1.2.3-starlit-whispers-r2`, the ambient DOM in `assets/index.html`, and both `assets/src/render/cursor-trail.js` and `assets/src/render/easter-eggs.js`.
 
 ### Residual Notes
 
@@ -136,3 +137,5 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 - Root cause found during the v1.2.3 review: the ambient DOM existed and its opacity toggled on, but `z-index: 0` placed it behind the full-screen `#shell`/canvas stack; cursor particles were created but their layer sat below the active menu surface; the 520 and Konami letter indices were reversed in `src/render/easter-eggs.js`.
 - Fix applied: ambient now uses `z-index: 2`, `.cursor-trail` is a fixed full-viewport layer at `z-index: 9`, `5 → 2 → 0` opens the first letter, and `↑↑↓↓←→←→ N Y` opens the second letter plus the rose-gold heart.
 - Regression coverage added to `tests/browser-smoke.js` and `tests/menu-polish-v1_2_3.js` so the review checks real pointer movement, real keyboard input, layer ordering, and letter order instead of only checking that scripts and DOM nodes exist.
+- Follow-up interaction polish: the cursor trail now interpolates along fast pointer movement, uses a 960 ms tail with a 56-particle cap, adds a cyan aurora tone, and disables text selection/callout only on rapid-click and long-press targets.
+- The service worker cache key is refreshed to `nini-yuan-v1.2.3-starlit-whispers-r2` so local review browsers that cached the first v1.2.3 build pick up the corrected CSS and render scripts.
