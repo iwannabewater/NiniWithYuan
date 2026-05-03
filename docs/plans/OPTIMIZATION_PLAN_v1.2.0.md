@@ -1,4 +1,4 @@
-# State-of-the-Art Optimization Plan and Completion Record — v1.2.0
+# Optimization Plan and Completion Record — v1.2.0
 
 Version scope: `v1.1.0` to `v1.2.0`
 Baseline commit: `dd847cc`

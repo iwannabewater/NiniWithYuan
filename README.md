@@ -104,6 +104,7 @@ dist/store-assets/
 - [Motion Guide](docs/MOTION.md)
 - [Character Atlas](docs/CHARACTER_ATLAS.md)
 - [Android Testing](docs/ANDROID_TESTING.md)
+- [Optimization Plans](docs/plans/README.md)
 - [Privacy Policy](PRIVACY.md)
 
 ## Privacy

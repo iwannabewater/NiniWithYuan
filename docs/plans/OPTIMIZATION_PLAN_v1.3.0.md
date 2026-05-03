@@ -2,7 +2,7 @@
 
 Version scope: `v1.2.4` to `v1.3.0`
 Baseline commit: `4615216`
-Design spec: `docs/superpowers/specs/2026-05-03-world-2-star-gates-design.md`
+Design spec: `docs/plans/WORLD_2_STAR_GATES_DESIGN.md`
 Date: 2026-05-03
 Repository: `iwannabewater/NiniWithYuan`
 

@@ -2,9 +2,17 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 
+function markdownFiles(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  return entries.flatMap((entry) => {
+    const file = path.join(dir, entry.name);
+    if (entry.isDirectory()) return markdownFiles(file);
+    return entry.isFile() && entry.name.endsWith(".md") ? [file] : [];
+  });
+}
+
 const rootDocs = fs.readdirSync(".").filter((file) => file.endsWith(".md"));
-const docs = fs.readdirSync("docs").map((file) => path.join("docs", file));
-const files = [...rootDocs, ...docs].filter((file) => file.endsWith(".md"));
+const files = [...rootDocs, ...markdownFiles("docs")];
 
 for (const file of files) {
   const source = fs.readFileSync(file, "utf8");

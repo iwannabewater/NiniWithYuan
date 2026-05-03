@@ -210,7 +210,7 @@ Implementation should update:
 - `docs/DESIGN.md`
 - `docs/MOTION.md`
 - `docs/ANDROID_TESTING.md`
-- `SOTA_OPTIMIZATION_PLAN_v1.3.0.md` or equivalent release plan
+- `docs/plans/OPTIMIZATION_PLAN_v1.3.0.md`
 - `package.json` and `package-lock.json`
 - `service-worker.js` cache key
 - `android/app/src/main/AndroidManifest.xml` version metadata
