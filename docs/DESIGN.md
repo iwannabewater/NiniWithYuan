@@ -4,7 +4,7 @@
 
 The visual direction is **Aurora Inkwash · Night Atlas Cinematic**: a hand-bound astronomical atlas, lit at midnight by drifting aurora. Dark indigo vellum, hairline gold cartography, jade and rose witch-light from Yuan and Nini, and warm ivory ink type.
 
-The first viewport must identify three elements: the brushwork title that reveals on entry, the gold-cornered atlas panel framing, and the two characters glowing inside an aurora halo. The release avoids glassmorphism slabs, generic purple-blue gradients, default sans-serif headings, and decorative elements without gameplay meaning.
+The first viewport must identify three elements: the brushwork title that reveals on entry, the gold-cornered atlas panel framing, and the two characters glowing inside an aurora halo with static star-chart detail. The release avoids glassmorphism slabs, generic purple-blue gradients, default sans-serif headings, and decorative elements without gameplay meaning.
 
 The visual language is built up in three orders of depth:
 
@@ -68,7 +68,7 @@ Each touch button is a 50 % radius coin with a tactile inner specular and a deep
 
 ## Layout
 
-Desktop menus use a two-column structure: title and actions on the left, character presentation on the right. Mobile portrait places character presentation above title and actions. Mobile landscape restores a compact two-column structure and reduces the HUD, chapter intro, and touch controls so gameplay visibility is preserved.
+Desktop menus use a two-column structure: title and actions on the left, character presentation on the right. Mobile portrait places character presentation above title and actions. Mobile landscape restores a compact two-column structure and reduces the HUD, chapter intro, and touch controls so gameplay visibility is preserved. Chapter cards keep their copy pinned to a consistent left edge even though they are implemented as buttons.
 
 Fixed controls account for safe areas (`env(safe-area-inset-*)`). Touch buttons render between roughly 72 px (landscape) and 140 px (user maximum). The CSS variable `--touch-size` is JS-controlled at runtime from save settings.
 

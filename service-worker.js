@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.2.1-gameplay-fixes";
+const CACHE = "nini-yuan-v1.2.2-menu-polish";
 const ASSETS = [
   "./",
   "./index.html",

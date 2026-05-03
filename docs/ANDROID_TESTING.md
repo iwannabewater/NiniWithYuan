@@ -39,6 +39,7 @@ Start-Sleep -Seconds 5
 - Character selection works.
 - Touch controls respond with low latency.
 - Landscape gameplay HUD, chapter intro, and touch buttons do not overlap.
+- Main-menu subtitle reads naturally, the cover hero includes subtle star-chart detail without visual crowding, and chapter-card text starts from a consistent left edge across the first four chapters.
 - Chapter 3 and chapter 5 wind fields show clear directional arrows that move with the wind direction, visibly push the player, change landing positions, and remain enterable while holding movement plus jump into the wind on the shared WebView gameplay build.
 - Slime and ember enemies in every chapter keep their feet visually on platform tops, show contact shadow/feet, and patrol the full current platform without stepping beyond its edges; wisp enemies present as flying enemies with a visible hover gap, wing/glow silhouette, tail trail, and no ground feet.
 - BGM starts after entering gameplay, pauses on modal or menu, and respects the BGM volume slider.

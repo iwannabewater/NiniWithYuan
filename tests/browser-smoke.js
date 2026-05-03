@@ -123,6 +123,71 @@ async function run() {
     );
 
     await withPage(
+      "menu polish layout",
+      async (page) => {
+        const menuState = await page.evaluate(() => {
+          const heroDetail = getComputedStyle(document.querySelector(".menu-heroes"), "::after").backgroundImage;
+          return {
+            subtitle: document.querySelector(".brand p").textContent.trim(),
+            description: document.querySelector('meta[name="description"]').content,
+            heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
+          };
+        });
+        if (menuState.subtitle.includes("平台跳跃") || !menuState.subtitle.includes("双角色星图冒险") || menuState.description.includes("平台跳跃") || !menuState.heroHasStarChart) {
+          throw new Error(`Menu copy or star-chart detail invalid: ${JSON.stringify(menuState)}`);
+        }
+
+        await page.getByText("选择关卡").click();
+        await page.waitForTimeout(150);
+        const levelState = await page.evaluate(() => {
+          const cards = [...document.querySelectorAll(".level-item")].slice(0, 4);
+          const offsets = cards.map((card) => {
+            const cardRect = card.getBoundingClientRect();
+            const copyRect = card.querySelector(".level-copy").getBoundingClientRect();
+            const metaRect = card.querySelector(".level-meta").getBoundingClientRect();
+            return {
+              copyLeft: Math.round(copyRect.left - cardRect.left),
+              metaLeft: Math.round(metaRect.left - cardRect.left),
+              copyClass: card.querySelector(".level-copy").className,
+            };
+          });
+          return {
+            visible: document.querySelector("#levelScreen").classList.contains("active"),
+            offsets,
+          };
+        });
+        const copyLefts = levelState.offsets.map((item) => item.copyLeft);
+        const metaLefts = levelState.offsets.map((item) => item.metaLeft);
+        const expectedLeftEdge = (value) => value >= 18 && value <= 24;
+        if (
+          !levelState.visible ||
+          !copyLefts.every(expectedLeftEdge) ||
+          !metaLefts.every(expectedLeftEdge) ||
+          Math.max(...copyLefts) - Math.min(...copyLefts) > 2 ||
+          !levelState.offsets.every((item) => item.copyClass === "level-copy")
+        ) {
+          throw new Error(`Level card text alignment invalid: ${JSON.stringify(levelState)}`);
+        }
+      },
+      {
+        init: () => {
+          localStorage.setItem(
+            "nini-yuan-save-v1",
+            JSON.stringify({
+              schemaVersion: 2,
+              selected: "nini",
+              unlocked: 5,
+              totalCoins: 389,
+              bestTimes: { sakura: 22, moonruin: 15, cloudsea: 19, crystalforge: 16 },
+              levelStars: { sakura: 3, moonruin: 3, cloudsea: 3, crystalforge: 2 },
+              settings: { volume: 70, touch: 98, fx: true, bgmVolume: 60 },
+            })
+          );
+        },
+      }
+    );
+
+    await withPage(
       "mobile controls fit",
       async (page) => {
         await page.getByText("继续冒险").tap();
@@ -212,7 +277,7 @@ async function run() {
       { page: { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
     );
 
-    console.log("browser-smoke: 5 passed");
+    console.log("browser-smoke: 6 passed");
   } finally {
     server.kill();
   }

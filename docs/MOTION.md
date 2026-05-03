@@ -24,7 +24,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | # | Element | Trigger | Behavior |
 | --- | --- | --- | --- |
 | 1 | `.brand h1` | Menu enters | Brushwork title reveal: opacity rises and the title settles over 1.1 s. |
-| 2 | `.menu-heroes::before` | Static | Aurora halo behind the heroes adds color depth without animation or blur filters. |
+| 2 | `.menu-heroes::before/.menu-heroes::after` | Static | Aurora halo and star-chart tracery behind the heroes add color depth without animation or blur filters. |
 | 3 | `.character-card[data-character]::after` | Hover, focus, selected | Character-tinted halo (rose for Nini, jade for Yuan) fades in and lights a gold ring. |
 | 4 | `.level-item.featured::before` | Static | Atlas ring marks the next available chapter with a hairline arc and star core. |
 | 5 | `.touch-btn.jump/.skill/.shoot::before` | Idle | Breath aura ring scales 0.96 -> 1.04 over 3.2 s; cancels instantly on press. |

@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.2
+
+- Updated the main-menu subtitle from the awkward platform-jump phrasing to a shorter star-atlas adventure line across HTML metadata and the visible cover.
+- Fixed chapter-card text alignment by giving level cards explicit left-aligned grid content instead of inheriting the global button centering behavior.
+- Added static star-chart detail to the cover hero area to make the first screen feel richer while keeping the WebView-friendly no-new-asset approach.
+- Bumped the web package to `1.2.2`, Android `versionCode` to 5 / `versionName` to `1.2.2`, and the service worker cache to `nini-yuan-v1.2.2-menu-polish`.
+
 ## v1.2.1
 
 - Fixed chapter 3 and chapter 5 wind fields so they feed into the player's horizontal velocity target instead of applying a low-magnitude post-input acceleration; wind now changes landing positions, remains traversable while walking or jumping into it, shows directional arrows that drift with the current, and is surfaced in the HUD status pill while active.

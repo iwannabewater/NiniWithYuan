@@ -628,6 +628,13 @@
     pointer-events: none;
     border-radius: var(--r-m);
     background:
+      radial-gradient(circle at 18% 24%, rgba(242, 211, 137, 0.72) 0 1.4px, transparent 1.8px),
+      radial-gradient(circle at 28% 36%, rgba(245, 242, 234, 0.52) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 66% 21%, rgba(130, 227, 184, 0.58) 0 1.3px, transparent 1.8px),
+      radial-gradient(circle at 82% 34%, rgba(109, 214, 238, 0.50) 0 1.1px, transparent 1.6px),
+      radial-gradient(circle at 72% 70%, rgba(242, 211, 137, 0.50) 0 1px, transparent 1.5px),
+      linear-gradient(28deg, transparent 0 20%, rgba(242, 211, 137, 0.16) 20.2% 20.5%, transparent 21%),
+      linear-gradient(150deg, transparent 0 61%, rgba(109, 214, 238, 0.14) 61.2% 61.5%, transparent 62%),
       linear-gradient(90deg, transparent, rgba(242, 211, 137, 0.20), transparent) 50% 14% / 78% 1px no-repeat,
       linear-gradient(90deg, transparent, rgba(130, 227, 184, 0.16), transparent) 50% 86% / 72% 1px no-repeat,
       radial-gradient(ellipse 42% 4% at 50% 82%, rgba(0, 0, 0, 0.34), transparent 72%);
@@ -978,9 +985,14 @@
   .level-item {
     position: relative;
     display: grid;
-    align-content: space-between;
+    grid-template-rows: minmax(78px, auto) auto;
+    align-content: stretch;
+    align-items: start;
+    justify-content: stretch;
+    justify-items: start;
+    gap: 10px;
     min-height: 118px;
-    padding: 18px;
+    padding: 20px 22px;
     text-align: left;
     border-radius: var(--r-m);
     background:
@@ -1000,6 +1012,7 @@
     grid-row: span 4;
     min-height: 320px;
     align-content: end;
+    grid-template-rows: auto auto;
     padding: 22px;
     background:
       linear-gradient(180deg, transparent 0 38%, rgba(7, 11, 24, 0.78) 100%),
@@ -1071,11 +1084,23 @@
 
   .level-item strong {
     display: block;
-    margin-bottom: 8px;
+    margin: 0;
     color: var(--ink);
     font-size: 24px;
     line-height: 1.1;
     letter-spacing: 0.01em;
+  }
+
+  .level-copy {
+    display: grid;
+    justify-items: start;
+    gap: 4px;
+    width: 100%;
+  }
+
+  .level-vibe,
+  .level-hint {
+    display: block;
   }
 
   .level-item span {
@@ -1083,7 +1108,9 @@
     line-height: 1.5;
   }
 
-  .level-item span:last-child {
+  .level-meta {
+    display: block;
+    align-self: end;
     color: var(--c-gold-300);
     font-variant-numeric: tabular-nums;
     font-feature-settings: "tnum" 1;
@@ -1956,7 +1983,7 @@
     }
 
     .level-item {
-      padding: 14px;
+      padding: 16px 18px;
     }
 
     .level-item.featured {

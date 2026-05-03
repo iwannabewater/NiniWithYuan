@@ -49,14 +49,14 @@
       button.style.setProperty("--level-banner", levelBanner(level.palette));
 
       const intro = document.createElement("span");
+      intro.className = "level-copy";
       appendText(intro, "strong", level.name);
-      intro.append(document.createTextNode(level.vibe));
-      intro.append(document.createElement("br"));
-      intro.append(document.createTextNode(level.hint));
+      appendText(intro, "span", level.vibe, "level-vibe");
+      appendText(intro, "span", level.hint, "level-hint");
 
       const stars = save.levelStars[level.id] || 0;
       const best = save.bestTimes[level.id] ? formatTime(save.bestTimes[level.id]) : "--:--";
-      appendText(button, "span", `${"★".repeat(stars)}${"☆".repeat(3 - stars)} · 最佳 ${best}`);
+      appendText(button, "span", `${"★".repeat(stars)}${"☆".repeat(3 - stars)} · 最佳 ${best}`, "level-meta");
 
       button.insertBefore(intro, button.firstChild);
       button.addEventListener("click", () => startLevel(i));
