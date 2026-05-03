@@ -86,6 +86,8 @@
   let toastTimer = 0;
   let introTimer = 0;
   let projectiles = [];
+  // v1.2.4 — track HUD state so we can fire one-shot pulses only on real transitions.
+  let hudState = { character: null, cooling: null };
 
   const characters = {
     nini: {
@@ -427,6 +429,7 @@
     projectiles = [];
     camera = { x: 0, y: 0, shake: 0 };
     keys = Object.create(null);
+    hudState = { character: null, cooling: null };
     mode = "play";
     modal.classList.remove("active");
     showScreen("");
@@ -1668,6 +1671,10 @@
       const s = 80 + Math.random() * 420;
       particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: 2 + Math.random() * 4, life: 0.35 + Math.random() * 0.55, max: 0.9, color });
     }
+    // v1.2.4 — single composite-add glow ring on warm pickup bursts so coins feel collected.
+    if (save.settings.fx && (color === "#ffd36d" || color === "#61e5ff" || color === "#fff7d1")) {
+      particles.push({ x, y, vx: 0, vy: 0, r: 18, life: 0.28, max: 0.28, color, glow: true });
+    }
   }
 
   function spawnSpark(x, y, color, count) {
@@ -1698,6 +1705,21 @@
     ctx.save();
     for (const p of particles) {
       ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
+      if (p.glow) {
+        // v1.2.4 — soft additive halo ring for warm pickup bursts.
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        const grd = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r * 1.6);
+        grd.addColorStop(0, p.color);
+        grd.addColorStop(0.55, "rgba(255, 247, 213, 0.45)");
+        grd.addColorStop(1, "rgba(255, 247, 213, 0)");
+        ctx.fillStyle = grd;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 1.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        continue;
+      }
       ctx.fillStyle = p.color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
@@ -1712,10 +1734,18 @@
 
   function renderFloatTexts() {
     ctx.save();
-    ctx.font = "700 20px system-ui, sans-serif";
     ctx.textAlign = "center";
     for (const f of floatTexts) {
-      ctx.globalAlpha = clamp(f.life / 0.8, 0, 1);
+      const alpha = clamp(f.life / 0.8, 0, 1);
+      // v1.2.4 — gilded edge: italic gold underprint at low alpha, then the regular color on top.
+      if (save.settings.fx) {
+        ctx.font = "italic 700 20px system-ui, sans-serif";
+        ctx.globalAlpha = alpha * 0.55;
+        ctx.fillStyle = "#f2d389";
+        ctx.fillText(f.text, f.x + 1, f.y + 1);
+      }
+      ctx.font = "700 20px system-ui, sans-serif";
+      ctx.globalAlpha = alpha;
       ctx.fillStyle = f.color;
       ctx.fillText(f.text, f.x, f.y);
     }
@@ -1727,14 +1757,20 @@
   }
 
   function updateHud() {
-    hudEls.character.textContent = characters[save.selected].name;
+    const characterName = characters[save.selected].name;
+    if (hudState.character !== null && hudState.character !== characterName) Hud.pulseHudPill?.(hudEls.character.parentElement);
+    hudState.character = characterName;
+    hudEls.character.textContent = characterName;
     hudEls.health.textContent = heartLabel(player.health, player.maxHealth);
     hudEls.coins.textContent = player.coins;
     hudEls.ammo.textContent = player.ammo;
     hudEls.time.textContent = formatTime(player.elapsed);
     hudEls.status.textContent = statusLabel();
     hudEls.skill.textContent = skillLabel();
-    hudEls.skill.classList.toggle("cooling", player.skillCd > 0);
+    const cooling = player.skillCd > 0;
+    if (hudState.cooling !== null && hudState.cooling !== cooling) Hud.pulseHudPill?.(hudEls.skill);
+    hudState.cooling = cooling;
+    hudEls.skill.classList.toggle("cooling", cooling);
     const progress = clamp((player.x + player.w / 2) / activeLevel.width, 0, 1);
     hudEls.bar.style.width = `${progress * 100}%`;
   }

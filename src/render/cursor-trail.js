@@ -111,9 +111,53 @@
     };
   }
 
+  function attachHeroParallax(heroes) {
+    if (!heroes) return () => {};
+    if (typeof window === "undefined" || !window.matchMedia) return () => {};
+    const fineHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+    if (!fineHover.matches) return () => {};
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (reduceMotion.matches) return () => {};
+    let pending = false;
+    let nextX = 0;
+    let nextY = 0;
+    const flush = () => {
+      pending = false;
+      heroes.style.setProperty("--mx", nextX.toFixed(3));
+      heroes.style.setProperty("--my", nextY.toFixed(3));
+    };
+    const onMove = (event) => {
+      const rect = heroes.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      nextX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      nextY = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+      if (!pending) {
+        pending = true;
+        window.requestAnimationFrame(flush);
+      }
+    };
+    const onLeave = () => {
+      nextX = 0;
+      nextY = 0;
+      if (!pending) {
+        pending = true;
+        window.requestAnimationFrame(flush);
+      }
+    };
+    heroes.addEventListener("pointermove", onMove);
+    heroes.addEventListener("pointerleave", onLeave);
+    return function detach() {
+      heroes.removeEventListener("pointermove", onMove);
+      heroes.removeEventListener("pointerleave", onLeave);
+    };
+  }
+
   function init() {
     const heroes = document.querySelector(".menu-heroes");
-    if (heroes) attachCursorTrail(heroes);
+    if (heroes) {
+      attachCursorTrail(heroes);
+      attachHeroParallax(heroes);
+    }
     const brand = document.querySelector("#menu .brand h1");
     if (brand) attachCursorTrail(brand);
   }
@@ -126,7 +170,7 @@
     }
   }
 
-  const api = { attachCursorTrail };
+  const api = { attachCursorTrail, attachHeroParallax };
   root.NiniYuanCursorTrail = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -29,8 +29,15 @@
       eyebrow: "Hidden Atlas",
       body: "我们一共要走五个章节，<br/>但每一个都叫——和你在一起。",
       sign: "—— 源源 · 妮妮的护卫"
+    },
+    {
+      eyebrow: "Constellation Found",
+      body: "你把六颗星都点亮了。<br/>原来这一整片夜空，本来就写着你的名字。",
+      sign: "—— 源源 · 收藏在星图最深处"
     }
   ];
+
+  const HUNT_WINDOW_MS = 8000;
 
   function once(fn) {
     let called = false;
@@ -262,6 +269,48 @@
     flashHeart(3200);
   }
 
+  function bindConstellationHunt() {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const sparks = document.querySelectorAll(".ambient .ambient-spark");
+    if (sparks.length < 6) return;
+    document.querySelectorAll(".ambient").forEach((rail) => rail.classList.add("hunt-on"));
+    const found = new Set();
+    let firstAt = 0;
+    let resetTimer = 0;
+    const resetHunt = () => {
+      found.clear();
+      firstAt = 0;
+      window.clearTimeout(resetTimer);
+      resetTimer = 0;
+    };
+    sparks.forEach((spark, index) => {
+      spark.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        if (found.has(index)) return;
+        const now = Date.now();
+        if (!firstAt) firstAt = now;
+        if (now - firstAt > HUNT_WINDOW_MS) {
+          resetHunt();
+          firstAt = now;
+        }
+        found.add(index);
+        spark.classList.remove("lit");
+        // Force reflow so the animation restarts cleanly when the same spark blooms again later.
+        void spark.offsetWidth;
+        spark.classList.add("lit");
+        window.setTimeout(() => spark.classList.remove("lit"), 1500);
+        window.clearTimeout(resetTimer);
+        resetTimer = window.setTimeout(resetHunt, HUNT_WINDOW_MS);
+        if (found.size >= sparks.length) {
+          resetHunt();
+          openLetter(SECRET_LINES[3]);
+          flashHeart(3200);
+        }
+      });
+    });
+  }
+
   const openLetter = (function makeOpener() {
     let instance = null;
     return function open(payload) {
@@ -276,6 +325,7 @@
     bindBrandTaps();
     bindLongPressBrand();
     bindSecretGem();
+    bindConstellationHunt();
     rotateAmbientQuote();
     dateSurprise();
   }
@@ -288,7 +338,7 @@
     }
   }
 
-  const api = { openLetter, flashHeart, showToast, rotateAmbientQuote };
+  const api = { openLetter, flashHeart, showToast, rotateAmbientQuote, bindConstellationHunt };
   root.NiniYuanLove = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

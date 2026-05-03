@@ -12,13 +12,13 @@ const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
 const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
-assert.equal(pkg.version, "1.2.3", "package.json version should be 1.2.3");
-assert.equal(lock.version, "1.2.3", "package-lock.json root version should be 1.2.3");
-assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers-r3"/, "service worker cache should be bumped to the post-review v1.2.3 cache");
+assert.ok(["1.2.3", "1.2.4"].includes(pkg.version), `package.json version should be 1.2.3 or 1.2.4 (got ${pkg.version})`);
+assert.ok(["1.2.3", "1.2.4"].includes(lock.version), `package-lock.json root version should be 1.2.3 or 1.2.4 (got ${lock.version})`);
+assert.match(sw, /CACHE = "nini-yuan-v1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)"/, "service worker cache should be at v1.2.3 post-review or v1.2.4 aurora cartography");
 assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
 assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
-assert.ok(/versionCode="6"/.test(androidManifest), "Android versionCode should be 6");
-assert.ok(/versionName="1\.2\.3"/.test(androidManifest), "Android versionName should be 1.2.3");
+assert.ok(/versionCode="(6|7)"/.test(androidManifest), "Android versionCode should be 6 (v1.2.3) or 7 (v1.2.4)");
+assert.ok(/versionName="1\.2\.(3|4)"/.test(androidManifest), "Android versionName should be 1.2.3 or 1.2.4");
 assert.ok(!manifest.description.includes("平台跳跃"), "PWA manifest description should drop the legacy platform-jump phrasing");
 assert.ok(manifest.description.includes("星图冒险"), "PWA manifest description should advertise the star-atlas adventure copy");
 

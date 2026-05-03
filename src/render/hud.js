@@ -99,7 +99,20 @@
     ].join(", ");
   }
 
-  const api = { renderSaveStrip, renderChapterIntroMeta, renderLevelList };
+  function pulseHudPill(el) {
+    if (!el) return;
+    el.classList.remove("pulse");
+    // Force reflow so the keyframe restarts cleanly when called twice in quick succession.
+    void el.offsetWidth;
+    el.classList.add("pulse");
+    el.addEventListener(
+      "animationend",
+      () => el.classList.remove("pulse"),
+      { once: true }
+    );
+  }
+
+  const api = { renderSaveStrip, renderChapterIntroMeta, renderLevelList, pulseHudPill };
   root.NiniYuanHud = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
