@@ -120,7 +120,7 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 ### Verification
 
 - `npm test` passed locally on 2026-05-03.
-  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, and cursor-trail / easter-egg script registration.
+  - Includes `physics-balance`, `mechanics-balance`, `gameplay-bugfix`, `unit/storage.test`, `character-atlas`, `docs-links`, `render-touch-polish`, the new `menu-polish-v1_2_3`, `ci-workflows`, `android-wrapper`, `audio-bgm`, `pwa-assets`, all four `e2e/*` suites, and the expanded `browser-smoke` (6 scenarios) which now also asserts the gold filled-star color, gold best-time value, ambient streamer / strip / constellation presence, ambient z-layer above the canvas shell, visible cursor-trail particles on a fine pointer, and functional 520/Konami keyboard surprises.
 - `npm run build:android` passed locally on 2026-05-03 and produced `dist/NiniYuan.apk` (~6.2 MB).
   - APK badging: `versionCode=6`, `versionName=1.2.3`, `compileSdkVersion=36`, `min-sdk-version=23`, `targetSdkVersion=36`.
   - APK assets contain the updated `service-worker.js` cache name `nini-yuan-v1.2.3-starlit-whispers`, the ambient DOM in `assets/index.html`, and both `assets/src/render/cursor-trail.js` and `assets/src/render/easter-eggs.js`.
@@ -128,5 +128,11 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 ### Residual Notes
 
 - Manual Android emulator validation remains part of the release gate for store submission because it verifies vendor WebView behavior and device-specific rendering of the ambient layer + easter-egg surfaces.
-- `body:has(.screen.active)` is used to gate ambient visibility. Modern Chromium and current Android-36 WebView support `:has`. Older WebView builds gracefully degrade to "no ambient layer," which keeps gameplay unaffected.
-- The pointer stardust trail is intentionally desktop-only via `(hover: hover) and (pointer: fine)` and is fully off under reduced-motion to keep the WebView gameplay surface untouched.
+- `body:has(.screen.active)` is used to gate ambient visibility, and `body:has(.hud.active)` forces it off with no fade delay once gameplay begins. Modern Chromium and current Android-36 WebView support `:has`. Older WebView builds gracefully degrade to "no ambient layer," which keeps gameplay unaffected. The ambient layer must sit above the full-screen canvas shell and below the active menu panels.
+- The pointer stardust trail is intentionally desktop-only via `(hover: hover) and (pointer: fine)` and is fully off under reduced-motion to keep the WebView gameplay surface untouched. Its rendering layer must cover the viewport above the active menu panel so particles are not hidden by the panel/canvas stacking order.
+
+### Post-Review Correction
+
+- Root cause found during the v1.2.3 review: the ambient DOM existed and its opacity toggled on, but `z-index: 0` placed it behind the full-screen `#shell`/canvas stack; cursor particles were created but their layer sat below the active menu surface; the 520 and Konami letter indices were reversed in `src/render/easter-eggs.js`.
+- Fix applied: ambient now uses `z-index: 2`, `.cursor-trail` is a fixed full-viewport layer at `z-index: 9`, `5 → 2 → 0` opens the first letter, and `↑↑↓↓←→←→ N Y` opens the second letter plus the rose-gold heart.
+- Regression coverage added to `tests/browser-smoke.js` and `tests/menu-polish-v1_2_3.js` so the review checks real pointer movement, real keyboard input, layer ordering, and letter order instead of only checking that scripts and DOM nodes exist.

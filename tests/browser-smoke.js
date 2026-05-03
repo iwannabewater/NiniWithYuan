@@ -71,6 +71,7 @@ async function run() {
           hud: document.querySelector("#overlay").classList.contains("active"),
           menu: document.querySelector("#menu").classList.contains("active"),
           modal: document.querySelector("#modal").classList.contains("active"),
+          ambientHidden: getComputedStyle(document.querySelector(".ambient-left")).opacity === "0" && getComputedStyle(document.querySelector(".ambient-strip")).opacity === "0",
           ammo: Number(document.querySelector("#hudAmmo").textContent),
           skill: document.querySelector("#hudSkill").textContent.trim(),
           intro: document.querySelector("#chapterIntro").classList.contains("active"),
@@ -79,7 +80,7 @@ async function run() {
           pixel,
         };
       });
-      if (!state.hud || state.menu || state.modal || state.ammo >= 14 || !state.skill.includes("技能") || !state.intro || state.characterSpriteDraws <= 0 || state.tips.length < 5 || state.pixel[3] === 0) {
+      if (!state.hud || state.menu || state.modal || !state.ambientHidden || state.ammo >= 14 || !state.skill.includes("技能") || !state.intro || state.characterSpriteDraws <= 0 || state.tips.length < 5 || state.pixel[3] === 0) {
         throw new Error(`Game did not enter playable state: ${JSON.stringify(state)}`);
       }
     });
@@ -133,13 +134,16 @@ async function run() {
             strip: !!document.querySelector(".ambient-strip"),
             constellation: !!document.querySelector(".ambient-right .ambient-constellation"),
           };
+          const ambientStyle = getComputedStyle(document.querySelector(".ambient.ambient-left"));
           const stripStyle = getComputedStyle(document.querySelector(".ambient-strip"));
+          const shellStyle = getComputedStyle(document.querySelector("#shell"));
           return {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
             heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
             ambient,
             ambientStripVisible: stripStyle.opacity !== "0",
+            ambientAboveShell: Number(ambientStyle.zIndex) > Number(shellStyle.zIndex),
             cursorTrailScript: !!document.querySelector('script[src="./src/render/cursor-trail.js"]'),
             easterEggScript: !!document.querySelector('script[src="./src/render/easter-eggs.js"]'),
           };
@@ -154,11 +158,59 @@ async function run() {
           !menuState.ambient.strip ||
           !menuState.ambient.constellation ||
           !menuState.ambientStripVisible ||
+          !menuState.ambientAboveShell ||
           !menuState.cursorTrailScript ||
           !menuState.easterEggScript
         ) {
           throw new Error(`Menu polish layout invalid: ${JSON.stringify(menuState)}`);
         }
+
+        await page.mouse.move(890, 230);
+        await page.waitForTimeout(40);
+        await page.mouse.move(940, 280);
+        await page.waitForTimeout(80);
+        const trailState = await page.evaluate(() => {
+          const layers = [...document.querySelectorAll(".cursor-trail")].map((layer) => {
+            const rect = layer.getBoundingClientRect();
+            const style = getComputedStyle(layer);
+            return { width: rect.width, height: rect.height, zIndex: Number(style.zIndex) };
+          });
+          return {
+            sparks: document.querySelectorAll(".cursor-spark").length,
+            layers,
+            viewport: { width: innerWidth, height: innerHeight },
+          };
+        });
+        if (
+          trailState.sparks < 1 ||
+          !trailState.layers.length ||
+          !trailState.layers.every((layer) => layer.width >= trailState.viewport.width - 1 && layer.height >= trailState.viewport.height - 1 && layer.zIndex >= 9)
+        ) {
+          throw new Error(`Cursor trail did not render above the menu surface: ${JSON.stringify(trailState)}`);
+        }
+
+        for (const key of ["Digit5", "Digit2", "Digit0"]) await page.keyboard.press(key);
+        await page.waitForSelector(".love-letter.show");
+        const numberLetter = await page.locator(".love-letter-sign").textContent();
+        if (!numberLetter.includes("第 520 颗星")) {
+          throw new Error(`520 code opened the wrong letter: ${numberLetter}`);
+        }
+        await page.locator(".love-letter-close").click();
+        await page.waitForSelector(".love-letter", { state: "detached" });
+
+        for (const key of ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "KeyN", "KeyY"]) {
+          await page.keyboard.press(key);
+        }
+        await page.waitForSelector(".love-letter.show");
+        const konamiState = await page.evaluate(() => ({
+          sign: document.querySelector(".love-letter-sign")?.textContent.trim(),
+          hearts: document.querySelectorAll(".love-heart.show").length,
+        }));
+        if (konamiState.sign !== "—— 源源" || konamiState.hearts < 1) {
+          throw new Error(`Konami code should open the second letter and heart: ${JSON.stringify(konamiState)}`);
+        }
+        await page.keyboard.press("Escape");
+        await page.waitForSelector(".love-letter", { state: "detached" });
 
         await page.getByText("选择关卡").click();
         await page.waitForTimeout(150);

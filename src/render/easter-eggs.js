@@ -154,7 +154,7 @@
         konamiCursor += 1;
         if (konamiCursor === KONAMI.length) {
           konamiCursor = 0;
-          openLetter(SECRET_LINES[0]);
+          openLetter(SECRET_LINES[1]);
           flashHeart();
         }
       } else {
@@ -164,7 +164,7 @@
         numberCursor += 1;
         if (numberCursor === NUMBER_CODE.length) {
           numberCursor = 0;
-          openLetter(SECRET_LINES[1]);
+          openLetter(SECRET_LINES[0]);
         }
       } else {
         numberCursor = code === NUMBER_CODE[0] ? 1 : 0;

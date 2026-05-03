@@ -245,7 +245,7 @@
   .ambient,
   .ambient-strip {
     position: fixed;
-    z-index: 0;
+    z-index: 2;
     pointer-events: none;
     color: var(--ink-muted);
     opacity: 0;
@@ -255,6 +255,12 @@
   body:has(.screen.active) .ambient,
   body:has(.screen.active) .ambient-strip {
     opacity: 1;
+  }
+
+  body:has(.hud.active) .ambient,
+  body:has(.hud.active) .ambient-strip {
+    opacity: 0;
+    transition-duration: 0ms;
   }
 
   .ambient {
@@ -449,7 +455,10 @@
   /* Pointer trail used by cursor-trail.js */
   .cursor-trail {
     position: fixed;
-    z-index: 4;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9;
     pointer-events: none;
     contain: layout paint;
   }

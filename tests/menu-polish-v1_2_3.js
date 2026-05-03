@@ -40,6 +40,8 @@ assert.ok(html.includes('id="ambientQuote"'), "index.html should expose ambientQ
 assert.ok(html.includes('class="ambient-constellation"'), "right ambient rail should include the connected constellation glyph");
 
 assert.ok(/body:has\(\.screen\.active\) \.ambient,[\s\S]*\.ambient-strip\s*{\s*opacity: 1;/.test(css), "ambient layer should reveal only when a menu screen is active");
+assert.ok(/body:has\(\.hud\.active\) \.ambient,[\s\S]*?transition-duration: 0ms;/.test(css), "ambient layer should hide immediately during gameplay");
+assert.ok(/\.ambient,[\s\S]*?\.ambient-strip\s*{[\s\S]*?z-index: 2;/.test(css), "ambient layer should sit above the full-screen canvas shell");
 assert.ok(/@media \(pointer: coarse\), \(max-width: 900px\) {[\s\S]*?\.ambient {\s*display: none;/.test(css), "side ambient rails should hide on coarse pointer / narrow viewport");
 assert.ok(/@keyframes ambient-drift/.test(css), "ambient-drift keyframe should exist");
 assert.ok(/@keyframes ambient-twinkle/.test(css), "ambient-twinkle keyframe should exist");
@@ -49,6 +51,7 @@ assert.ok(html.includes('src="./src/render/cursor-trail.js"'), "index.html shoul
 assert.ok(html.includes('src="./src/render/easter-eggs.js"'), "index.html should load easter-eggs.js");
 assert.ok(/@keyframes cursor-spark-fade/.test(css), "cursor-spark-fade keyframe should exist");
 assert.ok(/\.cursor-trail\s*{[\s\S]*?pointer-events: none;/.test(css), "cursor-trail layer should ignore pointer events");
+assert.ok(/\.cursor-trail\s*{[\s\S]*?inset: 0;[\s\S]*?width: 100vw;[\s\S]*?height: 100vh;[\s\S]*?z-index: 9;/.test(css), "cursor-trail layer should cover the viewport above the menu panel");
 assert.ok(cursor.includes("(hover: hover) and (pointer: fine)"), "cursor trail should gate on fine-pointer hover devices");
 assert.ok(cursor.includes("prefers-reduced-motion"), "cursor trail should bail under reduced-motion");
 assert.ok(cursor.includes("MAX_PARTICLES"), "cursor trail should cap concurrent particles");
@@ -59,6 +62,8 @@ assert.ok(eggs.includes("flashHeart"), "easter-eggs script should expose the fla
 assert.ok(eggs.includes("openLetter"), "easter-eggs script should expose the openLetter helper");
 assert.ok(eggs.includes("rotateAmbientQuote"), "easter-eggs script should rotate the ambient quote line");
 assert.ok(eggs.includes("dateSurprise"), "easter-eggs script should declare a calendar trigger");
+assert.ok(/konamiCursor === KONAMI\.length\)[\s\S]*?openLetter\(SECRET_LINES\[1\]\);[\s\S]*?flashHeart/.test(eggs), "Konami should open the second letter and flash the heart");
+assert.ok(/numberCursor === NUMBER_CODE\.length\)[\s\S]*?openLetter\(SECRET_LINES\[0\]\);/.test(eggs), "520 should open the first letter");
 assert.ok(/@keyframes love-heart-beat/.test(css), "love-heart-beat keyframe should exist");
 assert.ok(/\.love-letter,[\s\S]*?\.love-heart,[\s\S]*?\.love-toast\s*{[\s\S]*?z-index: 60;/.test(css), "love overlays should share z-index 60 above the menu");
 assert.ok(/\.love-letter\.show,[\s\S]*?\.love-heart\.show,[\s\S]*?\.love-toast\.show\s*{\s*opacity: 1;/.test(css), "love overlays should reveal via .show opacity 1");

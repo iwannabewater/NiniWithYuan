@@ -71,7 +71,7 @@ Outside the central panel, three fixed decorative regions reclaim the empty view
 - `.ambient-left` and `.ambient-right` — vertical aurora streamers, three drifting calligraphic rune marks per side (gold, jade, rose) at low opacity, three twinkling sparks, and a small connected six-star constellation glyph on the right.
 - `.ambient-strip` — a hairline-divided footer placard with a gold star mark, a version-and-scope chip in caps, a rotating star-quote line (italic ink-soft), and a copyright credit.
 
-Visibility is gated by `body:has(.screen.active)`. Mobile portrait hides the side rails; mobile landscape keeps a compact strip. Reduced-motion stops all decorative ambient animation.
+Visibility is gated by `body:has(.screen.active)` and forced off immediately under `body:has(.hud.active)`. The layer sits above the full-screen attract canvas and below the menu panels, HUD, modal, and love overlays. Mobile portrait hides the side rails; mobile landscape keeps a compact strip. Reduced-motion stops all decorative ambient animation.
 
 ### Touch Controls
 
@@ -96,6 +96,8 @@ Motion uses `transform` and `opacity`. Expensive full-screen animated filters, m
 - `ambient-constellation-pulse` — connected six-star glyph pulse, 8 s ease-soft infinite.
 - `cursor-spark-fade` — pointer stardust trail particle lift-and-fade, 720 ms ease-out forwards.
 - `love-heart-beat` — easter-egg constellation heart, 1.6 s ease-soft infinite while shown.
+
+The pointer stardust layer is a fixed full-viewport overlay above the active menu panel, with pointer events disabled. It is scoped by JS to pointer movement over `.menu-heroes` and `#menu .brand h1`, so the particles can escape their source boxes without affecting gameplay hit targets.
 
 Under `prefers-reduced-motion: reduce`, animation and transition durations collapse to ~0 ms; touch breath is hidden and the aurora remains static.
 
