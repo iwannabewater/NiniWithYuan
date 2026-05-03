@@ -12,13 +12,13 @@ const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
 const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
-assert.ok(["1.2.3", "1.2.4", "1.3.0"].includes(pkg.version), `package.json version should be 1.2.3, 1.2.4, or 1.3.0 (got ${pkg.version})`);
-assert.ok(["1.2.3", "1.2.4", "1.3.0"].includes(lock.version), `package-lock.json root version should be 1.2.3, 1.2.4, or 1.3.0 (got ${lock.version})`);
-assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)|1\.3\.0-world-2-star-gates)"/, "service worker cache should be at v1.2.3 post-review, v1.2.4, or v1.3.0");
+assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1"].includes(pkg.version), `package.json version should be 1.2.3, 1.2.4, 1.3.0, or 1.3.1 (got ${pkg.version})`);
+assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1"].includes(lock.version), `package-lock.json root version should be 1.2.3, 1.2.4, 1.3.0, or 1.3.1 (got ${lock.version})`);
+assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)|1\.3\.(0-world-2-star-gates|1-typography-copy-fix))"/, "service worker cache should be at v1.2.3 post-review, v1.2.4, v1.3.0, or v1.3.1");
 assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
 assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
-assert.ok(/versionCode="(6|7|8)"/.test(androidManifest), "Android versionCode should be 6 (v1.2.3), 7 (v1.2.4), or 8 (v1.3.0)");
-assert.ok(/versionName="(1\.2\.(3|4)|1\.3\.0)"/.test(androidManifest), "Android versionName should be 1.2.3, 1.2.4, or 1.3.0");
+assert.ok(/versionCode="(6|7|8|9)"/.test(androidManifest), "Android versionCode should be 6, 7, 8, or 9");
+assert.ok(/versionName="(1\.2\.(3|4)|1\.3\.(0|1))"/.test(androidManifest), "Android versionName should be 1.2.3, 1.2.4, 1.3.0, or 1.3.1");
 assert.ok(!manifest.description.includes("平台跳跃"), "PWA manifest description should drop the legacy platform-jump phrasing");
 assert.ok(manifest.description.includes("星图冒险"), "PWA manifest description should advertise the star-atlas adventure copy");
 

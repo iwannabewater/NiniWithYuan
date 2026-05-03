@@ -122,5 +122,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.2.1: focused gameplay fixes for chapter 3/5 wind fields, grounded enemy patrols, and flying wisp readability, plus regression coverage.
 - v1.2.2: cover copy, chapter-card alignment, and static menu star-chart polish.
 - v1.3.0: World 2 content expansion with three star-gate chapters, world-grouped chapter select, and save-compatible eight-chapter release metadata.
+- v1.3.1: typography and copy bugfix pass for local WenKai glyph coverage, shared DOM/Canvas font usage, count-free current scope copy, and Chinese easter-egg overlays.
 - Future release: production character sprite sheets, expanded enemy variants, or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

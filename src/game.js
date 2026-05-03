@@ -54,6 +54,7 @@
   const WIND_ARROW_SPACING = 72;
   const WIND_ARROW_SPEED = 18;
   const PORTAL_COOLDOWN = 0.34;
+  const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const snap = (n) => Math.round(n);
@@ -1991,12 +1992,12 @@
       const alpha = clamp(f.life / 0.8, 0, 1);
       // v1.2.4 — gilded edge: italic gold underprint at low alpha, then the regular color on top.
       if (save.settings.fx) {
-        ctx.font = "italic 700 20px system-ui, sans-serif";
+        ctx.font = `italic 700 20px ${CANVAS_FONT_FAMILY}`;
         ctx.globalAlpha = alpha * 0.55;
         ctx.fillStyle = "#f2d389";
         ctx.fillText(f.text, f.x + 1, f.y + 1);
       }
-      ctx.font = "700 20px system-ui, sans-serif";
+      ctx.font = `700 20px ${CANVAS_FONT_FAMILY}`;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = f.color;
       ctx.fillText(f.text, f.x, f.y);

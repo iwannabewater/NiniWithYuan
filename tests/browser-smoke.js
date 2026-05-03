@@ -140,7 +140,7 @@ async function run() {
           return {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
-            eightChapterCopy: document.querySelector(".brand p").textContent.includes("八大章节") && document.querySelector('meta[name="description"]').content.includes("八大章节"),
+            chapterScopeCopy: document.querySelector(".brand p").textContent.includes("多世界章节") && document.querySelector('meta[name="description"]').content.includes("多世界章节"),
             heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
             ambient,
             ambientStripVisible: stripStyle.opacity !== "0",
@@ -154,7 +154,7 @@ async function run() {
           !menuState.subtitle.includes("双角色星图冒险") ||
           menuState.description.includes("平台跳跃") ||
           !menuState.heroHasStarChart ||
-          !menuState.eightChapterCopy ||
+          !menuState.chapterScopeCopy ||
           !menuState.ambient.left ||
           !menuState.ambient.right ||
           !menuState.ambient.strip ||

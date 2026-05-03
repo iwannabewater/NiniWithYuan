@@ -17,6 +17,7 @@ const checks = [
   ["node", ["tests/menu-polish-v1_2_3.js"]],
   ["node", ["tests/aesthetic-polish-v1_2_4.js"]],
   ["node", ["tests/content-expansion-v1_3_0.js"]],
+  ["node", ["tests/typography-copy-v1_3_1.js"]],
   ["node", ["tests/ci-workflows.js"]],
   ["node", ["tests/android-wrapper.js"]],
   ["node", ["tests/audio-bgm.js"]],

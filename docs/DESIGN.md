@@ -40,6 +40,8 @@ Surface tokens (`--panel`, `--panel-strong`, `--chip`, `--line`, `--line-strong`
 
 The local subset files are `assets/fonts/lxgw-wenkai-500.woff2` and `assets/fonts/lxgw-wenkai-700.woff2` and are preloaded in `index.html`.
 
+All DOM UI and Canvas float text use the same LXGW WenKai-led stack through `--font-ui`, `--font-canvas`, and `CANVAS_FONT_FAMILY`. The local 500/700 subsets are generated from the current runtime text surface, so chapter-select headings, world subtitles, modal copy, HUD labels, Canvas float text, and easter-egg messages do not fall back mid-phrase for missing Chinese glyphs. Current user-facing scope copy avoids hard-coded chapter counts, so menu metadata, ambient-strip text, and easter eggs do not drift when future chapters are added.
+
 ## Components
 
 ### Panels

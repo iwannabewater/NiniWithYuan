@@ -11,6 +11,7 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.2.3 starlit whispers plan](OPTIMIZATION_PLAN_v1.2.3.md)
 - [v1.2.4 aurora cartography plan](OPTIMIZATION_PLAN_v1.2.4.md)
 - [v1.3.0 world 2 star gates plan](OPTIMIZATION_PLAN_v1.3.0.md)
+- [v1.3.1 typography and copy bugfix plan](OPTIMIZATION_PLAN_v1.3.1.md)
 
 ## Design Specs
 

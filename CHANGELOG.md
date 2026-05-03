@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.3.1
+
+- Fixed mixed-font presentation on in-game canvas float text by using the same LXGW WenKai-led font stack as the DOM UI.
+- Rebuilt the local LXGW WenKai 500/700 subsets from the full source font so current UI copy, including World 2 chapter names and world subtitles, no longer falls back mid-sentence for missing Chinese glyphs.
+- Generalized current user-facing chapter-scope copy from a hard-coded chapter count to `多世界章节` across visible menu/install metadata, so future chapter expansions do not need another wording pass.
+- Updated Yuan-to-Nini easter-egg copy to remove hard-coded chapter counts and replaced English eyebrows/toasts with Chinese text for a more consistent visual voice.
+- Bumped the web package to `1.3.1`, Android `versionCode` to 9 / `versionName` to `1.3.1`, and the service worker cache to `nini-yuan-v1.3.1-typography-copy-fix`.
+- Added typography/copy regression coverage to guard the shared font stack, Canvas font usage, local Chinese glyph coverage, and count-free current UI/easter-egg copy.
+
 ## v1.3.0
 
 - Added World 2, **星门群岛**, with three handcrafted chapters: 第六章 星门浅湾, 第七章 回环灯塔, and 第八章 星环温室. The original five chapters are now grouped as World 1, **第一星域 破碎星图**.

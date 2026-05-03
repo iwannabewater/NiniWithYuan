@@ -65,4 +65,7 @@ Start-Sleep -Seconds 5
 - v1.3.0 — finishing chapter 5 unlocks chapter 6; existing completed-Aurora-Citadel saves open World 2, while saves that only unlocked chapter 5 still ask the player to finish chapter 5.
 - v1.3.0 — each World 2 chapter contains paired star gates. Entering one gate moves the player to its pair, preserves movement direction and momentum, avoids wall/solid overlap, and shows a short `星门` cue.
 - v1.3.0 — chapter 8 combines gates, wind, moving platforms, and crystals without HUD/control overlap in Android landscape.
-- v1.3.0 — menu/install metadata reads `八大章节`, and the APK badging reports `versionCode=8` / `versionName=1.3.0`.
+- v1.3.0 — menu/install metadata reflects the expanded chapter scope, and the APK badging reports `versionCode=8` / `versionName=1.3.0`.
+- v1.3.1 — menu/install metadata reads `多世界章节`; Yuan-to-Nini easter-egg copy no longer mentions a fixed chapter count, and Canvas float text uses the same WenKai-led typography as the DOM UI.
+- v1.3.1 — chapter-select world subtitles and World 2 chapter names render without mixed Chinese font fallback, especially `五枚心石碎片`, `星门重新接合路线`, `星门浅湾`, `回环灯塔`, and `星环温室`.
+- v1.3.1 — APK badging reports `versionCode=9` / `versionName=1.3.1`.

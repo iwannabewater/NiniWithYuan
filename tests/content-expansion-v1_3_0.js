@@ -19,11 +19,11 @@ const levels = new Function(
   `const TILE = 48; const ENEMY_WIDTH = 38; const ENEMY_HEIGHT = 34; const WISP_FLOAT_GAP = 24; const WISP_HOVER_RANGE = 6; ${game.slice(buildStart, buildEnd)}; return buildLevels();`
 )();
 
-assert.equal(pkg.version, "1.3.0", "package.json should be bumped to 1.3.0");
-assert.equal(lock.version, "1.3.0", "package-lock.json root version should be bumped to 1.3.0");
-assert.match(sw, /CACHE = "nini-yuan-v1\.3\.0-world-2-star-gates"/, "service worker cache should be the v1.3.0 world-2 key");
-assert.ok(/versionCode="8"/.test(androidManifest), "Android versionCode should be 8");
-assert.ok(/versionName="1\.3\.0"/.test(androidManifest), "Android versionName should be 1.3.0");
+assert.ok(["1.3.0", "1.3.1"].includes(pkg.version), "package.json should be on the v1.3.x line");
+assert.ok(["1.3.0", "1.3.1"].includes(lock.version), "package-lock.json root version should be on the v1.3.x line");
+assert.match(sw, /CACHE = "nini-yuan-v1\.3\.(0-world-2-star-gates|1-typography-copy-fix)"/, "service worker cache should be on the v1.3.x line");
+assert.ok(/versionCode="(8|9)"/.test(androidManifest), "Android versionCode should be 8 or 9 on the v1.3.x line");
+assert.ok(/versionName="1\.3\.(0|1)"/.test(androidManifest), "Android versionName should be 1.3.0 or 1.3.1");
 
 assert.equal(levels.length, 8, "v1.3.0 should ship eight chapters");
 assert.deepEqual(
@@ -48,7 +48,7 @@ assert.ok(/\.level-item\.featured\s*{[\s\S]*?grid-column: span 2/.test(css), "fe
 assert.ok(storage.includes("DEFAULT_LEVEL_COUNT = 8"), "storage default level count should be updated to 8");
 assert.ok(storage.includes("bestTimes.auroracitadel") && storage.includes("levelStars.auroracitadel"), "storage should derive chapter 6 access from old chapter 5 completion");
 
-assert.ok(html.includes("八大章节"), "index.html visible and metadata copy should mention eight chapters");
-assert.ok(manifest.description.includes("八大章节"), "PWA manifest should mention eight chapters");
+assert.ok(html.includes("多世界章节"), "index.html visible and metadata copy should use count-free chapter scope copy");
+assert.ok(manifest.description.includes("多世界章节"), "PWA manifest should use count-free chapter scope copy");
 
 console.log("content-expansion-v1.3.0: World 2 content, metadata, UI grouping, and save compatibility guards passed");

@@ -14,11 +14,11 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 // --- version metadata --------------------------------------------------------
 
-assert.ok(["1.2.4", "1.3.0"].includes(pkg.version), "package.json should be at least v1.2.4");
-assert.ok(["1.2.4", "1.3.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
-assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.0-world-2-star-gates)"/, "service worker cache should be v1.2.4 or v1.3.0");
-assert.ok(/versionCode="(7|8)"/.test(androidManifest), "Android versionCode should be 7 or 8");
-assert.ok(/versionName="(1\.2\.4|1\.3\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 or 1.3.0");
+assert.ok(["1.2.4", "1.3.0", "1.3.1"].includes(pkg.version), "package.json should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0", "1.3.1"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
+assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix))"/, "service worker cache should be v1.2.4, v1.3.0, or v1.3.1");
+assert.ok(/versionCode="(7|8|9)"/.test(androidManifest), "Android versionCode should be 7, 8, or 9");
+assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1))"/.test(androidManifest), "Android versionName should be 1.2.4, 1.3.0, or 1.3.1");
 
 // --- new keyframes -----------------------------------------------------------
 
@@ -105,7 +105,7 @@ assert.ok(/\.settings-list label\[data-rune\]::after\s*{[\s\S]*?linear-gradient\
 
 assert.ok(eggs.includes("bindConstellationHunt"), "easter-eggs.js should expose bindConstellationHunt");
 assert.ok(eggs.includes("SECRET_LINES[3]"), "easter-eggs.js should reference the fourth letter index");
-assert.ok(/Constellation Found/.test(eggs), "fourth letter should carry the Constellation Found eyebrow");
+assert.ok(/星座已点亮/.test(eggs), "fourth letter should carry the Chinese constellation-found eyebrow");
 assert.ok(/HUNT_WINDOW_MS\s*=\s*15000/.test(eggs), "constellation-hunt window should be pinned at 15 seconds");
 assert.ok(/\.ambient-spark\.lit\s*{[\s\S]*?animation: spark-lit 1400ms/.test(css), "ambient sparks should animate spark-lit when discovered");
 assert.ok(/@media \(hover: hover\) and \(pointer: fine\) {[\s\S]*?\.ambient\.hunt-on \.ambient-spark\s*{[\s\S]*?pointer-events: auto;/.test(css), "ambient sparks should only become clickable on fine-pointer surfaces with .hunt-on");
@@ -114,8 +114,8 @@ assert.ok(/@media \(hover: hover\) and \(pointer: fine\) {[\s\S]*?\.ambient\.hun
 
 assert.ok(game.includes("glow: true"), "game.js burst should push a glow particle for warm pickup bursts");
 assert.ok(/globalCompositeOperation = "lighter"/.test(game), "game.js renderParticles should composite glow particles with lighter blend");
-assert.ok(game.includes('italic 700 20px system-ui'), "game.js renderFloatTexts should draw an italic gold underprint for gilded text");
-assert.ok(game.includes("save.settings.fx") && /if \(save\.settings\.fx\) {[\s\S]*?italic 700 20px/.test(game), "gilded float-text should be guarded by the FX toggle");
+assert.ok(game.includes("CANVAS_FONT_FAMILY"), "game.js renderFloatTexts should use the shared Canvas font family");
+assert.ok(game.includes("save.settings.fx") && /if \(save\.settings\.fx\) {[\s\S]*?italic 700 20px \$\{CANVAS_FONT_FAMILY\}/.test(game), "gilded float-text should be guarded by the FX toggle");
 
 // --- reduced-motion contract -------------------------------------------------
 

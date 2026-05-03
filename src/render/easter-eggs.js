@@ -10,28 +10,28 @@
     "如果星图里的每颗星都是我想你的瞬间…",
     "源源在风里说，妮妮永远不会一个人闯。",
     "把这一夜的极光，都做成你的回家路。",
-    "走完五大章节，就来听我说一句小秘密。",
+    "走完整片星图，就来听我说一句小秘密。",
     "你跳得高，我接你；你掉下来，我也接你。",
     "妮妮，你笑的样子比星露还甜。"
   ];
   const SECRET_LINES = [
     {
-      eyebrow: "Yuan to Nini",
+      eyebrow: "源源给妮妮",
       body: "妮妮，把你想去的那颗星指给我看，<br/>这一整张星图都给你重新点亮。",
       sign: "—— 源源 · 写在第 520 颗星里"
     },
     {
-      eyebrow: "Y · N",
+      eyebrow: "星图密语",
       body: "如果有一天极光不亮了，<br/>我就把它揉成你最爱的星露糖。",
       sign: "—— 源源"
     },
     {
-      eyebrow: "Hidden Atlas",
-      body: "我们一共要走五个章节，<br/>但每一个都叫——和你在一起。",
+      eyebrow: "藏在星图里",
+      body: "我们还要一起走很远很远的路，<br/>每一站都叫——和你在一起。",
       sign: "—— 源源 · 妮妮的护卫"
     },
     {
-      eyebrow: "Constellation Found",
+      eyebrow: "星座已点亮",
       body: "你把六颗星都点亮了。<br/>原来这一整片夜空，本来就写着你的名字。",
       sign: "—— 源源 · 收藏在星图最深处"
     }
@@ -190,7 +190,7 @@
         yyCursor += 1;
         if (yyCursor === yyPattern.length) {
           yyCursor = 0;
-          showToast("Y · N · Y · N — 源源在这里", 2200);
+          showToast("源 · 妮 · 源 · 妮——源源在这里", 2200);
         }
       } else {
         yyCursor = code === yyPattern[0] ? 1 : 0;
@@ -226,7 +226,7 @@
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
         flashHeart(3200);
-        showToast("Yuan ❤ Nini", 2200);
+        showToast("源源 ❤ 妮妮", 2200);
       }, 1500);
     };
     const cancel = () => { window.clearTimeout(timer); };

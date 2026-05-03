@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.3.0 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, and Aurora Cartography interaction pass, then adds the **World 2: 星门群岛** content expansion: three new handcrafted chapters, paired star-gate traversal, world-grouped chapter select cards, eight-chapter metadata, and save compatibility for existing v1.2.x players. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, eight handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.3.1 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, Aurora Cartography interaction pass, and **World 2: 星门群岛** content expansion, then applies a typography/copy bugfix pass across menu, HUD, level select, modals, Canvas float text, install metadata, local WenKai font subsets, and Yuan-to-Nini easter eggs. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, eight handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
 ## Gameplay
 
@@ -44,7 +44,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.3.0 expansion adds `tests/content-expansion-v1_3_0.js` and `tests/portal-mechanics-v1_3_0.js` for world grouping, eight-chapter metadata, save compatibility, and safe portal authoring.
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.3.x expansion adds content, portal, and typography/copy regression files for world grouping, save compatibility, safe portal authoring, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy.
 
 ## Android APK
 

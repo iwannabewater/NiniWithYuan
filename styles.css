@@ -1,5 +1,5 @@
 /* ============================================================================
-   Nini & Yuan v1.3.0 — "Aurora Inkwash · Night Atlas Cinematic"
+   Nini & Yuan v1.3.1 — "Aurora Inkwash · Night Atlas Cinematic"
    v1.2.0 visual shell + v1.2.3 ambient/cursor/easter-egg layer + v1.2.4
    Aurora Cartography polish + World 2 Star Gates expansion.
    Pure visual layer. Every selector, ID, data-attribute, and CSS custom
@@ -31,7 +31,9 @@
 @layer tokens {
   :root {
     color-scheme: dark;
-    font-family: "LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+    --font-ui: "LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", system-ui, sans-serif;
+    --font-canvas: "LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif;
+    font-family: var(--font-ui);
     background: #07090f;
 
     /* Night ramp — page ground to chip surface */
@@ -188,6 +190,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+
+  body,
+  button,
+  input {
+    font-family: var(--font-ui);
   }
 
   button,
