@@ -56,7 +56,34 @@
 
       const stars = save.levelStars[level.id] || 0;
       const best = save.bestTimes[level.id] ? formatTime(save.bestTimes[level.id]) : "--:--";
-      appendText(button, "span", `${"★".repeat(stars)}${"☆".repeat(3 - stars)} · 最佳 ${best}`, "level-meta");
+      const meta = document.createElement("span");
+      meta.className = "level-meta";
+      const starGroup = document.createElement("span");
+      starGroup.className = "level-stars";
+      starGroup.setAttribute("aria-label", `星级 ${stars} / 3`);
+      for (let s = 0; s < 3; s += 1) {
+        const star = document.createElement("span");
+        star.className = `star ${s < stars ? "filled" : "empty"}`;
+        star.textContent = s < stars ? "★" : "☆";
+        starGroup.appendChild(star);
+      }
+      meta.appendChild(starGroup);
+      const sep = document.createElement("span");
+      sep.className = "level-sep";
+      sep.textContent = "·";
+      meta.appendChild(sep);
+      const bestGroup = document.createElement("span");
+      bestGroup.className = "level-best";
+      const bestLabel = document.createElement("span");
+      bestLabel.className = "level-best-label";
+      bestLabel.textContent = "最佳";
+      const bestValue = document.createElement("strong");
+      bestValue.className = "level-best-value";
+      bestValue.textContent = best;
+      bestGroup.appendChild(bestLabel);
+      bestGroup.appendChild(bestValue);
+      meta.appendChild(bestGroup);
+      button.appendChild(meta);
 
       button.insertBefore(intro, button.firstChild);
       button.addEventListener("click", () => startLevel(i));

@@ -127,14 +127,37 @@ async function run() {
       async (page) => {
         const menuState = await page.evaluate(() => {
           const heroDetail = getComputedStyle(document.querySelector(".menu-heroes"), "::after").backgroundImage;
+          const ambient = {
+            left: !!document.querySelector(".ambient.ambient-left .ambient-streamer"),
+            right: !!document.querySelector(".ambient.ambient-right .ambient-streamer"),
+            strip: !!document.querySelector(".ambient-strip"),
+            constellation: !!document.querySelector(".ambient-right .ambient-constellation"),
+          };
+          const stripStyle = getComputedStyle(document.querySelector(".ambient-strip"));
           return {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
             heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
+            ambient,
+            ambientStripVisible: stripStyle.opacity !== "0",
+            cursorTrailScript: !!document.querySelector('script[src="./src/render/cursor-trail.js"]'),
+            easterEggScript: !!document.querySelector('script[src="./src/render/easter-eggs.js"]'),
           };
         });
-        if (menuState.subtitle.includes("平台跳跃") || !menuState.subtitle.includes("双角色星图冒险") || menuState.description.includes("平台跳跃") || !menuState.heroHasStarChart) {
-          throw new Error(`Menu copy or star-chart detail invalid: ${JSON.stringify(menuState)}`);
+        if (
+          menuState.subtitle.includes("平台跳跃") ||
+          !menuState.subtitle.includes("双角色星图冒险") ||
+          menuState.description.includes("平台跳跃") ||
+          !menuState.heroHasStarChart ||
+          !menuState.ambient.left ||
+          !menuState.ambient.right ||
+          !menuState.ambient.strip ||
+          !menuState.ambient.constellation ||
+          !menuState.ambientStripVisible ||
+          !menuState.cursorTrailScript ||
+          !menuState.easterEggScript
+        ) {
+          throw new Error(`Menu polish layout invalid: ${JSON.stringify(menuState)}`);
         }
 
         await page.getByText("选择关卡").click();
@@ -145,10 +168,18 @@ async function run() {
             const cardRect = card.getBoundingClientRect();
             const copyRect = card.querySelector(".level-copy").getBoundingClientRect();
             const metaRect = card.querySelector(".level-meta").getBoundingClientRect();
+            const filled = card.querySelector(".level-stars .star.filled");
+            const bestValue = card.querySelector(".level-best-value");
+            const filledColor = filled ? getComputedStyle(filled).color : "";
+            const bestColor = bestValue ? getComputedStyle(bestValue).color : "";
             return {
               copyLeft: Math.round(copyRect.left - cardRect.left),
               metaLeft: Math.round(metaRect.left - cardRect.left),
               copyClass: card.querySelector(".level-copy").className,
+              hasStars: !!card.querySelector(".level-stars"),
+              hasBestValue: !!bestValue,
+              filledColor,
+              bestColor,
             };
           });
           return {
@@ -159,14 +190,31 @@ async function run() {
         const copyLefts = levelState.offsets.map((item) => item.copyLeft);
         const metaLefts = levelState.offsets.map((item) => item.metaLeft);
         const expectedLeftEdge = (value) => value >= 18 && value <= 24;
+        const isGoldish = (color) => {
+          if (!color) return false;
+          const rgb = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
+          if (rgb) {
+            const [, r, g, b] = rgb.map(Number);
+            return r >= 220 && g >= 200 && b <= 200;
+          }
+          const oklch = /oklch\(([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)/.exec(color);
+          if (oklch) {
+            const [, l, c, h] = oklch.map(Number);
+            return l >= 0.7 && c >= 0.04 && h >= 70 && h <= 100;
+          }
+          return false;
+        };
         if (
           !levelState.visible ||
           !copyLefts.every(expectedLeftEdge) ||
           !metaLefts.every(expectedLeftEdge) ||
           Math.max(...copyLefts) - Math.min(...copyLefts) > 2 ||
-          !levelState.offsets.every((item) => item.copyClass === "level-copy")
+          !levelState.offsets.every((item) => item.copyClass === "level-copy") ||
+          !levelState.offsets.every((item) => item.hasStars && item.hasBestValue) ||
+          !isGoldish(levelState.offsets[0].filledColor) ||
+          !isGoldish(levelState.offsets[0].bestColor)
         ) {
-          throw new Error(`Level card text alignment invalid: ${JSON.stringify(levelState)}`);
+          throw new Error(`Level card text alignment or score-line gold invalid: ${JSON.stringify(levelState)}`);
         }
       },
       {

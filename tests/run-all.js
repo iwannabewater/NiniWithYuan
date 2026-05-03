@@ -13,6 +13,7 @@ const checks = [
   ["node", ["tests/character-atlas.js"]],
   ["node", ["tests/docs-links.js"]],
   ["node", ["tests/render-touch-polish.js"]],
+  ["node", ["tests/menu-polish-v1_2_3.js"]],
   ["node", ["tests/ci-workflows.js"]],
   ["node", ["tests/android-wrapper.js"]],
   ["node", ["tests/audio-bgm.js"]],

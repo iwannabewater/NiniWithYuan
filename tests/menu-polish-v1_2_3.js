@@ -1,0 +1,69 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+
+const html = fs.readFileSync("index.html", "utf8");
+const css = fs.readFileSync("styles.css", "utf8");
+const hud = fs.readFileSync("src/render/hud.js", "utf8");
+const cursor = fs.readFileSync("src/render/cursor-trail.js", "utf8");
+const eggs = fs.readFileSync("src/render/easter-eggs.js", "utf8");
+const sw = fs.readFileSync("service-worker.js", "utf8");
+const manifest = JSON.parse(fs.readFileSync("manifest.webmanifest", "utf8"));
+const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
+const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
+
+assert.equal(pkg.version, "1.2.3", "package.json version should be 1.2.3");
+assert.equal(lock.version, "1.2.3", "package-lock.json root version should be 1.2.3");
+assert.match(sw, /CACHE = "nini-yuan-v1\.2\.3-starlit-whispers"/, "service worker cache should be bumped to v1.2.3");
+assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
+assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
+assert.ok(/versionCode="6"/.test(androidManifest), "Android versionCode should be 6");
+assert.ok(/versionName="1\.2\.3"/.test(androidManifest), "Android versionName should be 1.2.3");
+assert.ok(!manifest.description.includes("平台跳跃"), "PWA manifest description should drop the legacy platform-jump phrasing");
+assert.ok(manifest.description.includes("星图冒险"), "PWA manifest description should advertise the star-atlas adventure copy");
+
+assert.ok(hud.includes('"level-stars"'), "renderLevelList should emit a .level-stars container");
+assert.ok(hud.includes('"level-best"'), "renderLevelList should emit a .level-best container");
+assert.ok(hud.includes('"level-best-value"'), "renderLevelList should emit a .level-best-value strong tag");
+assert.ok(/star\s+\$\{s\s*<\s*stars\s*\?\s*"filled"\s*:\s*"empty"\}/.test(hud), "stars should be split into filled/empty glyphs");
+assert.ok(hud.includes('aria-label'), "level-stars should expose an aria-label for assistive tech");
+
+assert.ok(/\.level-item \.level-stars \.star\.filled\s*{[\s\S]*?--c-gold-200/.test(css), "filled stars should use --c-gold-200");
+assert.ok(/\.level-item \.level-stars \.star\.empty\s*{[\s\S]*?rgba\(245, 242, 234, 0\.22\)/.test(css), "empty stars should drop to a low-contrast ivory tone");
+assert.ok(/\.level-item \.level-best-value\s*{[\s\S]*?--c-gold-200/.test(css), "best-time value should be set in --c-gold-200");
+assert.ok(/\.level-item\.locked \.level-stars \.star\.filled,[\s\S]*\.level-item\.locked \.level-best-value/.test(css), "locked level cards should desaturate their gold tint");
+
+assert.ok(html.includes('class="ambient ambient-left"'), "index.html should declare the left ambient rail");
+assert.ok(html.includes('class="ambient ambient-right"'), "index.html should declare the right ambient rail");
+assert.ok(html.includes('class="ambient-strip"'), "index.html should declare the bottom ambient strip");
+assert.ok(html.includes('id="ambientQuote"'), "index.html should expose ambientQuote for runtime rotation");
+assert.ok(html.includes('class="ambient-constellation"'), "right ambient rail should include the connected constellation glyph");
+
+assert.ok(/body:has\(\.screen\.active\) \.ambient,[\s\S]*\.ambient-strip\s*{\s*opacity: 1;/.test(css), "ambient layer should reveal only when a menu screen is active");
+assert.ok(/@media \(pointer: coarse\), \(max-width: 900px\) {[\s\S]*?\.ambient {\s*display: none;/.test(css), "side ambient rails should hide on coarse pointer / narrow viewport");
+assert.ok(/@keyframes ambient-drift/.test(css), "ambient-drift keyframe should exist");
+assert.ok(/@keyframes ambient-twinkle/.test(css), "ambient-twinkle keyframe should exist");
+assert.ok(/@keyframes ambient-constellation-pulse/.test(css), "ambient-constellation-pulse keyframe should exist");
+
+assert.ok(html.includes('src="./src/render/cursor-trail.js"'), "index.html should load cursor-trail.js");
+assert.ok(html.includes('src="./src/render/easter-eggs.js"'), "index.html should load easter-eggs.js");
+assert.ok(/@keyframes cursor-spark-fade/.test(css), "cursor-spark-fade keyframe should exist");
+assert.ok(/\.cursor-trail\s*{[\s\S]*?pointer-events: none;/.test(css), "cursor-trail layer should ignore pointer events");
+assert.ok(cursor.includes("(hover: hover) and (pointer: fine)"), "cursor trail should gate on fine-pointer hover devices");
+assert.ok(cursor.includes("prefers-reduced-motion"), "cursor trail should bail under reduced-motion");
+assert.ok(cursor.includes("MAX_PARTICLES"), "cursor trail should cap concurrent particles");
+
+assert.ok(eggs.includes("KONAMI"), "easter-eggs script should declare a Konami sequence");
+assert.ok(eggs.includes("Digit5") && eggs.includes("Digit2") && eggs.includes("Digit0"), "easter-eggs script should declare a 5-2-0 number sequence");
+assert.ok(eggs.includes("flashHeart"), "easter-eggs script should expose the flashHeart helper");
+assert.ok(eggs.includes("openLetter"), "easter-eggs script should expose the openLetter helper");
+assert.ok(eggs.includes("rotateAmbientQuote"), "easter-eggs script should rotate the ambient quote line");
+assert.ok(eggs.includes("dateSurprise"), "easter-eggs script should declare a calendar trigger");
+assert.ok(/@keyframes love-heart-beat/.test(css), "love-heart-beat keyframe should exist");
+assert.ok(/\.love-letter,[\s\S]*?\.love-heart,[\s\S]*?\.love-toast\s*{[\s\S]*?z-index: 60;/.test(css), "love overlays should share z-index 60 above the menu");
+assert.ok(/\.love-letter\.show,[\s\S]*?\.love-heart\.show,[\s\S]*?\.love-toast\.show\s*{\s*opacity: 1;/.test(css), "love overlays should reveal via .show opacity 1");
+
+assert.ok(/@media \(prefers-reduced-motion: reduce\) {[\s\S]*?\.cursor-trail\s*{\s*display: none;/.test(css), "reduced-motion should hide the cursor trail");
+assert.ok(/@media \(prefers-reduced-motion: reduce\) {[\s\S]*?\.love-heart svg\s*{\s*animation: none;/.test(css), "reduced-motion should pause the love-heart heartbeat");
+
+console.log("menu-polish-v1.2.3: chapter-card gold restore, ambient layer, cursor trail, and easter-egg scripts wired correctly");

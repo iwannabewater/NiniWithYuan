@@ -15,6 +15,42 @@
   </head>
   <body>
     <a class="skip-link" href="#menu">跳到菜单</a>
+    <div class="ambient ambient-left" aria-hidden="true">
+      <span class="ambient-streamer"></span>
+      <span class="ambient-rune ambient-rune-a">星</span>
+      <span class="ambient-rune ambient-rune-b">露</span>
+      <span class="ambient-rune ambient-rune-c">花</span>
+      <span class="ambient-spark ambient-spark-1"></span>
+      <span class="ambient-spark ambient-spark-2"></span>
+      <span class="ambient-spark ambient-spark-3"></span>
+    </div>
+    <div class="ambient ambient-right" aria-hidden="true">
+      <span class="ambient-streamer"></span>
+      <span class="ambient-rune ambient-rune-a">月</span>
+      <span class="ambient-rune ambient-rune-b">镜</span>
+      <span class="ambient-rune ambient-rune-c">极</span>
+      <span class="ambient-spark ambient-spark-1"></span>
+      <span class="ambient-spark ambient-spark-2"></span>
+      <span class="ambient-spark ambient-spark-3"></span>
+      <svg class="ambient-constellation" viewBox="0 0 120 220" aria-hidden="true">
+        <path d="M28,40 L60,72 L92,46 L96,90 L70,118 L42,108 L28,40 Z"
+              fill="none" stroke="rgba(242,211,137,0.42)" stroke-width="0.6" stroke-dasharray="2 4" />
+        <circle cx="28" cy="40" r="1.4" fill="#f2d389" />
+        <circle cx="60" cy="72" r="1.6" fill="#ffe9a8" />
+        <circle cx="92" cy="46" r="1.2" fill="#82e3b8" />
+        <circle cx="96" cy="90" r="1.3" fill="#ffadc7" />
+        <circle cx="70" cy="118" r="1.5" fill="#ffe9a8" />
+        <circle cx="42" cy="108" r="1.2" fill="#9ee7ff" />
+      </svg>
+    </div>
+    <footer class="ambient-strip" aria-hidden="true">
+      <span class="ambient-strip-mark">✦</span>
+      <span class="ambient-strip-text">星图 · v1.2.3 · 五大章节 · 离线游玩</span>
+      <span class="ambient-strip-divider"></span>
+      <span class="ambient-strip-quote" id="ambientQuote">愿每一次跳跃，都落在你想去的星上。</span>
+      <span class="ambient-strip-divider"></span>
+      <span class="ambient-strip-credit">© Nini & Yuan · iwannabewater</span>
+    </footer>
     <main id="shell">
       <canvas id="game" aria-label="妮妮源源历险记游戏画面"></canvas>
 
@@ -164,6 +200,8 @@
     <script src="./src/core/storage.js"></script>
     <script src="./src/core/audio.js"></script>
     <script src="./src/render/hud.js"></script>
+    <script src="./src/render/cursor-trail.js" defer></script>
+    <script src="./src/render/easter-eggs.js" defer></script>
     <script src="./src/game.js"></script>
   </body>
 </html>
