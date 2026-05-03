@@ -37,7 +37,7 @@
     }
   ];
 
-  const HUNT_WINDOW_MS = 8000;
+  const HUNT_WINDOW_MS = 15000;
 
   function once(fn) {
     let called = false;

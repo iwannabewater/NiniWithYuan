@@ -60,4 +60,4 @@ Start-Sleep -Seconds 5
 - v1.2.4 — the touch action buttons (`跳 / 技 / 弹`) carry a refined glyph mark above the existing label; the labels are still announced as `跳跃 / 技能 / 发射` on TalkBack.
 - v1.2.4 — the pause modal card shows a small gold atlas seal in the lower-right corner that breathes slowly, plus a faint paper grain across the card body.
 - v1.2.4 — the settings rows are prefixed with rune chips (♪ / ♬ / ◐ / ✦) without changing the slider/checkbox positions.
-- v1.2.4 hidden surprise — on desktop fine-pointer review only, clicking all six ambient sparks within eight seconds opens a fourth letter modal and a heart; on Android touch this surprise stays inactive so the existing five surprises are the public phone surface.
+- v1.2.4 hidden surprise — on desktop fine-pointer review only, clicking all six ambient sparks within fifteen seconds opens a fourth letter modal and a heart; on Android touch this surprise stays inactive so the existing five surprises are the public phone surface.

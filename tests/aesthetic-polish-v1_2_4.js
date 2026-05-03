@@ -106,6 +106,7 @@ assert.ok(/\.settings-list label\[data-rune\]::after\s*{[\s\S]*?linear-gradient\
 assert.ok(eggs.includes("bindConstellationHunt"), "easter-eggs.js should expose bindConstellationHunt");
 assert.ok(eggs.includes("SECRET_LINES[3]"), "easter-eggs.js should reference the fourth letter index");
 assert.ok(/Constellation Found/.test(eggs), "fourth letter should carry the Constellation Found eyebrow");
+assert.ok(/HUNT_WINDOW_MS\s*=\s*15000/.test(eggs), "constellation-hunt window should be pinned at 15 seconds");
 assert.ok(/\.ambient-spark\.lit\s*{[\s\S]*?animation: spark-lit 1400ms/.test(css), "ambient sparks should animate spark-lit when discovered");
 assert.ok(/@media \(hover: hover\) and \(pointer: fine\) {[\s\S]*?\.ambient\.hunt-on \.ambient-spark\s*{[\s\S]*?pointer-events: auto;/.test(css), "ambient sparks should only become clickable on fine-pointer surfaces with .hunt-on");
 

@@ -18,7 +18,7 @@ The v1.2.4 release is a focused aesthetic-and-interaction pass on top of the v1.
 7. **touch action glyphs** add refined inline-SVG marks (star arrow, aurora swirl, diamond burst) above the `跳 / 技 / 弹` labels for richer presence on the Android WebView build;
 8. a **modal atlas seal** adds an embossed gold seal in the modal corner and a low-opacity paper grain so pause and completion modals feel inked rather than generic;
 9. **settings rune ribbons** prefix each settings row with a small gold rune (♪ / ♬ / ◐ / ✦) and a left ribbon notch;
-10. a sixth **constellation hunt** easter egg unlocks a fourth letter when the player taps six ambient sparks across both side rails within eight seconds; the existing five surprises remain unchanged;
+10. a sixth **constellation hunt** easter egg unlocks a fourth letter when the player taps six ambient sparks across both side rails within fifteen seconds; the existing five surprises remain unchanged;
 11. **canvas pickup feedback** adds a single-frame golden glow ring on coin/gem bursts and an italic gold-gradient float-text without altering physics, particle counts, or the FX toggle behavior.
 
 Together with the existing v1.2.3 ambient layer, the v1.2.4 release should read as a coherent inked atlas — every empty zone occupied, every state change felt, every interaction surface signed.
@@ -83,8 +83,8 @@ Together with the existing v1.2.3 ambient layer, the v1.2.4 release should read 
 ### Sixth Easter Egg — Constellation Hunt — `src/render/easter-eggs.js` and `styles.css`
 
 - Make the existing 6 `.ambient-spark` elements clickable on fine-pointer devices (skip on coarse pointer to keep mobile UX clean): each spark gets a `pointerdown` listener.
-- A spark click adds a `.ambient-spark.lit` class for 1.4 s and tracks a small "found this index" set scoped per session. If all 6 are found within 8 s of the first click, open `SECRET_LINES[3]` (a new fourth letter) and `flashHeart`.
-- Reset the session set after 8 s of inactivity to avoid soft-locks.
+- A spark click adds a `.ambient-spark.lit` class for 1.4 s and tracks a small "found this index" set scoped per session. If all 6 are found within 15 s of the first click, open `SECRET_LINES[3]` (a new fourth letter) and `flashHeart`.
+- Reset the session set after 15 s of inactivity to avoid soft-locks.
 - The fourth letter copy is a Yuan-to-Nini line tied to the constellation theme. Hidden under coarse-pointer environments so the existing five surprises remain the public surface on phones.
 
 ### Canvas Pickup Glow + Float-Text Polish — `src/game.js`
@@ -156,7 +156,7 @@ Manual review should re-open the main menu, the level-select screen, and a singl
 - the touch action buttons show a glyph mark above the existing label, and the labels are still announced as `跳跃 / 技能 / 发射`;
 - the pause modal shows a small gold atlas seal in the lower-right corner that breathes slowly, plus a faint paper grain across the card;
 - the settings labels are prefixed with rune chips (♪ / ♬ / ◐ / ✦);
-- clicking six ambient sparks across both rails within eight seconds opens a fourth letter modal with a heart;
+- clicking six ambient sparks across both rails within fifteen seconds opens a fourth letter modal with a heart;
 - collecting a coin shows a brief gold halo on the burst and gilded float-text;
 - `prefers-reduced-motion: reduce` pauses every new keyframe; `prefers-contrast: more` increases hairlines as before;
 - the Android APK builds with `versionCode=7` and `versionName=1.2.4` and the WebView gameplay surface shows the new touch glyphs.
