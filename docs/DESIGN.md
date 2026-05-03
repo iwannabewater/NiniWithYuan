@@ -62,6 +62,17 @@ Pills are pill-shaped with translucent night fill, hairline edge, and tabular nu
 
 The featured chapter carries a static atlas ring and a star at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens.
 
+The chapter score line is built from three readable groups: filled stars set in `--c-gold-200` with a soft gold halo, empty stars dropped to a low-contrast ivory tint, and the best-time value rendered in tabular gold (`<strong class="level-best-value">`) so the metric stays legible against the ink-vellum surface. Locked chapters drop the gold tint to a near-white muted tone to keep visual hierarchy without reusing the live state.
+
+### Ambient Side Layer
+
+Outside the central panel, three fixed decorative regions reclaim the empty viewport zones for menu surfaces only and disappear during gameplay:
+
+- `.ambient-left` and `.ambient-right` — vertical aurora streamers, three drifting calligraphic rune marks per side (gold, jade, rose) at low opacity, three twinkling sparks, and a small connected six-star constellation glyph on the right.
+- `.ambient-strip` — a hairline-divided footer placard with a gold star mark, a version-and-scope chip in caps, a rotating star-quote line (italic ink-soft), and a copyright credit.
+
+Visibility is gated by `body:has(.screen.active)`. Mobile portrait hides the side rails; mobile landscape keeps a compact strip. Reduced-motion stops all decorative ambient animation.
+
 ### Touch Controls
 
 Each touch button is a 50 % radius coin with a tactile inner specular and a deep drop shadow. The jump, skill, and shoot buttons emit a slow breath-pulse aura when ready (paused under reduced-motion). Press collapses the button and lights a gold halo.
@@ -80,6 +91,11 @@ Motion uses `transform` and `opacity`. Expensive full-screen animated filters, m
 - `brand-reveal` — title brushwork reveal on first menu, 1.1 s.
 - `touch-breath` — touch action button aura, 3.2 s ease-in-out infinite.
 - `modal-pop` — modal card entry, spring 360 ms.
+- `ambient-drift` — calligraphic rune slow drift, 18 s ease-soft infinite.
+- `ambient-twinkle` — spark and gold-mark scale-and-opacity blink, 4.6 s ease-soft infinite.
+- `ambient-constellation-pulse` — connected six-star glyph pulse, 8 s ease-soft infinite.
+- `cursor-spark-fade` — pointer stardust trail particle lift-and-fade, 720 ms ease-out forwards.
+- `love-heart-beat` — easter-egg constellation heart, 1.6 s ease-soft infinite while shown.
 
 Under `prefers-reduced-motion: reduce`, animation and transition durations collapse to ~0 ms; touch breath is hidden and the aurora remains static.
 

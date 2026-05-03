@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.2.2-menu-polish";
+const CACHE = "nini-yuan-v1.2.3-starlit-whispers";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,8 @@ const ASSETS = [
   "./src/core/storage.js",
   "./src/core/audio.js",
   "./src/render/hud.js",
+  "./src/render/cursor-trail.js",
+  "./src/render/easter-eggs.js",
   "./src/game.js",
   "./manifest.webmanifest",
   "./assets/icons/icon-192.png",

@@ -28,6 +28,9 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 3 | `.character-card[data-character]::after` | Hover, focus, selected | Character-tinted halo (rose for Nini, jade for Yuan) fades in and lights a gold ring. |
 | 4 | `.level-item.featured::before` | Static | Atlas ring marks the next available chapter with a hairline arc and star core. |
 | 5 | `.touch-btn.jump/.skill/.shoot::before` | Idle | Breath aura ring scales 0.96 -> 1.04 over 3.2 s; cancels instantly on press. |
+| 6 | `.ambient-rune` / `.ambient-spark` / `.ambient-constellation` | Menu surfaces only | Calligraphic rune drift, sparkle twinkle, and connected six-star glyph pulse fill the empty viewport zones outside the panel and pause during gameplay. |
+| 7 | `.cursor-spark` | Pointer move on cover or title (`(hover: hover) and (pointer: fine)`) | Throttled gold/rose/jade stardust trail emits ~one particle per 28 ms, lifts 22 px, and fades over 720 ms; capped at 32 active sparks; disabled under reduced-motion. |
+| 8 | `.love-letter` / `.love-heart` / `.love-toast` | Hidden Yuan-to-Nini surprises | A discovered easter egg fades a centered letter card, a beating constellation heart, or a top-center toast in for a few seconds, then fades back out. The heart beats at 1.6 s and pauses under reduced-motion. |
 
 ## Continuous Motion
 
@@ -51,6 +54,9 @@ Under `prefers-reduced-motion: reduce`:
 - `body::after` aurora remains static with reduced opacity.
 - `.menu-heroes::before` and `.level-item.featured::before` are already static.
 - `.touch-btn` breath aura is hidden.
+- Ambient runes, sparks, the constellation glyph, and the gold strip mark stop animating.
+- Pointer stardust trail (`.cursor-trail`) is hidden so no spawn-and-fade particles run.
+- Hidden easter-egg heart pauses its heartbeat scale loop.
 - Canvas particles remain available because they communicate gameplay events; players can reduce them through the visual effects setting.
 
 ## BGM and Audio

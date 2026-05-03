@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.2.2 keeps the chapter set fixed at five. The release keeps the v1.2.0 visual refresh and v1.2.1 gameplay fixes, then applies a small menu polish pass for cover copy, chapter-card alignment, and static star-chart detail while preserving the save schema, audio routing, screen flow, and control bindings.
+Version 1.2.3 keeps the chapter set fixed at five. The release keeps the v1.2.0 visual refresh, v1.2.1 gameplay fixes, and v1.2.2 menu polish, then layers a small aesthetic-and-interaction pass on the menu surfaces only: gilded chapter score readability, an ambient star-rune side layer that fills the empty viewport zones outside the panel, a soft pointer stardust trail on the cover and title, and a small set of hidden Yuan-to-Nini surprises. The save schema, audio routing, physics, screen flow, control bindings, and chapter content remain unchanged.
 
 ## Fiction
 
