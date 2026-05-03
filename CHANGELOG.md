@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.3.0
+
+- Added World 2, **星门群岛**, with three handcrafted chapters: 第六章 星门浅湾, 第七章 回环灯塔, and 第八章 星环温室. The original five chapters are now grouped as World 1, **第一星域 破碎星图**.
+- Added paired star gates as a World 2 traversal mechanic. Gates preserve velocity, facing, character state, health, ammo, and collection progress, apply a short cooldown plus an exit-gate lock, and use safe-exit authoring checks to avoid placing the player inside solids or outside level bounds.
+- Expanded chapter-select rendering with world headings and a denser two-column atlas layout while preserving the v1.2.4 compass, meridian rail, locked-card treatment, keyboard focus, and touch behavior.
+- Kept save schema version 2 and added compatibility logic for the eight-chapter cap. Completed Aurora Citadel progress derives World 2 access; saves that only unlocked chapter 5 still require finishing chapter 5.
+- Updated visible and install metadata from five chapters to eight chapters across `index.html`, `manifest.webmanifest`, README, GDD, design docs, motion docs, Android testing notes, and the release plan.
+- Bumped the web package to `1.3.0`, Android `versionCode` to 8 / `versionName` to `1.3.0`, and the service worker cache to `nini-yuan-v1.3.0-world-2-star-gates`.
+- Added `tests/content-expansion-v1_3_0.js` and `tests/portal-mechanics-v1_3_0.js`, expanded storage and browser smoke coverage for eight chapters, and widened v1.2.3/v1.2.4 regression tests to accept v1.3.0 release metadata.
+
 ## v1.2.4
 
 - Replaced the static featured-chapter atlas ring with a slow rotating gold compass and added a hairline meridian rail that reveals on grid hover so the four ordinary chapters and the featured chapter read as one inked map; the featured-chapter star is upgraded to a four-point compass mark.

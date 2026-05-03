@@ -1,12 +1,13 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.2.4 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell from v1.2.0, the v1.2.1 gameplay fixes, the v1.2.2 menu polish, and the v1.2.3 Starlit Whispers ambient-and-easter-egg layer, then adds the v1.2.4 **Aurora Cartography** aesthetic-and-interaction pass: a slowly rotating compass on the featured chapter and a hairline meridian rail that links the level grid into one map, a gold/rose/jade brushwork sub-aurora under the wordmark, two-axis pointer parallax on the cover heroes with a touch-only breath fallback, one-shot HUD ink-bloom pulses on character and skill-state changes, an aurora wash and leading-edge gleam on the chapter progress bar, an orchestrated chapter-intro stagger, refined glyph marks above the touch action labels, a gold atlas seal and paper grain on the pause modal, gold rune ribbons on the settings rows, a sixth constellation-hunt easter egg that lights all six ambient sparks, and gilded float-text plus an additive halo on coin pickups in canvas. The v1.1.0 content baseline is unchanged: two playable characters, five handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.3.0 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, and Aurora Cartography interaction pass, then adds the **World 2: 星门群岛** content expansion: three new handcrafted chapters, paired star-gate traversal, world-grouped chapter select cards, eight-chapter metadata, and save compatibility for existing v1.2.x players. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, eight handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
 ## Gameplay
 
 - Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes.
 - Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes.
-- The game ships five chapters: Starlight Garden, Moon-Mirror Ruins, Cloudsea Sails, Radiant Forge, and Aurora Citadel.
+- The game ships eight chapters across two worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, and World 2 / 星门群岛 adds Star Gate Cove, Looping Lighthouse, and Ring Conservatory.
+- World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
 - The application runs offline. It does not require login, networking, advertising SDKs, analytics SDKs, or server storage.
 - Desktop play uses arrow keys or WASD. Android starts in landscape and uses on-screen controls.
 - The bundled background track is a local CC0 Vorbis file with an independent volume control.
@@ -43,7 +44,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3 smoke path also verifies the ambient layer stacking, fine-pointer stardust trail, non-selectable interaction targets, and functional 520/Konami hidden-surprise triggers. The v1.2.4 polish pass adds an additional regression file (`tests/aesthetic-polish-v1_2_4.js`) that pins the new keyframes (compass rotation, aurora sweep, HUD pulse, bossbar shimmer, modal seal breathe, hero breath, spark lit), the meridian rail, the modal seal, the settings-rune attributes, the touch-button glyph masks, the parallax custom properties, and the new constellation-hunt fourth letter.
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.3.0 expansion adds `tests/content-expansion-v1_3_0.js` and `tests/portal-mechanics-v1_3_0.js` for world grouping, eight-chapter metadata, save compatibility, and safe portal authoring.
 
 ## Android APK
 

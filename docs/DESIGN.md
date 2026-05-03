@@ -60,9 +60,15 @@ Pills are pill-shaped with translucent night fill, hairline edge, and tabular nu
 
 ### Chapter Cards
 
-The featured chapter carries an **atlas compass** — a gold conic ring that rotates at 18 s per revolution and a four-point compass mark (`✦`) at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens. On grid hover, a hairline **meridian rail** (a single decorative `.level-list::after`) traces between the four ordinary chapters and the featured chapter, surfacing the level grid as one inked map without any DOM-shape change.
+The chapter grid is grouped by world headings. World 1 / 破碎星图 contains the original five chapters; World 2 / 星门群岛 contains the three star-gate chapters. Headings use a slim gilded divider and compact subtitle so the grid reads as an atlas table of contents without becoming a marketing section.
+
+The featured chapter carries an **atlas compass** — a gold conic ring that rotates at 18 s per revolution and a four-point compass mark (`✦`) at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens. On grid hover, a hairline **meridian rail** (a single decorative `.level-list::after`) traces between the ordinary chapters and the featured chapter, surfacing the level grid as one inked map without any DOM-shape change.
 
 The chapter score line is built from three readable groups: filled stars set in `--c-gold-200` with a soft gold halo, empty stars dropped to a low-contrast ivory tint, and the best-time value rendered in tabular gold (`<strong class="level-best-value">`) so the metric stays legible against the ink-vellum surface. Locked chapters drop the gold tint to a near-white muted tone to keep visual hierarchy without reusing the live state.
+
+### Star Gates
+
+Star gates are canvas-native gameplay objects in World 2. They use paired cyan/gold/rose rings with a soft inner field and a short activation flare. Their rendering is intentionally readable at gameplay scale: the ring sits in front of the background, behind the player, and avoids dense decorative strokes that could be mistaken for hazards. The HUD status pill appends `星门` briefly after travel, matching the existing wind and power-up state language.
 
 ### Ambient Side Layer
 

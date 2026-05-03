@@ -42,6 +42,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 17 | `.modal-card::after` | Pause / completion modal open | `seal-breathe` 9 s ease-soft scales 0.96 ↔ 1.04 and 0.78 ↔ 0.92 opacity on a gold conic seal masked into a hairline ring. Paused under reduced-motion. |
 | 18 | `.settings-list label[data-rune]::before` | Static decoration | Gold rune chip (♪ / ♬ / ◐ / ✦) with hairline ribbon stub. CSS-only, reads `attr(data-rune)`. |
 | 19 | `.ambient-spark.lit` | Constellation-hunt click | `spark-lit` 1.4 s ease-soft scales the spark to 2.2× with a doubled glow then settles. Active only on `(hover: hover) and (pointer: fine)`. |
+| 20 | Canvas star gate | Player overlap | Paired rings pulse once, teleport the player to the paired safe exit, and show a brief `星门` status/float cue while preserving movement momentum. |
 
 ## Continuous Motion
 
@@ -70,7 +71,7 @@ Under `prefers-reduced-motion: reduce`:
 - Hidden easter-egg heart pauses its heartbeat scale loop.
 - v1.2.4 keyframes pause: featured-chapter compass rotation, brand sub-aurora sweep, HUD pulse, bossbar shimmer, hero breath, modal seal breathe, spark-lit, and the chapter-intro orchestration `bossbar-rise` / `tips-rise`.
 - Cover-hero parallax stops writing `--mx` / `--my` because the script gates on reduced-motion at attach time, so the heroes return to their static rotated transforms.
-- Canvas particles remain available because they communicate gameplay events; players can reduce them through the visual effects setting.
+- Canvas particles and star-gate fields remain available because they communicate gameplay events; players can reduce optional pickup bursts through the visual effects setting.
 
 ## BGM and Audio
 

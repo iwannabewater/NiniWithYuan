@@ -4,11 +4,11 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.2.4 keeps the chapter set fixed at five. The release keeps the v1.2.0 visual refresh, v1.2.1 gameplay fixes, v1.2.2 menu polish, and the v1.2.3 Starlit Whispers ambient-and-easter-egg layer, then layers the v1.2.4 **Aurora Cartography** aesthetic-and-interaction pass on top: a rotating featured-chapter compass and meridian rail that links the level grid into one map, a sub-aurora brushwork under the wordmark, two-axis cover-hero parallax with a touch-only breath fallback, one-shot HUD ink-bloom pulses on character and skill-state changes, an aurora wash and leading-edge gleam on the chapter progress bar, an orchestrated chapter-intro entrance, refined glyph marks on the touch action buttons, a gold atlas seal and paper grain on the pause modal, gold rune ribbons on the settings rows, a sixth constellation-hunt easter egg, and gilded float-text plus an additive halo on coin pickups in canvas. The save schema, audio routing, physics, screen flow, control bindings, and chapter content remain unchanged.
+Version 1.3.0 expands the game from five chapters to eight while preserving the v1.2.x physics, controls, visual shell, audio routing, and offline storage model. The original five chapters are grouped as World 1, **第一星域 破碎星图**. The new World 2, **第二星域 星门群岛**, adds three handcrafted chapters built around paired star gates, route choice, collection loops, and readable movement momentum rather than a hard postgame difficulty spike.
 
 ## Fiction
 
-The setting is a floating night city above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes.
+The setting is a floating night city above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes. After Aurora Citadel is restored, dormant star gates wake across nearby islands and fold the atlas into a second playable world.
 
 Playable characters:
 
@@ -59,6 +59,10 @@ The ammunition cap is 14. The default regeneration rate is one unit per 1.6 s. D
 | Wind Bell Fruit | Refreshes skill cooldown and shortens cooldowns for 15 s. |
 | Health Pack | Restores 1 health. |
 
+### Star Gates
+
+World 2 introduces paired star gates. A gate activates only when the player's body overlaps its field and its pair is available, then teleports the player to the paired gate's safe exit point. The transition preserves velocity, facing, health, skill state, projectile ammo, and collection progress; it applies a short cooldown plus an exit-gate lock so the player cannot bounce back and forth while standing inside the target field. Portal exits are authored and tested against platform solids and level bounds.
+
 ## Chapters
 
 | Chapter | English Name | Theme | Design Focus |
@@ -68,6 +72,9 @@ The ammunition cap is 14. The default regeneration rate is one unit per 1.6 s. D
 | 3 | Cloudsea Sails | High-altitude wind fields | Wind zones that modify landing positions. |
 | 4 | Radiant Forge | Crystal furnace | Breakable crystals and denser hazards. |
 | 5 | Aurora Citadel | Aurora throne | Combined wind, moving platform, crystal, and jump-chain tests. |
+| 6 | Star Gate Cove | Tide-lit gate islands | First paired-gate route split with low punishment. |
+| 7 | Looping Lighthouse | Vertical beacon tower | Layered gate loops, glides, dashes, and collection routing. |
+| 8 | Ring Conservatory | Floating greenhouse rings | World 2 finale combining gates, wind, moving platforms, and crystals. |
 
 Star ratings are determined by collection ratio:
 
@@ -106,7 +113,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.3.0; existing saves clamp to the new eight-chapter cap, and completed Aurora Citadel progress derives World 2 access while saves that merely unlocked chapter 5 still require finishing chapter 5. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -114,5 +121,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.2.0: Aurora Inkwash visual refresh, lighter menu rendering, PWA/Android palette sync, and release documentation.
 - v1.2.1: focused gameplay fixes for chapter 3/5 wind fields, grounded enemy patrols, and flying wisp readability, plus regression coverage.
 - v1.2.2: cover copy, chapter-card alignment, and static menu star-chart polish.
-- Future release: production character sprite sheets and a possible sixth chapter.
+- v1.3.0: World 2 content expansion with three star-gate chapters, world-grouped chapter select, and save-compatible eight-chapter release metadata.
+- Future release: production character sprite sheets, expanded enemy variants, or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

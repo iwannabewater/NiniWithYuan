@@ -61,3 +61,8 @@ Start-Sleep -Seconds 5
 - v1.2.4 — the pause modal card shows a small gold atlas seal in the lower-right corner that breathes slowly, plus a faint paper grain across the card body.
 - v1.2.4 — the settings rows are prefixed with rune chips (♪ / ♬ / ◐ / ✦) without changing the slider/checkbox positions.
 - v1.2.4 hidden surprise — on desktop fine-pointer review only, clicking all six ambient sparks within fifteen seconds opens a fourth letter modal and a heart; on Android touch this surprise stays inactive so the existing five surprises are the public phone surface.
+- v1.3.0 — chapter select shows two world headings: `第一星域 破碎星图` above chapters 1-5 and `第二星域 星门群岛` above chapters 6-8. Locked cards retain the existing dim treatment.
+- v1.3.0 — finishing chapter 5 unlocks chapter 6; existing completed-Aurora-Citadel saves open World 2, while saves that only unlocked chapter 5 still ask the player to finish chapter 5.
+- v1.3.0 — each World 2 chapter contains paired star gates. Entering one gate moves the player to its pair, preserves movement direction and momentum, avoids wall/solid overlap, and shows a short `星门` cue.
+- v1.3.0 — chapter 8 combines gates, wind, moving platforms, and crystals without HUD/control overlap in Android landscape.
+- v1.3.0 — menu/install metadata reads `八大章节`, and the APK badging reports `versionCode=8` / `versionName=1.3.0`.
