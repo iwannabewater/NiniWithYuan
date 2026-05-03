@@ -8,6 +8,7 @@ const checks = [
   ["node", ["--check", "service-worker.js"]],
   ["node", ["tests/physics-balance.js"]],
   ["node", ["tests/mechanics-balance.js"]],
+  ["node", ["tests/gameplay-bugfix.js"]],
   ["node", ["tests/unit/storage.test.js"]],
   ["node", ["tests/character-atlas.js"]],
   ["node", ["tests/docs-links.js"]],

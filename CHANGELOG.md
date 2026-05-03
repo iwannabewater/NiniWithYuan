@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.1
+
+- Fixed chapter 3 and chapter 5 wind fields so they feed into the player's horizontal velocity target instead of applying a low-magnitude post-input acceleration; wind now changes landing positions, remains traversable while walking or jumping into it, shows directional arrows that drift with the current, and is surfaced in the HUD status pill while active.
+- Fixed ground enemy placement, patrol behavior, and contact rendering across all chapters so slimes and embers spawn with their feet on platform tops, show a grounded foot/shadow treatment, and patrol the full current platform without stepping beyond its edges.
+- Redesigned wisp enemies as flying aurora wisps: they now spawn with a visible hover gap, use bounded vertical oscillation, draw a distant shadow, and use wing/core/tail visuals with no ground feet.
+- Added `tests/gameplay-bugfix.js` to guard jump-traversable wind strength, visible wind direction, all-chapter enemy floor alignment, full-platform patrol bounds, ground contact rendering, and wisp hover readability.
+- Bumped the web package to `1.2.1`, Android `versionCode` to 4 / `versionName` to `1.2.1`, and the service worker cache to `nini-yuan-v1.2.1-gameplay-fixes`.
+
 ## v1.2.0
 
 - Reworked the visual layer into the **Aurora Inkwash · Night Atlas Cinematic** direction across web and Android WebView surfaces, without touching gameplay, save schema, audio routing, or controls.

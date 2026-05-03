@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.2.0 keeps the chapter set fixed at five. The release concentrates on a performance-tuned visual refresh for the shared web and Android WebView shell, while preserving the v1.1.0 gameplay, save schema, audio routing, and control bindings.
+Version 1.2.1 keeps the chapter set fixed at five. The release keeps the v1.2.0 visual refresh and applies focused gameplay fixes for wind-field response, grounded enemy movement, and flying wisp readability, while preserving the save schema, audio routing, screen flow, and control bindings.
 
 ## Fiction
 
@@ -24,6 +24,14 @@ Playable characters:
 - Coyote time: 0.12 s.
 - Jump buffer: 0.14 s.
 - The main loop clamps accumulated time after background or foreground transitions.
+
+### Wind Fields
+
+Wind fields appear in chapter 3 and chapter 5. They are directional horizontal currents that contribute to the player's movement target, so they visibly change landing positions, partially counter movement into the wind without blocking forward progress on the ground or during jumps, and speed same-direction routes without exceeding the wind speed cap. Canvas wind fields draw repeated arrowheads that drift with the current direction to make the airflow readable during play.
+
+### Enemies
+
+Slimes and embers are ground enemies across all chapters. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, and use their current supporting platform as the patrol boundary, turning around at platform-safe limits. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow and no feet.
 
 ### Skills
 
@@ -104,5 +112,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 
 - v1.1.0: security, technical foundation, visual system, BGM, release documentation, and Android landscape support.
 - v1.2.0: Aurora Inkwash visual refresh, lighter menu rendering, PWA/Android palette sync, and release documentation.
+- v1.2.1: focused gameplay fixes for chapter 3/5 wind fields, grounded enemy patrols, and flying wisp readability, plus regression coverage.
 - Future release: production character sprite sheets and a possible sixth chapter.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

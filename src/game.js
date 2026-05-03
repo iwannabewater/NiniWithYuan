@@ -43,6 +43,16 @@
   const YUAN_DASH_MAX_DISTANCE = 170;
   const NINI_GLIDE_DURATION = 1.25;
   const NINI_GLIDE_FALL_SPEED = 190;
+  const ENEMY_WIDTH = 38;
+  const ENEMY_HEIGHT = 34;
+  const WISP_FLOAT_GAP = 24;
+  const WISP_HOVER_RANGE = 6;
+  const WIND_REFERENCE_FORCE = 320;
+  const WIND_GROUND_DRIFT = 0.14;
+  const WIND_AIR_DRIFT = 0.38;
+  const WIND_MAX_SPEED = 1.3;
+  const WIND_ARROW_SPACING = 72;
+  const WIND_ARROW_SPEED = 18;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const snap = (n) => Math.round(n);
@@ -176,18 +186,23 @@
     const P = (x, y, w, h, type = "ground") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type });
     const C = (x, y, kind = "coin") => ({ x: x * TILE + 18, y: y * TILE + 16, w: 22, h: 22, kind, taken: false });
     const F = (x, y, kind = "berry") => ({ x: x * TILE + 10, y: y * TILE + 10, w: 30, h: 30, kind, taken: false });
-    const E = (x, y, patrol = 160, type = "slime") => ({
-      x: x * TILE,
-      y: y * TILE,
-      w: 38,
-      h: 34,
-      baseX: x * TILE,
-      vx: type === "wisp" ? 65 : 90,
-      patrol,
-      type,
-      alive: true,
-      phase: Math.random() * 10,
-    });
+    const E = (x, y, patrol = 160, type = "slime") => {
+      const groundedY = y * TILE + TILE - ENEMY_HEIGHT;
+      const enemyY = type === "wisp" ? groundedY - WISP_FLOAT_GAP : groundedY;
+      return {
+        x: x * TILE,
+        y: enemyY,
+        w: ENEMY_WIDTH,
+        h: ENEMY_HEIGHT,
+        baseX: x * TILE,
+        baseY: enemyY,
+        vx: type === "wisp" ? 65 : 90,
+        patrol,
+        type,
+        alive: true,
+        phase: Math.random() * 10,
+      };
+    };
     const S = (x, y, power = 1050) => ({ x: x * TILE, y: y * TILE + 20, w: TILE, h: 18, power });
     const M = (x, y, w, range, speed, axis = "x", type = "jade") => ({
       x: x * TILE,
@@ -399,6 +414,7 @@
       bigTimer: 0,
       ammoTimer: 0,
       boostTimer: 0,
+      windTimer: 0,
       carrier: null,
       coins: 0,
       gems: 0,
@@ -491,10 +507,6 @@
   function updatePlayer(dt) {
     const ch = characters[save.selected];
     const leftRight = (inputs.right ? 1 : 0) - (inputs.left ? 1 : 0);
-    const target = leftRight * ch.speed;
-    const accel = player.onGround ? ch.accel : ch.accel * 0.74;
-    player.vx = moveToward(player.vx, target, accel * dt);
-    if (!leftRight && player.onGround) player.vx = moveToward(player.vx, 0, 2800 * dt);
     if (leftRight) {
       const nextFacing = Math.sign(leftRight);
       if (nextFacing !== player.facing) player.turnTimer = 0.16;
@@ -513,6 +525,7 @@
     player.bigTimer = Math.max(0, player.bigTimer - dt);
     player.ammoTimer = Math.max(0, player.ammoTimer - dt);
     player.boostTimer = Math.max(0, player.boostTimer - dt);
+    player.windTimer = Math.max(0, player.windTimer - dt);
     player.ammoRegen += dt;
     if (player.ammo < 14 && player.ammoRegen >= 1.6) {
       player.ammo += 1;
@@ -523,11 +536,17 @@
 
     let gravity = ch.gravity;
     const playerRect = bodyRect(player);
-    for (const w of activeLevel.wind) {
-      if (rectsOverlap(playerRect, w)) {
-        player.vx = clamp(player.vx + w.force * dt, -ch.speed * 1.6, ch.speed * 1.6);
-        spawnWind(player.x + player.w / 2, player.y + player.h / 2, Math.sign(w.force));
-      }
+    const windZone = activeWindZone(playerRect);
+    const windDirection = windZone ? Math.sign(windZone.force) : 0;
+    const windStrength = windZone ? clamp(Math.abs(windZone.force) / WIND_REFERENCE_FORCE, 0.75, 1.25) : 0;
+    const windTarget = windDirection * ch.speed * (player.onGround ? WIND_GROUND_DRIFT : WIND_AIR_DRIFT) * windStrength;
+    const target = clamp(leftRight * ch.speed + windTarget, -ch.speed * WIND_MAX_SPEED, ch.speed * WIND_MAX_SPEED);
+    const accel = player.onGround ? ch.accel : ch.accel * 0.74;
+    player.vx = moveToward(player.vx, target, accel * dt);
+    if (!leftRight && player.onGround && !windDirection) player.vx = moveToward(player.vx, 0, 2800 * dt);
+    if (windZone) {
+      player.windTimer = 0.18;
+      spawnWind(player.x + player.w / 2, player.y + player.h / 2, windDirection);
     }
 
     const skillCooldown = ch.skillCooldown * (player.boostTimer > 0 ? 0.55 : 1);
@@ -730,6 +749,15 @@
     return !allSolids().some((p) => !p.broken && rectsOverlap(probe, p));
   }
 
+  function activeWindZone(rect) {
+    let zone = null;
+    for (const w of activeLevel.wind) {
+      if (!rectsOverlap(rect, w)) continue;
+      if (!zone || Math.abs(w.force) > Math.abs(zone.force)) zone = w;
+    }
+    return zone;
+  }
+
   function moveAxis(axis, amount) {
     const steps = Math.max(1, Math.ceil(Math.abs(amount) / 14));
     const step = amount / steps;
@@ -826,14 +854,46 @@
       if (!e.alive) continue;
       e.phase += dt;
       if (e.type === "wisp") {
-        e.y += Math.sin(e.phase * 4) * 18 * dt;
+        e.y = e.baseY + Math.sin(e.phase * 4) * WISP_HOVER_RANGE;
+        e.x += e.vx * dt;
+        if (Math.abs(e.x - e.baseX) > e.patrol) {
+          e.x = e.baseX + Math.sign(e.x - e.baseX) * e.patrol;
+          e.vx *= -1;
+        }
+        continue;
       }
-      e.x += e.vx * dt;
-      if (Math.abs(e.x - e.baseX) > e.patrol) {
-        e.x = e.baseX + Math.sign(e.x - e.baseX) * e.patrol;
+
+      const support = enemySupportPlatform(e);
+      if (!support) {
+        e.vx *= -1;
+        continue;
+      }
+
+      e.y = support.y - e.h;
+      const minX = support.x + 3;
+      const maxX = support.x + support.w - e.w - 3;
+      if (maxX <= minX) {
+        e.x = clamp(e.x, support.x, support.x + Math.max(0, support.w - e.w));
+        continue;
+      }
+      let nextX = e.x + e.vx * dt;
+      if (nextX < minX || nextX > maxX) {
+        nextX = clamp(nextX, minX, maxX);
         e.vx *= -1;
       }
+      e.x = nextX;
+      e.y = support.y - e.h;
     }
+  }
+
+  function enemySupportPlatform(e) {
+    const probe = { x: e.x + 4, y: e.y + e.h - 2, w: e.w - 8, h: TILE + 4 };
+    let support = null;
+    for (const p of allSolids()) {
+      if (p.broken || p.y < e.y + e.h - 3 || !rectsOverlap(probe, p)) continue;
+      if (!support || p.y < support.y) support = p;
+    }
+    return support;
   }
 
   function updatePickups() {
@@ -1216,9 +1276,23 @@
   }
 
   function drawEnemy(e) {
+    if (e.type === "wisp") {
+      drawWispEnemy(e);
+      return;
+    }
+    drawGroundEnemy(e);
+  }
+
+  function drawGroundEnemy(e) {
     ctx.save();
     ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
-    const color = e.type === "ember" ? "#ff855f" : e.type === "wisp" ? "#8cf6ff" : "#a5f0a1";
+    const footY = e.h / 2;
+    const color = e.type === "ember" ? "#ff855f" : "#a5f0a1";
+    ctx.fillStyle = "rgba(0,0,0,.26)";
+    ellipse(0, footY + 1, e.w * 0.46, 4, 0);
+    ctx.fillStyle = e.type === "ember" ? "#b84c3f" : "#5fae72";
+    ellipse(-9, footY - 1, 6, 4, 0);
+    ellipse(9, footY - 1, 6, 4, 0);
     ctx.fillStyle = color;
     ellipse(0, 2, e.w * 0.55, e.h * 0.45, 0);
     ctx.fillStyle = "rgba(255,255,255,.85)";
@@ -1227,6 +1301,70 @@
     ctx.fillStyle = "#1b2433";
     ellipse(-8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
     ellipse(8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
+    ctx.restore();
+  }
+
+  function drawWispEnemy(e) {
+    const phase = e.phase || 0;
+    const dir = Math.sign(e.vx) || 1;
+    const footY = e.h / 2;
+    const hoverOffset = Math.sin(phase * 4) * WISP_HOVER_RANGE;
+    const wingLift = Math.sin(phase * 11) * 3;
+    ctx.save();
+    ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
+
+    ctx.globalAlpha = 0.24;
+    ctx.fillStyle = "#8cf6ff";
+    ellipse(0, footY + WISP_FLOAT_GAP - hoverOffset + 2, e.w * 0.34, 3.5, 0);
+    ctx.globalAlpha = 1;
+
+    ctx.strokeStyle = "rgba(140,246,255,.46)";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    for (let i = 0; i < 3; i += 1) {
+      const y = 8 + i * 4;
+      ctx.globalAlpha = 0.42 - i * 0.08;
+      ctx.beginPath();
+      ctx.moveTo(-dir * 4, y - i);
+      ctx.quadraticCurveTo(-dir * (14 + i * 5), y + Math.sin(phase * 6 + i) * 4, -dir * (24 + i * 4), y - 5);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 0.48;
+    ctx.fillStyle = "rgba(158,231,255,.72)";
+    ellipse(-15, -2 - wingLift, 10, 17, -0.7);
+    ellipse(15, -2 + wingLift, 10, 17, 0.7);
+    ctx.globalAlpha = 0.28;
+    ctx.fillStyle = "rgba(255,255,255,.9)";
+    ellipse(-12, -7 - wingLift * 0.5, 3, 8, -0.7);
+    ellipse(12, -7 + wingLift * 0.5, 3, 8, 0.7);
+
+    ctx.globalAlpha = 1;
+    ctx.shadowColor = "#8cf6ff";
+    ctx.shadowBlur = 16;
+    const core = ctx.createRadialGradient(-4, -6, 2, 0, 0, 20);
+    core.addColorStop(0, "#f6feff");
+    core.addColorStop(0.45, "#8cf6ff");
+    core.addColorStop(1, "#2f9fd0");
+    ctx.fillStyle = core;
+    ellipse(0, 0, e.w * 0.38, e.h * 0.44, 0);
+    ctx.shadowBlur = 0;
+
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ellipse(-5, -6, 3, 4, 0);
+    ellipse(5, -6, 3, 4, 0);
+    ctx.fillStyle = "#143047";
+    ellipse(-5 + dir, -5, 1.4, 2.2, 0);
+    ellipse(5 + dir, -5, 1.4, 2.2, 0);
+    ctx.strokeStyle = "rgba(246,254,255,.72)";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(0, -14);
+    ctx.lineTo(5, -3);
+    ctx.lineTo(0, 11);
+    ctx.lineTo(-5, -3);
+    ctx.closePath();
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -1256,6 +1394,8 @@
 
   function drawWind(w) {
     const t = performance.now() / 300;
+    const dir = Math.sign(w.force) || 1;
+    const arrowPhase = (t * WIND_ARROW_SPEED) % WIND_ARROW_SPACING;
     ctx.save();
     ctx.globalAlpha = 0.18;
     ctx.fillStyle = "#d9fbff";
@@ -1271,6 +1411,26 @@
         else ctx.lineTo(x, yy);
       }
       ctx.stroke();
+    }
+    ctx.globalAlpha = 0.76;
+    ctx.fillStyle = "#f2fbff";
+    ctx.strokeStyle = "rgba(17,66,92,.34)";
+    ctx.lineWidth = 2;
+    for (let y = w.y + 72; y < w.y + w.h; y += 110) {
+      for (let i = -1; i <= Math.ceil(w.w / WIND_ARROW_SPACING) + 1; i += 1) {
+        const localX = i * WIND_ARROW_SPACING + (dir > 0 ? arrowPhase : -arrowPhase);
+        const px = w.x + localX;
+        if (px < w.x + 14 || px > w.x + w.w - 14) continue;
+        const bob = Math.sin(t * 2 + y * 0.04) * 7;
+        ctx.beginPath();
+        ctx.moveTo(px + dir * 17, y + bob);
+        ctx.lineTo(px - dir * 9, y - 12 + bob);
+        ctx.lineTo(px - dir * 4, y + bob);
+        ctx.lineTo(px - dir * 9, y + 12 + bob);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
     }
     ctx.restore();
   }
@@ -1607,6 +1767,7 @@
 
   function statusLabel() {
     const states = [];
+    if (player.windTimer > 0) states.push("风场");
     if (player.bigTimer > 0) states.push(`巨大 ${Math.ceil(player.bigTimer)}`);
     if (player.superInvuln > 0) states.push(`无敌 ${Math.ceil(player.superInvuln)}`);
     if (player.ammoTimer > 0) states.push(`强化 ${Math.ceil(player.ammoTimer)}`);

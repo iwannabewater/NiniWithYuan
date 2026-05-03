@@ -39,6 +39,8 @@ Start-Sleep -Seconds 5
 - Character selection works.
 - Touch controls respond with low latency.
 - Landscape gameplay HUD, chapter intro, and touch buttons do not overlap.
+- Chapter 3 and chapter 5 wind fields show clear directional arrows that move with the wind direction, visibly push the player, change landing positions, and remain enterable while holding movement plus jump into the wind on the shared WebView gameplay build.
+- Slime and ember enemies in every chapter keep their feet visually on platform tops, show contact shadow/feet, and patrol the full current platform without stepping beyond its edges; wisp enemies present as flying enemies with a visible hover gap, wing/glow silhouette, tail trail, and no ground feet.
 - BGM starts after entering gameplay, pauses on modal or menu, and respects the BGM volume slider.
 - Nini glide starts when the skill button is held in the air.
 - Yuan dash stops at short platform edges.
