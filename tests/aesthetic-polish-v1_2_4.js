@@ -14,11 +14,11 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 // --- version metadata --------------------------------------------------------
 
-assert.equal(pkg.version, "1.2.4", "package.json should be bumped to 1.2.4");
-assert.equal(lock.version, "1.2.4", "package-lock.json root version should be bumped to 1.2.4");
-assert.match(sw, /CACHE = "nini-yuan-v1\.2\.4-aurora-cartography"/, "service worker cache should be the v1.2.4 aurora-cartography key");
-assert.ok(/versionCode="7"/.test(androidManifest), "Android versionCode should be 7");
-assert.ok(/versionName="1\.2\.4"/.test(androidManifest), "Android versionName should be 1.2.4");
+assert.ok(["1.2.4", "1.3.0"].includes(pkg.version), "package.json should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
+assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.0-world-2-star-gates)"/, "service worker cache should be v1.2.4 or v1.3.0");
+assert.ok(/versionCode="(7|8)"/.test(androidManifest), "Android versionCode should be 7 or 8");
+assert.ok(/versionName="(1\.2\.4|1\.3\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 or 1.3.0");
 
 // --- new keyframes -----------------------------------------------------------
 

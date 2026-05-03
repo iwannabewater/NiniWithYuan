@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.2.4-aurora-cartography";
+const CACHE = "nini-yuan-v1.3.0-world-2-star-gates";
 const ASSETS = [
   "./",
   "./index.html",

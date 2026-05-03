@@ -1,8 +1,7 @@
 /* ============================================================================
-   Nini & Yuan v1.2.4 — "Aurora Inkwash · Night Atlas Cinematic"
+   Nini & Yuan v1.3.0 — "Aurora Inkwash · Night Atlas Cinematic"
    v1.2.0 visual shell + v1.2.3 ambient/cursor/easter-egg layer + v1.2.4
-   Aurora Cartography polish (compass, sub-aurora, hero parallax, HUD pulse,
-   bossbar shimmer, modal seal, settings runes, in-game gilded float-text).
+   Aurora Cartography polish + World 2 Star Gates expansion.
    Pure visual layer. Every selector, ID, data-attribute, and CSS custom
    property name relied upon by src/game.js or tests/* is preserved verbatim.
    ============================================================================ */
@@ -1481,9 +1480,53 @@
 
   .level-list {
     display: grid;
-    grid-template-columns: minmax(280px, 1.35fr) minmax(240px, 1fr);
-    grid-auto-rows: minmax(118px, auto);
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    grid-auto-rows: minmax(112px, auto);
     gap: 12px;
+  }
+
+  .level-world {
+    position: relative;
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 42px;
+    padding: 10px 14px;
+    border-radius: var(--r-m);
+    color: var(--c-gold-200);
+    background:
+      linear-gradient(90deg, rgba(242, 211, 137, 0.14), rgba(130, 227, 184, 0.08), transparent),
+      rgba(7, 11, 24, 0.38);
+    box-shadow:
+      inset 0 0 0 1px rgba(242, 211, 137, 0.16),
+      inset 0 1px rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+
+  .level-world::before {
+    content: "";
+    position: absolute;
+    left: 14px;
+    right: 14px;
+    bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(242, 211, 137, 0.5), rgba(130, 227, 184, 0.34), transparent);
+  }
+
+  .level-world-name {
+    color: var(--c-gold-200);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+  }
+
+  .level-world-subtitle {
+    color: var(--ink-muted);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
   }
 
   .level-item {
@@ -1513,8 +1556,8 @@
   }
 
   .level-item.featured {
-    grid-row: span 4;
-    min-height: 320px;
+    grid-column: span 2;
+    min-height: 214px;
     align-content: end;
     grid-template-rows: auto auto;
     padding: 22px;
@@ -1568,7 +1611,7 @@
     text-shadow: 0 2px 12px rgba(242, 211, 137, 0.7);
   }
 
-  /* v1.2.4 — meridian rail revealed on grid hover, connects ordinary chapters into one map */
+  /* v1.2.4/v1.3.0 — meridian rail revealed on grid hover, now crossing grouped starfields */
   .level-list {
     position: relative;
   }
@@ -1576,7 +1619,7 @@
   .level-list::after {
     content: "";
     position: absolute;
-    inset: 22% 14% 28% 12%;
+    inset: 18% 10% 18% 10%;
     pointer-events: none;
     border-radius: 22px;
     background:
@@ -2639,6 +2682,10 @@
       grid-template-columns: 1fr;
     }
 
+    .level-list::after {
+      display: none;
+    }
+
     .menu-actions {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
@@ -2716,6 +2763,7 @@
     }
 
     .level-item.featured {
+      grid-column: 1;
       grid-row: auto;
       min-height: 232px;
     }

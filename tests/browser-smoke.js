@@ -140,6 +140,7 @@ async function run() {
           return {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
+            eightChapterCopy: document.querySelector(".brand p").textContent.includes("八大章节") && document.querySelector('meta[name="description"]').content.includes("八大章节"),
             heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
             ambient,
             ambientStripVisible: stripStyle.opacity !== "0",
@@ -153,6 +154,7 @@ async function run() {
           !menuState.subtitle.includes("双角色星图冒险") ||
           menuState.description.includes("平台跳跃") ||
           !menuState.heroHasStarChart ||
+          !menuState.eightChapterCopy ||
           !menuState.ambient.left ||
           !menuState.ambient.right ||
           !menuState.ambient.strip ||
@@ -233,6 +235,10 @@ async function run() {
         await page.waitForTimeout(150);
         const levelState = await page.evaluate(() => {
           const cards = [...document.querySelectorAll(".level-item")].slice(0, 4);
+          const headings = [...document.querySelectorAll(".level-world")].map((heading) => ({
+            world: heading.dataset.world,
+            text: heading.textContent.trim(),
+          }));
           const offsets = cards.map((card) => {
             const cardRect = card.getBoundingClientRect();
             const copyRect = card.querySelector(".level-copy").getBoundingClientRect();
@@ -253,6 +259,9 @@ async function run() {
           });
           return {
             visible: document.querySelector("#levelScreen").classList.contains("active"),
+            totalCards: document.querySelectorAll(".level-item").length,
+            headings,
+            world2Unlocked: ![...document.querySelectorAll(".level-item")].find((card) => card.textContent.includes("第六章 星门浅湾"))?.disabled,
             offsets,
           };
         });
@@ -275,6 +284,11 @@ async function run() {
         };
         if (
           !levelState.visible ||
+          levelState.totalCards !== 8 ||
+          !levelState.world2Unlocked ||
+          levelState.headings.length !== 2 ||
+          !levelState.headings.some((heading) => heading.world === "world1" && heading.text.includes("第一星域")) ||
+          !levelState.headings.some((heading) => heading.world === "world2" && heading.text.includes("第二星域")) ||
           !copyLefts.every(expectedLeftEdge) ||
           !metaLefts.every(expectedLeftEdge) ||
           Math.max(...copyLefts) - Math.min(...copyLefts) > 2 ||
@@ -285,6 +299,17 @@ async function run() {
         ) {
           throw new Error(`Level card text alignment or score-line gold invalid: ${JSON.stringify(levelState)}`);
         }
+
+        await page.locator(".level-item").filter({ hasText: "第六章 星门浅湾" }).click();
+        await page.waitForTimeout(500);
+        const chapterSixState = await page.evaluate(() => ({
+          hud: document.querySelector("#overlay").classList.contains("active"),
+          title: document.querySelector("#chapterIntroTitle").textContent.trim(),
+          status: document.querySelector("#hudStatus").textContent.trim(),
+        }));
+        if (!chapterSixState.hud || chapterSixState.title !== "第六章 星门浅湾") {
+          throw new Error(`Chapter 6 did not start from grouped level select: ${JSON.stringify(chapterSixState)}`);
+        }
       },
       {
         init: () => {
@@ -293,10 +318,10 @@ async function run() {
             JSON.stringify({
               schemaVersion: 2,
               selected: "nini",
-              unlocked: 5,
+              unlocked: 8,
               totalCoins: 389,
-              bestTimes: { sakura: 22, moonruin: 15, cloudsea: 19, crystalforge: 16 },
-              levelStars: { sakura: 3, moonruin: 3, cloudsea: 3, crystalforge: 2 },
+              bestTimes: { sakura: 22, moonruin: 15, cloudsea: 19, crystalforge: 16, auroracitadel: 28, stargatecove: 31, loopinglighthouse: 35 },
+              levelStars: { sakura: 3, moonruin: 3, cloudsea: 3, crystalforge: 2, auroracitadel: 3, stargatecove: 2, loopinglighthouse: 2 },
               settings: { volume: 70, touch: 98, fx: true, bgmVolume: 60 },
             })
           );

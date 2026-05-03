@@ -41,11 +41,23 @@
     clear(container);
     const { levels, save, startLevel, formatTime } = options;
     const featuredIndex = Math.max(0, Math.min(levels.length - 1, save.unlocked - 1));
+    let lastWorldId = "";
     levels.forEach((level, i) => {
+      const world = typeof level.world === "object" && level.world ? level.world : { id: "world1", name: "第一星域 破碎星图", subtitle: "" };
+      if (world.id !== lastWorldId) {
+        lastWorldId = world.id;
+        const heading = document.createElement("div");
+        heading.className = "level-world";
+        heading.dataset.world = world.id;
+        appendText(heading, "span", world.name, "level-world-name");
+        if (world.subtitle) appendText(heading, "strong", world.subtitle, "level-world-subtitle");
+        container.appendChild(heading);
+      }
       const locked = i >= save.unlocked;
       const button = document.createElement("button");
       button.className = `level-item${i === featuredIndex ? " featured" : ""}${locked ? " locked" : ""}`;
       button.disabled = locked;
+      button.dataset.world = world.id;
       button.style.setProperty("--level-banner", levelBanner(level.palette));
 
       const intro = document.createElement("span");

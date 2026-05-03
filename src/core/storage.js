@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "nini-yuan-save-v1";
   const SAVE_SCHEMA_VERSION = 2;
-  const DEFAULT_LEVEL_COUNT = 5;
+  const DEFAULT_LEVEL_COUNT = 8;
 
   const defaultSave = {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -69,13 +69,19 @@
   function sanitizeSave(raw = {}, options = {}) {
     const data = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     const levelCount = Math.max(1, Number(options.levelCount) || DEFAULT_LEVEL_COUNT);
+    const bestTimes = sanitizeRecord(data.bestTimes, (n) => Number.isFinite(n) && n > 0 && n < 36000, options);
+    const levelStars = sanitizeRecord(data.levelStars, (n) => Number.isInteger(n) && n >= 0 && n <= 3, options);
+    let unlocked = sanitizeInteger(data.unlocked, defaultSave.unlocked, 1, levelCount);
+    if (levelCount >= 6 && (bestTimes.auroracitadel || levelStars.auroracitadel > 0)) {
+      unlocked = Math.max(unlocked, 6);
+    }
     return {
       schemaVersion: SAVE_SCHEMA_VERSION,
       selected: data.selected === "yuan" ? "yuan" : "nini",
-      unlocked: sanitizeInteger(data.unlocked, defaultSave.unlocked, 1, levelCount),
+      unlocked,
       totalCoins: sanitizeInteger(data.totalCoins, defaultSave.totalCoins, 0, Number.MAX_SAFE_INTEGER),
-      bestTimes: sanitizeRecord(data.bestTimes, (n) => Number.isFinite(n) && n > 0 && n < 36000, options),
-      levelStars: sanitizeRecord(data.levelStars, (n) => Number.isInteger(n) && n >= 0 && n <= 3, options),
+      bestTimes,
+      levelStars,
       settings: sanitizeSettings(data.settings),
     };
   }

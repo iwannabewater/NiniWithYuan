@@ -53,6 +53,7 @@
   const WIND_MAX_SPEED = 1.3;
   const WIND_ARROW_SPACING = 72;
   const WIND_ARROW_SPEED = 18;
+  const PORTAL_COOLDOWN = 0.34;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const snap = (n) => Math.round(n);
@@ -223,10 +224,22 @@
     });
     const H = (x, y, w = 1, h = 1, type = "spike") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type });
     const B = (x, y, w = 1, h = 1) => P(x, y, w, h, "breakable");
+    const G = (id, pair, x, platformTopY, palette = "cyan") => ({
+      id,
+      pair,
+      x: x * TILE + 3,
+      y: platformTopY * TILE - 76,
+      w: 42,
+      h: 76,
+      palette,
+    });
+    const W1 = { id: "world1", name: "第一星域 破碎星图", subtitle: "五枚心石碎片" };
+    const W2 = { id: "world2", name: "第二星域 星门群岛", subtitle: "星门重新接合路线" };
 
     return [
       {
         id: "sakura",
+        world: W1,
         name: "第一章 星露花庭",
         vibe: "黄昏花庭",
         hint: "学习二段跳、冲刺和踩踏敌人。",
@@ -253,6 +266,7 @@
       },
       {
         id: "moonruin",
+        world: W1,
         name: "第二章 月镜遗迹",
         vibe: "镜面遗迹",
         hint: "移动平台更密集，星露藏在高路线。",
@@ -279,6 +293,7 @@
       },
       {
         id: "cloudsea",
+        world: W1,
         name: "第三章 云海风帆",
         vibe: "高空风场",
         hint: "风场会改变落点，保持节奏。",
@@ -306,6 +321,7 @@
       },
       {
         id: "crystalforge",
+        world: W1,
         name: "第四章 辉晶锻炉",
         vibe: "熔炉晶洞",
         hint: "源源可以冲碎琥珀晶块，妮妮可走上方滑翔路线。",
@@ -333,6 +349,7 @@
       },
       {
         id: "auroracitadel",
+        world: W1,
         name: "终章 极光天城",
         vibe: "极光王座",
         hint: "综合考验：风场、移动平台、晶块和连续跳跃。",
@@ -360,6 +377,115 @@
         springs: [S(35, 16, 1180), S(62, 16, 1150), S(115, 10, 1220)],
         hazards: [H(35, 18, 5, 1), H(49, 18, 5, 1), H(78, 16, 5, 1), H(110, 15, 5, 1)],
         moving: [M(21, 13, 3, 6, 112), M(48, 11, 4, 5, 98, "y"), M(77, 9, 3, 7, 118), M(93, 8, 4, 4, 90, "y"), M(109, 7, 3, 5, 100)],
+      },
+      {
+        id: "stargatecove",
+        world: W2,
+        name: "第六章 星门浅湾",
+        vibe: "潮汐星门",
+        hint: "成对星门会接合两处路线，穿过后保持动量。",
+        width: 106 * TILE,
+        height: 18 * TILE,
+        start: { x: 100, y: 560 },
+        goal: { x: 101 * TILE, y: 8 * TILE, w: 72, h: 124 },
+        palette: ["#10213a", "#1f5a77", "#6dd6ee", "#ffe9a8"],
+        portals: [
+          G("cove-a", "cove-b", 19, 15, "cyan"),
+          G("cove-b", "cove-a", 34, 14, "gold"),
+          G("cove-c", "cove-d", 54, 13, "jade"),
+          G("cove-d", "cove-c", 74, 14, "rose"),
+        ],
+        platforms: [
+          P(0, 16, 12, 2), P(14, 15, 8, 3), P(28, 14, 9, 4), P(43, 15, 7, 3),
+          P(56, 13, 9, 5), P(72, 14, 8, 4), P(88, 12, 18, 6),
+          P(10, 12, 3, 1, "cloud"), P(24, 10, 4, 1, "cloud"), P(39, 9, 3, 1, "cloud"),
+          P(53, 8, 4, 1, "cloud"), P(68, 9, 4, 1, "cloud"), P(84, 8, 3, 1, "cloud"),
+        ],
+        coins: [
+          C(8, 14), C(15, 13), C(24, 8, "gem"), C(32, 12), C(39, 7), C(47, 13),
+          C(55, 6, "gem"), C(62, 11), C(70, 7), C(76, 12), C(85, 6, "gem"), C(98, 10),
+        ],
+        powerups: [F(16, 13, "bell"), F(45, 13, "berry"), F(70, 12, "moon"), F(91, 10, "core")],
+        enemies: [E(17, 14, 150), E(45, 14, 130, "wisp"), E(60, 12, 190), E(93, 11, 180)],
+        springs: [S(26, 15, 1080), S(82, 14, 1120)],
+        hazards: [H(38, 16, 3, 1), H(67, 15, 3, 1)],
+        moving: [M(22, 12, 3, 4, 86, "x", "cloud"), M(50, 10, 3, 4, 78, "y", "cloud"), M(79, 10, 4, 4, 86, "x", "cloud")],
+      },
+      {
+        id: "loopinglighthouse",
+        world: W2,
+        name: "第七章 回环灯塔",
+        vibe: "回环灯塔",
+        hint: "星门分出上下路线，收集路径会考验滑翔和冲刺。",
+        width: 120 * TILE,
+        height: 18 * TILE,
+        start: { x: 96, y: 560 },
+        goal: { x: 115 * TILE, y: 6 * TILE, w: 72, h: 126 },
+        palette: ["#121b32", "#3c4a7a", "#f2d389", "#82e3b8"],
+        portals: [
+          G("light-a", "light-b", 18, 15, "gold"),
+          G("light-b", "light-a", 35, 14, "cyan"),
+          G("light-c", "light-d", 53, 15, "jade"),
+          G("light-d", "light-c", 71, 13, "rose"),
+          G("light-e", "light-f", 87, 12, "cyan"),
+          G("light-f", "light-e", 101, 10, "gold"),
+        ],
+        platforms: [
+          P(0, 16, 12, 2), P(15, 15, 9, 3), P(30, 14, 8, 4), P(45, 15, 9, 3),
+          P(62, 13, 9, 5), P(79, 12, 8, 6), P(96, 10, 24, 8),
+          P(11, 11, 3, 1, "stone"), P(24, 9, 4, 1, "stone"), P(39, 8, 4, 1, "stone"),
+          P(55, 8, 3, 1, "stone"), P(70, 7, 4, 1, "stone"), P(86, 6, 3, 1, "stone"),
+          B(41, 13, 2, 1), B(76, 11, 3, 1), B(105, 9, 2, 1),
+        ],
+        coins: [
+          C(11, 9), C(20, 13), C(25, 7, "gem"), C(36, 12), C(40, 6), C(50, 13),
+          C(56, 6, "gem"), C(66, 11), C(72, 5), C(82, 10), C(87, 4, "gem"), C(99, 8),
+          C(107, 8), C(115, 8, "gem"),
+        ],
+        powerups: [F(16, 13, "berry"), F(47, 13, "bell"), F(73, 11, "core"), F(100, 8, "moon")],
+        enemies: [E(18, 14, 190), E(34, 13, 170, "wisp"), E(50, 14, 150, "ember"), E(68, 12, 190), E(101, 9, 220)],
+        springs: [S(28, 14, 1120), S(91, 12, 1160)],
+        hazards: [H(25, 16, 4, 1), H(58, 16, 4, 1), H(89, 14, 4, 1)],
+        moving: [M(23, 11, 3, 5, 94), M(57, 10, 4, 5, 90, "y"), M(84, 8, 3, 5, 98), M(102, 7, 3, 3, 82, "y")],
+      },
+      {
+        id: "ringconservatory",
+        world: W2,
+        name: "第八章 星环温室",
+        vibe: "星环温室",
+        hint: "星门、风场、移动平台和晶块会在同一条路线里交替出现。",
+        width: 136 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 660 },
+        goal: { x: 130 * TILE, y: 5 * TILE, w: 76, h: 128 },
+        palette: ["#0e1a2f", "#244e57", "#ffadc7", "#b6f5d8"],
+        wind: [{ x: 40 * TILE, y: 0, w: 11 * TILE, h: 18 * TILE, force: 300 }, { x: 92 * TILE, y: 0, w: 13 * TILE, h: 18 * TILE, force: -320 }],
+        portals: [
+          G("ring-a", "ring-b", 20, 17, "jade"),
+          G("ring-b", "ring-a", 37, 15, "gold"),
+          G("ring-c", "ring-d", 63, 14, "rose"),
+          G("ring-d", "ring-c", 82, 13, "cyan"),
+          G("ring-e", "ring-f", 101, 12, "gold"),
+          G("ring-f", "ring-e", 119, 10, "jade"),
+        ],
+        platforms: [
+          P(0, 18, 11, 2), P(15, 17, 8, 3), P(31, 15, 8, 4), P(47, 16, 7, 3),
+          P(61, 14, 8, 5), P(78, 13, 9, 5), P(96, 12, 8, 5), P(114, 10, 22, 8),
+          P(12, 13, 3, 1, "aurora"), P(25, 11, 4, 1, "aurora"), P(40, 9, 4, 1, "aurora"),
+          P(56, 8, 3, 1, "aurora"), P(72, 7, 4, 1, "aurora"), P(88, 7, 3, 1, "aurora"),
+          P(105, 6, 4, 1, "aurora"), P(121, 6, 3, 1, "aurora"),
+          B(54, 15, 2, 1), B(90, 12, 2, 1), B(111, 9, 2, 1),
+        ],
+        coins: [
+          C(12, 11), C(19, 15), C(26, 9, "gem"), C(38, 13), C(41, 7), C(53, 14),
+          C(57, 6, "gem"), C(67, 12), C(73, 5), C(84, 11), C(89, 5, "gem"), C(98, 10),
+          C(106, 4), C(113, 8), C(122, 4, "gem"), C(131, 8),
+        ],
+        powerups: [F(16, 15, "berry"), F(45, 14, "bell"), F(70, 12, "core"), F(99, 10, "moon"), F(121, 8, "heart")],
+        enemies: [E(18, 16, 160), E(34, 14, 170, "wisp"), E(50, 15, 150, "ember"), E(66, 13, 180), E(84, 12, 170, "wisp"), E(101, 11, 220, "ember"), E(122, 9, 230)],
+        springs: [S(29, 17, 1140), S(58, 16, 1160), S(108, 12, 1200)],
+        hazards: [H(24, 18, 5, 1), H(55, 18, 5, 1), H(89, 15, 5, 1), H(112, 14, 5, 1)],
+        moving: [M(24, 13, 3, 6, 104), M(45, 12, 4, 5, 92, "y"), M(74, 9, 3, 6, 110), M(94, 8, 4, 5, 92, "y"), M(109, 7, 3, 5, 98)],
       },
     ];
   }
@@ -417,6 +543,9 @@
       ammoTimer: 0,
       boostTimer: 0,
       windTimer: 0,
+      portalCd: 0,
+      portalTimer: 0,
+      portalLock: "",
       carrier: null,
       coins: 0,
       gems: 0,
@@ -448,6 +577,7 @@
       hazards: level.hazards.map((h) => ({ ...h })),
       moving: level.moving.map((m) => ({ ...m })),
       wind: (level.wind || []).map((w) => ({ ...w })),
+      portals: (level.portals || []).map((p) => ({ ...p })),
     };
   }
 
@@ -529,6 +659,8 @@
     player.ammoTimer = Math.max(0, player.ammoTimer - dt);
     player.boostTimer = Math.max(0, player.boostTimer - dt);
     player.windTimer = Math.max(0, player.windTimer - dt);
+    player.portalCd = Math.max(0, player.portalCd - dt);
+    player.portalTimer = Math.max(0, player.portalTimer - dt);
     player.ammoRegen += dt;
     if (player.ammo < 14 && player.ammoRegen >= 1.6) {
       player.ammo += 1;
@@ -633,6 +765,8 @@
         beep(780, 0.06);
       }
     }
+
+    updatePortals();
 
     for (const h of activeLevel.hazards) {
       if (rectsOverlap(bodyRect(player), h)) hurt(h.type === "lava" ? 2 : 1);
@@ -759,6 +893,63 @@
       if (!zone || Math.abs(w.force) > Math.abs(zone.force)) zone = w;
     }
     return zone;
+  }
+
+  function updatePortals() {
+    const portal = activePortalForPlayer();
+    if (!portal) {
+      player.portalLock = "";
+      return;
+    }
+    if (player.portalLock === portal.id || player.portalCd > 0) return;
+    const target = pairedPortal(portal);
+    if (!target) return;
+    const exit = portalExitPosition(target);
+    const candidate = { ...player, x: exit.x, y: exit.y };
+    if (!portalExitRectIsSafe(candidate)) return;
+    player.x = exit.x;
+    player.y = exit.y;
+    player.portalCd = PORTAL_COOLDOWN;
+    player.portalTimer = 0.42;
+    player.portalLock = target.id;
+    refreshGroundedState();
+    camera.shake = Math.max(camera.shake, 4);
+    const color = portalColor(target);
+    burst(player.x + player.w / 2, player.y + player.h / 2, color, 16);
+    floatText("星门", player.x + player.w / 2, player.y, color);
+    beep(640, 0.045);
+  }
+
+  function activePortalForPlayer() {
+    for (const portal of activeLevel.portals || []) {
+      if (rectsOverlap(bodyRect(player), portal)) return portal;
+    }
+    return null;
+  }
+
+  function pairedPortal(portal) {
+    return (activeLevel.portals || []).find((candidate) => candidate.id === portal.pair) || null;
+  }
+
+  function portalExitPosition(portal) {
+    return {
+      x: portal.x + portal.w / 2 - player.w / 2,
+      y: portal.y + portal.h - player.h,
+    };
+  }
+
+  function portalExitRectIsSafe(candidate) {
+    if (candidate.x < 0 || candidate.y < 0 || candidate.x + candidate.w > activeLevel.width || candidate.y + candidate.h > activeLevel.height) return false;
+    return !allSolids().some((p) => !p.broken && rectsOverlap(bodyRect(candidate), p));
+  }
+
+  function refreshGroundedState() {
+    const foot = { x: player.x + 5, y: player.y + player.h + 2, w: player.w - 10, h: 4 };
+    player.onGround = allSolids().some((p) => !p.broken && rectsOverlap(foot, p));
+    if (player.onGround) {
+      player.coyote = 0.12;
+      player.airJumps = characters[save.selected].airJumps;
+    }
   }
 
   function moveAxis(axis, amount) {
@@ -1117,6 +1308,7 @@
     for (const m of level.moving) drawPlatform(m);
     for (const h of level.hazards) drawHazard(h);
     for (const s of level.springs) drawSpring(s);
+    for (const portal of level.portals || []) drawPortal(portal);
     for (const c of level.coins) if (!c.taken) drawCoin(c);
     for (const p of level.powerups || []) if (!p.taken) drawPowerup(p);
     for (const pr of projectiles) drawProjectile(pr);
@@ -1435,6 +1627,66 @@
         ctx.stroke();
       }
     }
+    ctx.restore();
+  }
+
+  function portalColor(portal) {
+    return {
+      cyan: "#61e5ff",
+      gold: "#ffd36d",
+      jade: "#7ff1ba",
+      rose: "#ff86bd",
+    }[portal.palette] || "#9ee7ff";
+  }
+
+  function drawPortal(portal) {
+    const t = performance.now() / 1000;
+    const color = portalColor(portal);
+    const cx = portal.x + portal.w / 2;
+    const cy = portal.y + portal.h / 2;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.globalCompositeOperation = "source-over";
+    const pulse = 1 + Math.sin(t * 3 + portal.x * 0.01) * 0.035;
+    ctx.scale(pulse, 1);
+
+    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, portal.h * 0.62);
+    glow.addColorStop(0, "rgba(255, 247, 213, 0.24)");
+    glow.addColorStop(0.45, `${color}66`);
+    glow.addColorStop(1, "rgba(97, 229, 255, 0)");
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, portal.w * 0.72, portal.h * 0.62, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, portal.w * 0.42, portal.h * 0.48, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = "#fff7d1";
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 3; i += 1) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, portal.w * (0.24 + i * 0.08), portal.h * (0.24 + i * 0.06), t * 0.8 + i * 0.7, 0, Math.PI * 1.65);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    for (let i = 0; i < 4; i += 1) {
+      const a = -Math.PI / 2 + i * Math.PI / 2;
+      const r = i % 2 ? 5 : 10;
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 
@@ -1804,6 +2056,7 @@
   function statusLabel() {
     const states = [];
     if (player.windTimer > 0) states.push("风场");
+    if (player.portalTimer > 0) states.push("星门");
     if (player.bigTimer > 0) states.push(`巨大 ${Math.ceil(player.bigTimer)}`);
     if (player.superInvuln > 0) states.push(`无敌 ${Math.ceil(player.superInvuln)}`);
     if (player.ammoTimer > 0) states.push(`强化 ${Math.ceil(player.ammoTimer)}`);
