@@ -54,6 +54,8 @@
   const WIND_ARROW_SPACING = 72;
   const WIND_ARROW_SPEED = 18;
   const PORTAL_COOLDOWN = 0.34;
+  const PHASE_DEFAULT_PERIOD = 3.2;
+  const PHASE_WARNING_DEFAULT = 0.45;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -187,9 +189,9 @@
   }
 
   function buildLevels() {
-    const P = (x, y, w, h, type = "ground") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type });
-    const C = (x, y, kind = "coin") => ({ x: x * TILE + 18, y: y * TILE + 16, w: 22, h: 22, kind, taken: false });
-    const F = (x, y, kind = "berry") => ({ x: x * TILE + 10, y: y * TILE + 10, w: 30, h: 30, kind, taken: false });
+    const P = (x, y, w, h, type = "ground", phase = "") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type, phase });
+    const C = (x, y, kind = "coin", phase = "") => ({ x: x * TILE + 18, y: y * TILE + 16, w: 22, h: 22, kind, phase, taken: false });
+    const F = (x, y, kind = "berry", phase = "") => ({ x: x * TILE + 10, y: y * TILE + 10, w: 30, h: 30, kind, phase, taken: false });
     const E = (x, y, patrol = 160, type = "slime") => {
       const groundedY = y * TILE + TILE - ENEMY_HEIGHT;
       const enemyY = type === "wisp" ? groundedY - WISP_FLOAT_GAP : groundedY;
@@ -208,7 +210,7 @@
       };
     };
     const S = (x, y, power = 1050) => ({ x: x * TILE, y: y * TILE + 20, w: TILE, h: 18, power });
-    const M = (x, y, w, range, speed, axis = "x", type = "jade") => ({
+    const M = (x, y, w, range, speed, axis = "x", type = "jade", phase = "") => ({
       x: x * TILE,
       y: y * TILE,
       w: w * TILE,
@@ -222,8 +224,9 @@
       dx: 0,
       dy: 0,
       type,
+      phase,
     });
-    const H = (x, y, w = 1, h = 1, type = "spike") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type });
+    const H = (x, y, w = 1, h = 1, type = "spike", phase = "") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type, phase });
     const B = (x, y, w = 1, h = 1) => P(x, y, w, h, "breakable");
     const G = (id, pair, x, platformTopY, palette = "cyan") => ({
       id,
@@ -236,6 +239,7 @@
     });
     const W1 = { id: "world1", name: "第一星域 破碎星图", subtitle: "五枚心石碎片" };
     const W2 = { id: "world2", name: "第二星域 星门群岛", subtitle: "星门重新接合路线" };
+    const W3 = { id: "world3", name: "第三星域 星潮镜域", subtitle: "星潮相位路线" };
 
     return [
       {
@@ -488,6 +492,255 @@
         hazards: [H(24, 18, 5, 1), H(55, 18, 5, 1), H(89, 15, 5, 1), H(112, 14, 5, 1)],
         moving: [M(24, 13, 3, 6, 104), M(45, 12, 4, 5, 92, "y"), M(74, 9, 3, 6, 110), M(94, 8, 4, 5, 92, "y"), M(109, 7, 3, 5, 98)],
       },
+      {
+        id: "starbridgetide",
+        world: W2,
+        name: "第九章 星桥潮汐",
+        vibe: "潮汐星桥",
+        hint: "风场会改写星门后的落点，顺势保留动量。",
+        width: 128 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 660 },
+        goal: { x: 122 * TILE, y: 6 * TILE, w: 76, h: 128 },
+        palette: ["#0d1c34", "#1f5a77", "#9ee7ff", "#ffe9a8"],
+        wind: [{ x: 24 * TILE, y: 0, w: 12 * TILE, h: 18 * TILE, force: 310 }, { x: 78 * TILE, y: 0, w: 12 * TILE, h: 18 * TILE, force: -330 }],
+        portals: [
+          G("bridge-a", "bridge-b", 18, 17, "cyan"),
+          G("bridge-b", "bridge-a", 32, 15, "gold"),
+          G("bridge-c", "bridge-d", 51, 16, "jade"),
+          G("bridge-d", "bridge-c", 70, 14, "rose"),
+          G("bridge-e", "bridge-f", 91, 13, "cyan"),
+          G("bridge-f", "bridge-e", 109, 11, "gold"),
+        ],
+        platforms: [
+          P(0, 18, 11, 2), P(14, 17, 8, 3), P(30, 15, 8, 5), P(44, 16, 8, 4),
+          P(58, 14, 9, 6), P(74, 14, 9, 5), P(89, 13, 8, 5), P(106, 11, 22, 7),
+          P(11, 13, 3, 1, "cloud"), P(25, 11, 4, 1, "cloud"), P(40, 10, 3, 1, "cloud"),
+          P(55, 9, 3, 1, "cloud"), P(69, 8, 4, 1, "cloud"), P(86, 7, 3, 1, "cloud"),
+          P(102, 7, 4, 1, "cloud"), P(116, 6, 3, 1, "cloud"),
+        ],
+        coins: [
+          C(12, 11), C(18, 15), C(26, 9, "gem"), C(33, 13), C(41, 8), C(49, 14),
+          C(56, 7, "gem"), C(65, 12), C(70, 6), C(80, 12), C(87, 5, "gem"), C(95, 11),
+          C(103, 5), C(111, 9), C(117, 4, "gem"), C(124, 9),
+        ],
+        powerups: [F(16, 15, "bell"), F(46, 14, "berry"), F(76, 12, "moon"), F(103, 9, "core"), F(118, 9, "heart")],
+        enemies: [E(17, 16, 170), E(34, 14, 180, "wisp"), E(47, 15, 160), E(61, 13, 200, "ember"), E(79, 13, 170, "wisp"), E(111, 10, 210)],
+        springs: [S(28, 17, 1120), S(54, 16, 1140), S(101, 13, 1160)],
+        hazards: [H(23, 18, 4, 1), H(52, 18, 5, 1), H(84, 16, 5, 1), H(104, 15, 4, 1)],
+        moving: [M(23, 13, 3, 5, 96, "x", "cloud"), M(67, 10, 4, 5, 88, "y", "cloud"), M(97, 9, 3, 5, 94, "x", "cloud")],
+      },
+      {
+        id: "islandstarcore",
+        world: W2,
+        name: "第十章 群岛星核",
+        vibe: "星核群岛",
+        hint: "星门、风场、晶块与移动平台完成星门群岛的终局路线。",
+        width: 146 * TILE,
+        height: 21 * TILE,
+        start: { x: 100, y: 710 },
+        goal: { x: 140 * TILE, y: 5 * TILE, w: 78, h: 132 },
+        palette: ["#101528", "#24416b", "#82e3b8", "#ffe46b"],
+        wind: [{ x: 35 * TILE, y: 0, w: 12 * TILE, h: 19 * TILE, force: -300 }, { x: 92 * TILE, y: 0, w: 14 * TILE, h: 19 * TILE, force: 330 }],
+        portals: [
+          G("core-a", "core-b", 19, 18, "gold"),
+          G("core-b", "core-a", 38, 16, "cyan"),
+          G("core-c", "core-d", 59, 16, "jade"),
+          G("core-d", "core-c", 79, 14, "rose"),
+          G("core-e", "core-f", 101, 13, "cyan"),
+          G("core-f", "core-e", 122, 11, "gold"),
+          G("core-g", "core-h", 113, 13, "jade"),
+          G("core-h", "core-g", 134, 9, "rose"),
+        ],
+        platforms: [
+          P(0, 19, 12, 2), P(15, 18, 8, 3), P(34, 16, 8, 5), P(50, 16, 10, 4),
+          P(68, 14, 10, 5), P(86, 14, 10, 5), P(100, 13, 9, 5), P(119, 11, 12, 6), P(134, 9, 12, 8),
+          P(12, 14, 3, 1, "aurora"), P(28, 12, 4, 1, "aurora"), P(45, 10, 3, 1, "aurora"),
+          P(62, 9, 4, 1, "aurora"), P(80, 8, 3, 1, "aurora"), P(96, 7, 4, 1, "aurora"),
+          P(113, 7, 3, 1, "aurora"), P(129, 6, 3, 1, "aurora"),
+          B(47, 15, 2, 1), B(82, 13, 3, 1), B(111, 12, 2, 1), B(132, 8, 2, 1),
+        ],
+        coins: [
+          C(12, 12), C(20, 16), C(29, 10, "gem"), C(39, 14), C(46, 8), C(55, 14),
+          C(63, 7, "gem"), C(72, 12), C(81, 6), C(91, 12), C(97, 5, "gem"), C(104, 11),
+          C(114, 5), C(123, 9), C(130, 4, "gem"), C(138, 7), C(142, 7, "gem"),
+        ],
+        powerups: [F(18, 16, "bell"), F(53, 14, "berry"), F(77, 12, "core"), F(104, 11, "moon"), F(127, 9, "heart")],
+        enemies: [E(18, 17, 160), E(36, 15, 180, "wisp"), E(55, 15, 170, "ember"), E(72, 13, 190), E(90, 13, 170, "wisp"), E(105, 12, 190, "ember"), E(124, 10, 220), E(138, 8, 170, "wisp")],
+        springs: [S(31, 18, 1140), S(66, 16, 1160), S(115, 13, 1180), S(132, 11, 1220)],
+        hazards: [H(24, 19, 5, 1), H(61, 18, 5, 1), H(96, 16, 5, 1), H(118, 15, 5, 1), H(132, 12, 4, 1)],
+        moving: [M(26, 14, 3, 6, 104), M(61, 11, 4, 5, 96, "y"), M(94, 9, 3, 6, 108), M(117, 8, 4, 4, 92, "y")],
+      },
+      {
+        id: "phaseshallows",
+        world: W3,
+        name: "第十一章 相位浅滩",
+        vibe: "相位浅滩",
+        hint: "星潮会交替点亮两组桥面，先看节奏再出发。",
+        width: 112 * TILE,
+        height: 18 * TILE,
+        start: { x: 100, y: 560 },
+        goal: { x: 107 * TILE, y: 7 * TILE, w: 74, h: 126 },
+        palette: ["#071827", "#16455a", "#9ee7ff", "#dff9ff"],
+        phaseTide: { period: 3.6, offset: 0, warning: 0.55 },
+        platforms: [
+          P(0, 16, 12, 2), P(17, 15, 7, 3), P(32, 15, 8, 3), P(48, 14, 8, 4),
+          P(64, 13, 8, 4), P(81, 12, 8, 5), P(98, 11, 14, 6),
+          P(12, 12, 4, 1, "phase", "a"), P(25, 10, 4, 1, "phase", "b"), P(39, 11, 4, 1, "phase", "a"),
+          P(54, 9, 4, 1, "phase", "b"), P(70, 8, 4, 1, "phase", "a"), P(87, 7, 4, 1, "phase", "b"),
+          P(101, 7, 3, 1, "phase", "a"),
+        ],
+        coins: [
+          C(12, 10, "coin", "a"), C(18, 13), C(25, 8, "gem", "b"), C(34, 13), C(40, 9, "coin", "a"),
+          C(51, 12), C(55, 7, "gem", "b"), C(66, 11), C(71, 6, "coin", "a"), C(83, 10),
+          C(88, 5, "gem", "b"), C(101, 5, "coin", "a"), C(108, 9),
+        ],
+        powerups: [F(19, 13, "berry"), F(50, 12, "bell"), F(82, 10, "moon"), F(100, 9, "core")],
+        enemies: [E(20, 14, 170), E(36, 14, 150, "wisp"), E(52, 13, 160), E(84, 11, 180)],
+        springs: [S(30, 15, 1080), S(94, 12, 1120)],
+        hazards: [H(28, 16, 4, 1, "spike", "b"), H(60, 15, 4, 1, "spike", "a"), H(91, 14, 4, 1, "spike", "b")],
+        moving: [M(44, 12, 3, 4, 82, "x", "jade"), M(74, 10, 3, 4, 78, "y", "jade")],
+      },
+      {
+        id: "tidecorridor",
+        world: W3,
+        name: "第十二章 潮汐回廊",
+        vibe: "星潮回廊",
+        hint: "星露也会随相位显隐，耐心等到正确的潮线。",
+        width: 122 * TILE,
+        height: 19 * TILE,
+        start: { x: 100, y: 610 },
+        goal: { x: 116 * TILE, y: 6 * TILE, w: 74, h: 128 },
+        palette: ["#081522", "#1a5262", "#b6f5d8", "#9ee7ff"],
+        phaseTide: { period: 3.25, offset: 0.4, warning: 0.5 },
+        platforms: [
+          P(0, 17, 12, 2), P(15, 16, 8, 3), P(30, 15, 8, 4), P(46, 15, 8, 4),
+          P(62, 14, 8, 4), P(78, 13, 8, 5), P(94, 12, 8, 5), P(109, 10, 13, 7),
+          P(12, 12, 4, 1, "phase", "a"), P(25, 10, 4, 1, "phase", "b"), P(41, 9, 4, 1, "phase", "a"),
+          P(57, 10, 4, 1, "phase", "b"), P(73, 8, 4, 1, "phase", "a"), P(89, 7, 4, 1, "phase", "b"),
+          P(104, 6, 4, 1, "phase", "a"),
+        ],
+        coins: [
+          C(12, 10, "gem", "a"), C(16, 14), C(25, 8, "coin", "b"), C(32, 13), C(42, 7, "gem", "a"),
+          C(49, 13), C(58, 8, "coin", "b"), C(65, 12), C(74, 6, "gem", "a"), C(82, 11),
+          C(90, 5, "coin", "b"), C(98, 10), C(105, 4, "gem", "a"), C(115, 8),
+        ],
+        powerups: [F(17, 14, "bell"), F(45, 13, "berry"), F(77, 11, "core"), F(108, 8, "heart")],
+        enemies: [E(18, 15, 160), E(34, 14, 170, "wisp"), E(50, 14, 150, "ember"), E(80, 12, 180), E(112, 9, 200)],
+        springs: [S(28, 16, 1100), S(60, 15, 1120), S(102, 12, 1150)],
+        hazards: [H(24, 17, 4, 1, "spike", "b"), H(55, 16, 4, 1, "spike", "a"), H(87, 15, 4, 1, "spike", "b"), H(103, 13, 4, 1, "spike", "a")],
+        moving: [M(39, 12, 3, 5, 88, "x", "jade", "a"), M(70, 10, 3, 5, 82, "y", "jade", "b"), M(99, 8, 3, 4, 88, "x", "jade")],
+      },
+      {
+        id: "moonmirrorbreak",
+        world: W3,
+        name: "第十三章 月镜断桥",
+        vibe: "月镜断桥",
+        hint: "风场和相位桥会一起改变落点，先找安全平台。",
+        width: 132 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 660 },
+        goal: { x: 126 * TILE, y: 6 * TILE, w: 76, h: 128 },
+        palette: ["#071526", "#1d4263", "#6dd6ee", "#fff7d1"],
+        phaseTide: { period: 3.05, offset: 0.7, warning: 0.45 },
+        wind: [{ x: 34 * TILE, y: 0, w: 12 * TILE, h: 18 * TILE, force: 300 }, { x: 83 * TILE, y: 0, w: 12 * TILE, h: 18 * TILE, force: -320 }],
+        platforms: [
+          P(0, 18, 12, 2), P(15, 17, 8, 3), P(31, 16, 8, 4), P(48, 15, 8, 4),
+          P(64, 15, 8, 4), P(80, 14, 8, 5), P(96, 13, 8, 5), P(114, 11, 18, 7),
+          P(12, 13, 3, 1, "phase", "a"), P(27, 11, 4, 1, "phase", "b"), P(43, 10, 4, 1, "phase", "a"),
+          P(59, 9, 4, 1, "phase", "b"), P(75, 8, 4, 1, "phase", "a"), P(91, 7, 4, 1, "phase", "b"),
+          P(107, 7, 4, 1, "phase", "a"), P(121, 6, 3, 1, "phase", "b"),
+        ],
+        coins: [
+          C(12, 11, "coin", "a"), C(19, 15), C(28, 9, "gem", "b"), C(35, 14), C(44, 8, "coin", "a"),
+          C(52, 13), C(60, 7, "gem", "b"), C(68, 13), C(76, 6, "coin", "a"), C(84, 12),
+          C(92, 5, "gem", "b"), C(100, 11), C(108, 5, "coin", "a"), C(116, 9), C(122, 4, "gem", "b"),
+        ],
+        powerups: [F(18, 15, "bell"), F(50, 13, "berry"), F(82, 12, "moon"), F(113, 9, "core")],
+        enemies: [E(18, 16, 170), E(35, 15, 160, "wisp"), E(51, 14, 170), E(68, 14, 160, "ember"), E(100, 12, 190, "wisp"), E(119, 10, 220)],
+        springs: [S(29, 17, 1140), S(62, 15, 1160), S(109, 13, 1180)],
+        hazards: [H(24, 18, 4, 1, "spike", "b"), H(55, 17, 5, 1, "spike", "a"), H(88, 16, 5, 1, "spike", "b"), H(108, 15, 4, 1, "spike", "a")],
+        moving: [M(24, 13, 3, 5, 100, "x", "jade"), M(56, 11, 4, 4, 88, "y", "jade", "b"), M(92, 9, 3, 5, 102, "x", "jade", "a")],
+      },
+      {
+        id: "twinstarclocktower",
+        world: W3,
+        name: "第十四章 双星钟塔",
+        vibe: "双星钟塔",
+        hint: "星门负责换位，相位桥负责时机，别急着冲进下一扇门。",
+        width: 140 * TILE,
+        height: 21 * TILE,
+        start: { x: 100, y: 710 },
+        goal: { x: 134 * TILE, y: 6 * TILE, w: 78, h: 130 },
+        palette: ["#08131f", "#213a5d", "#9ee7ff", "#f2d389"],
+        phaseTide: { period: 2.9, offset: 0.2, warning: 0.45 },
+        portals: [
+          G("clock-a", "clock-b", 18, 18, "cyan"),
+          G("clock-b", "clock-a", 36, 16, "gold"),
+          G("clock-c", "clock-d", 61, 15, "jade"),
+          G("clock-d", "clock-c", 83, 13, "rose"),
+          G("clock-e", "clock-f", 104, 12, "cyan"),
+          G("clock-f", "clock-e", 125, 10, "gold"),
+        ],
+        platforms: [
+          P(0, 19, 12, 2), P(15, 18, 8, 3), P(34, 16, 8, 5), P(52, 15, 9, 5),
+          P(78, 13, 9, 6), P(100, 12, 9, 6), P(122, 10, 18, 8),
+          P(12, 14, 4, 1, "phase", "a"), P(27, 12, 4, 1, "phase", "b"), P(44, 11, 4, 1, "phase", "a"),
+          P(65, 10, 4, 1, "phase", "b"), P(91, 8, 4, 1, "phase", "a"), P(112, 7, 4, 1, "phase", "b"),
+          P(129, 6, 3, 1, "phase", "a"),
+          B(48, 14, 2, 1), B(96, 11, 2, 1), B(118, 9, 2, 1),
+        ],
+        coins: [
+          C(12, 12, "coin", "a"), C(18, 16), C(28, 10, "gem", "b"), C(37, 14), C(45, 9, "coin", "a"),
+          C(54, 13), C(66, 8, "gem", "b"), C(82, 11), C(92, 6, "coin", "a"), C(103, 10),
+          C(113, 5, "gem", "b"), C(124, 8), C(130, 4, "coin", "a"), C(136, 8, "gem"),
+        ],
+        powerups: [F(18, 16, "berry"), F(55, 13, "bell"), F(85, 11, "core"), F(124, 8, "moon")],
+        enemies: [E(18, 17, 160), E(37, 15, 150, "wisp"), E(56, 14, 170, "ember"), E(82, 12, 180), E(105, 11, 170, "wisp"), E(127, 9, 210)],
+        springs: [S(31, 18, 1120), S(74, 15, 1160), S(116, 12, 1180)],
+        hazards: [H(24, 19, 4, 1, "spike", "b"), H(61, 17, 5, 1, "spike", "a"), H(93, 15, 4, 1, "spike", "b"), H(112, 14, 4, 1, "spike", "a")],
+        moving: [M(25, 14, 3, 5, 98, "x", "jade"), M(70, 11, 4, 5, 90, "y", "jade", "b"), M(111, 8, 3, 5, 102, "x", "jade", "a")],
+      },
+      {
+        id: "phasetidecourt",
+        world: W3,
+        name: "第十五章 星潮王庭",
+        vibe: "星潮王庭",
+        hint: "最终路线会把星门、风场、晶块和相位桥编在同一段星潮里。",
+        width: 154 * TILE,
+        height: 22 * TILE,
+        start: { x: 100, y: 760 },
+        goal: { x: 148 * TILE, y: 5 * TILE, w: 80, h: 136 },
+        palette: ["#07111e", "#173c58", "#6dd6ee", "#fff7d1"],
+        phaseTide: { period: 2.8, offset: 0.55, warning: 0.42 },
+        wind: [{ x: 38 * TILE, y: 0, w: 12 * TILE, h: 20 * TILE, force: 300 }, { x: 102 * TILE, y: 0, w: 14 * TILE, h: 20 * TILE, force: -330 }],
+        portals: [
+          G("court-a", "court-b", 20, 19, "gold"),
+          G("court-b", "court-a", 41, 17, "cyan"),
+          G("court-c", "court-d", 68, 16, "jade"),
+          G("court-d", "court-c", 92, 14, "rose"),
+          G("court-e", "court-f", 113, 13, "cyan"),
+          G("court-f", "court-e", 136, 10, "gold"),
+        ],
+        platforms: [
+          P(0, 20, 12, 2), P(15, 19, 9, 3), P(38, 17, 9, 5), P(58, 16, 10, 5),
+          P(86, 14, 10, 6), P(110, 13, 10, 6), P(132, 10, 22, 9),
+          P(12, 15, 4, 1, "phase", "a"), P(28, 13, 4, 1, "phase", "b"), P(49, 12, 4, 1, "phase", "a"),
+          P(72, 10, 4, 1, "phase", "b"), P(100, 9, 4, 1, "phase", "a"), P(124, 7, 4, 1, "phase", "b"),
+          P(142, 6, 3, 1, "phase", "a"),
+          B(54, 15, 2, 1), B(82, 13, 3, 1), B(122, 12, 2, 1), B(140, 9, 2, 1),
+        ],
+        coins: [
+          C(12, 13, "coin", "a"), C(21, 17), C(29, 11, "gem", "b"), C(42, 15), C(50, 10, "coin", "a"),
+          C(61, 14), C(73, 8, "gem", "b"), C(89, 12), C(101, 7, "coin", "a"), C(114, 11),
+          C(125, 5, "gem", "b"), C(136, 8), C(143, 4, "coin", "a"), C(149, 8, "gem"),
+        ],
+        powerups: [F(18, 17, "bell"), F(60, 14, "berry"), F(91, 12, "core"), F(116, 11, "moon"), F(136, 8, "heart")],
+        enemies: [E(18, 18, 160), E(42, 16, 170, "wisp"), E(62, 15, 170, "ember"), E(90, 13, 190), E(114, 12, 170, "wisp"), E(138, 9, 220, "ember")],
+        springs: [S(34, 19, 1140), S(78, 16, 1180), S(126, 13, 1200)],
+        hazards: [H(25, 20, 5, 1, "spike", "b"), H(68, 18, 5, 1, "spike", "a"), H(102, 16, 5, 1, "spike", "b"), H(124, 15, 4, 1, "spike", "a"), H(140, 13, 4, 1, "spike", "b")],
+        moving: [M(30, 15, 3, 6, 104, "x", "jade"), M(76, 12, 4, 5, 92, "y", "jade", "b"), M(105, 10, 3, 6, 106, "x", "jade", "a"), M(128, 8, 4, 4, 92, "y", "jade")],
+      },
     ];
   }
 
@@ -547,6 +800,7 @@
       portalCd: 0,
       portalTimer: 0,
       portalLock: "",
+      tidePhase: "",
       carrier: null,
       coins: 0,
       gems: 0,
@@ -613,7 +867,35 @@
   }
 
   function allSolids() {
-    return activeLevel.platforms.concat(activeLevel.moving);
+    const tide = phaseTideState();
+    return activeLevel.platforms.concat(activeLevel.moving).filter((p) => phaseIsActive(p, tide));
+  }
+
+  function phaseTideState(level = activeLevel, elapsed = player?.elapsed || 0) {
+    if (!level?.phaseTide) return { active: "", progress: 0, warning: false, enabled: false };
+    const period = Math.max(0.8, Number(level.phaseTide.period) || PHASE_DEFAULT_PERIOD);
+    const warningWindow = Math.max(0, Number(level.phaseTide.warning) || PHASE_WARNING_DEFAULT);
+    const offset = Number(level.phaseTide.offset) || 0;
+    const cycle = period * 2;
+    const t = ((elapsed + offset) % cycle + cycle) % cycle;
+    const active = t < period ? "a" : "b";
+    const phaseTime = t % period;
+    return {
+      active,
+      progress: phaseTime / period,
+      warning: phaseTime >= period - warningWindow,
+      enabled: true,
+      period,
+    };
+  }
+
+  function phaseIsActive(item, tide = phaseTideState()) {
+    if (!item?.phase || !tide.enabled) return true;
+    return item.phase === tide.active;
+  }
+
+  function isPhaseItem(item) {
+    return item?.phase === "a" || item?.phase === "b";
   }
 
   function updateMoving(dt) {
@@ -669,6 +951,7 @@
     }
     player.hurtFlash = Math.max(0, player.hurtFlash - dt);
     updatePlayerSize();
+    updatePhaseTransition();
 
     let gravity = ch.gravity;
     const playerRect = bodyRect(player);
@@ -770,6 +1053,7 @@
     updatePortals();
 
     for (const h of activeLevel.hazards) {
+      if (!phaseIsActive(h)) continue;
       if (rectsOverlap(bodyRect(player), h)) hurt(h.type === "lava" ? 2 : 1);
     }
     for (const e of activeLevel.enemies) {
@@ -836,6 +1120,46 @@
     if (blocked && (targetW > snapshot.w || targetH > snapshot.h)) {
       Object.assign(player, snapshot);
     }
+  }
+
+  function updatePhaseTransition() {
+    const tide = phaseTideState();
+    if (!tide.enabled) return;
+    if (!player.tidePhase) {
+      player.tidePhase = tide.active;
+      return;
+    }
+    if (player.tidePhase === tide.active) return;
+    player.tidePhase = tide.active;
+    const blockers = activeLevel.platforms
+      .concat(activeLevel.moving)
+      .filter((p) => !p.broken && isPhaseItem(p) && phaseIsActive(p, tide) && rectsOverlap(bodyRect(player), p));
+    if (!blockers.length) return;
+    for (const blocker of blockers) {
+      if (tryPhaseEscape(blocker)) return;
+    }
+    respawn();
+    toastMsg("星潮回卷");
+  }
+
+  function tryPhaseEscape(blocker) {
+    const snapshot = { x: player.x, y: player.y };
+    const candidates = [
+      { x: player.x, y: blocker.y - player.h },
+      { x: blocker.x - player.w + 3, y: player.y },
+      { x: blocker.x + blocker.w - 3, y: player.y },
+      { x: player.x, y: blocker.y + blocker.h - 3 },
+    ];
+    for (const candidate of candidates) {
+      player.x = clamp(candidate.x, 0, activeLevel.width - player.w);
+      player.y = clamp(candidate.y, 0, activeLevel.height - player.h);
+      if (!allSolids().some((p) => !p.broken && rectsOverlap(bodyRect(player), p))) {
+        refreshGroundedState();
+        return true;
+      }
+    }
+    Object.assign(player, snapshot);
+    return false;
   }
 
   function shootProjectile() {
@@ -1094,7 +1418,7 @@
   function updatePickups() {
     const reach = pickupRect(player);
     for (const c of activeLevel.coins) {
-      if (c.taken || !rectsOverlap(reach, c)) continue;
+      if (c.taken || !phaseIsActive(c) || !rectsOverlap(reach, c)) continue;
       c.taken = true;
       const amount = c.kind === "gem" ? 5 : 1;
       player.coins += amount;
@@ -1104,7 +1428,7 @@
       beep(c.kind === "gem" ? 920 : 720, 0.035);
     }
     for (const p of activeLevel.powerups || []) {
-      if (p.taken || !rectsOverlap(reach, p)) continue;
+      if (p.taken || !phaseIsActive(p) || !rectsOverlap(reach, p)) continue;
       p.taken = true;
       applyPowerup(p.kind);
     }
@@ -1303,17 +1627,51 @@
   }
 
   function renderWorld(level) {
+    const tide = phaseTideState(level);
+    drawPhaseTide(level, tide);
     for (const w of level.wind || []) drawWind(w);
     drawGoal(level.goal);
-    for (const p of level.platforms) if (!p.broken) drawPlatform(p);
-    for (const m of level.moving) drawPlatform(m);
-    for (const h of level.hazards) drawHazard(h);
+    for (const p of level.platforms) if (!p.broken && isPhaseItem(p) && !phaseIsActive(p, tide)) drawPhaseGhostPlatform(p, tide);
+    for (const m of level.moving) if (isPhaseItem(m) && !phaseIsActive(m, tide)) drawPhaseGhostPlatform(m, tide);
+    for (const p of level.platforms) if (!p.broken && phaseIsActive(p, tide)) drawPlatform(p);
+    for (const m of level.moving) if (phaseIsActive(m, tide)) drawPlatform(m);
+    for (const h of level.hazards) {
+      if (phaseIsActive(h, tide)) drawHazard(h);
+      else if (isPhaseItem(h)) drawPhaseGhostHazard(h, tide);
+    }
     for (const s of level.springs) drawSpring(s);
     for (const portal of level.portals || []) drawPortal(portal);
-    for (const c of level.coins) if (!c.taken) drawCoin(c);
-    for (const p of level.powerups || []) if (!p.taken) drawPowerup(p);
+    for (const c of level.coins) if (!c.taken && phaseIsActive(c, tide)) drawCoin(c);
+    for (const c of level.coins) if (!c.taken && isPhaseItem(c) && !phaseIsActive(c, tide)) drawPhaseGhostPickup(c, tide);
+    for (const p of level.powerups || []) if (!p.taken && phaseIsActive(p, tide)) drawPowerup(p);
+    for (const p of level.powerups || []) if (!p.taken && isPhaseItem(p) && !phaseIsActive(p, tide)) drawPhaseGhostPickup(p, tide);
     for (const pr of projectiles) drawProjectile(pr);
     for (const e of level.enemies) if (e.alive) drawEnemy(e);
+  }
+
+  function phaseColor(phase) {
+    return phase === "b" ? "#b6f5d8" : "#9ee7ff";
+  }
+
+  function drawPhaseTide(level, tide) {
+    if (!tide.enabled) return;
+    const color = phaseColor(tide.active);
+    const t = performance.now() / 1000;
+    const startX = Math.floor((camera.x - 160) / 220) * 220;
+    ctx.save();
+    ctx.globalAlpha = tide.warning ? 0.18 : 0.11;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = tide.warning ? 3 : 2;
+    for (let x = startX; x < camera.x + view.w + 220; x += 220) {
+      ctx.beginPath();
+      for (let y = -80; y < level.height + 120; y += 44) {
+        const px = x + Math.sin(y * 0.018 + t * 1.6 + tide.progress * Math.PI * 2) * 18;
+        if (y === -80) ctx.moveTo(px, y);
+        else ctx.lineTo(px, y);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   function drawPlatform(p) {
@@ -1326,6 +1684,7 @@
       breakable: ["#ffbf68", "#6a3d44"],
       aurora: ["#c2b1ff", "#30478c"],
       jade: ["#78f0bd", "#21546a"],
+      phase: [phaseColor(p.phase), p.phase === "b" ? "#1d5268" : "#203c72"],
     };
     const c = colors[p.type] || colors.ground;
     const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
@@ -1344,6 +1703,38 @@
         ctx.stroke();
       }
     }
+  }
+
+  function drawPhaseGhostPlatform(p) {
+    const color = phaseColor(p.phase);
+    ctx.save();
+    ctx.globalAlpha = 0.28;
+    const g = ctx.createLinearGradient(p.x, p.y, p.x + p.w, p.y + p.h);
+    g.addColorStop(0, "rgba(255,255,255,.08)");
+    g.addColorStop(0.5, color);
+    g.addColorStop(1, "rgba(255,255,255,.02)");
+    roundRect(p.x, p.y, p.w, p.h, 8, g);
+    ctx.globalAlpha = 0.58;
+    ctx.setLineDash([8, 10]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(p.x + 2, p.y + 2, p.w - 4, Math.max(4, p.h - 4));
+    ctx.restore();
+  }
+
+  function drawPhaseGhostHazard(h) {
+    ctx.save();
+    ctx.globalAlpha = 0.22;
+    drawHazard(h);
+    ctx.restore();
+  }
+
+  function drawPhaseGhostPickup(p) {
+    ctx.save();
+    ctx.globalAlpha = 0.22 + Math.sin(performance.now() / 220 + p.x) * 0.05;
+    if (p.kind === "coin" || p.kind === "gem") drawCoin(p);
+    else drawPowerup(p);
+    ctx.restore();
   }
 
   function drawHazard(h) {
@@ -2040,11 +2431,14 @@
     hudEls.introEyebrow.textContent = `${currentLevelIndex + 1} / ${levels.length} · ${activeLevel.vibe}`;
     hudEls.introTitle.textContent = activeLevel.name;
     hudEls.introText.textContent = activeLevel.hint;
-    Hud.renderChapterIntroMeta(hudEls.introMeta, [
+    const meta = [
       `${ch.name}：${ch.skillName}`,
       ch.projectileName,
       `${activeLevel.coins.length} 处星露`,
-    ]);
+    ];
+    if (activeLevel.phaseTide) meta.push("星潮相位");
+    if (activeLevel.portals?.length) meta.push("星门接合");
+    Hud.renderChapterIntroMeta(hudEls.introMeta, meta);
     hudEls.intro.classList.add("active");
   }
 
@@ -2056,6 +2450,8 @@
 
   function statusLabel() {
     const states = [];
+    const tide = phaseTideState();
+    if (tide.enabled) states.push(tide.active === "a" ? "星潮 甲相" : "星潮 乙相");
     if (player.windTimer > 0) states.push("风场");
     if (player.portalTimer > 0) states.push("星门");
     if (player.bigTimer > 0) states.push(`巨大 ${Math.ceil(player.bigTimer)}`);

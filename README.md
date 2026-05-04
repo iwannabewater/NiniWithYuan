@@ -1,13 +1,14 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.3.1 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, Aurora Cartography interaction pass, and **World 2: 星门群岛** content expansion, then applies a typography/copy bugfix pass across menu, HUD, level select, modals, Canvas float text, install metadata, local WenKai font subsets, and Yuan-to-Nini easter eggs. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, eight handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.4.0 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, Aurora Cartography interaction pass, World 2 star-gate expansion, and v1.3.1 typography/copy hardening, then completes **World 2: 星门群岛** and opens **World 3: 星潮镜域** with phase-tide bridges. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, fifteen handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
 ## Gameplay
 
 - Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes.
 - Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes.
-- The game ships eight chapters across two worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, and World 2 / 星门群岛 adds Star Gate Cove, Looping Lighthouse, and Ring Conservatory.
+- The game ships fifteen chapters across three worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, World 2 / 星门群岛 contains five star-gate chapters, and World 3 / 星潮镜域 contains five phase-tide chapters.
 - World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
+- World 3 introduces phase-tide bridges: platforms, pickups, and hazards can alternate between two readable star-tide phases without changing the base character physics.
 - The application runs offline. It does not require login, networking, advertising SDKs, analytics SDKs, or server storage.
 - Desktop play uses arrow keys or WASD. Android starts in landscape and uses on-screen controls.
 - The bundled background track is a local CC0 Vorbis file with an independent volume control.
@@ -44,7 +45,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.3.x expansion adds content, portal, and typography/copy regression files for world grouping, save compatibility, safe portal authoring, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy.
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.4.0 expansion adds content, portal, phase-tide, storage, browser-smoke, and typography/copy regression files for three-world grouping, fifteen-chapter save compatibility, safe portal authoring, phase-object validity, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy.
 
 ## Android APK
 

@@ -29,9 +29,11 @@ function exitRect(portal) {
 }
 
 const world2 = levels.filter((level) => level.world?.id === "world2");
-assert.equal(world2.length, 3, "World 2 should contain exactly three portal-focused chapters");
+const portalLevels = levels.filter((level) => Array.isArray(level.portals) && level.portals.length > 0);
+assert.equal(world2.length, 5, "World 2 should contain five portal-focused chapters in v1.4.0");
+assert.equal(portalLevels.length, 7, "v1.4.0 should contain five World 2 portal chapters plus two World 3 hybrid chapters");
 
-for (const level of world2) {
+for (const level of portalLevels) {
   assert.ok(Array.isArray(level.portals), `${level.id} should declare portals`);
   assert.ok(level.portals.length >= 2, `${level.id} should include at least one portal pair`);
   assert.equal(level.portals.length % 2, 0, `${level.id} should have an even portal endpoint count`);
@@ -55,6 +57,10 @@ for (const level of world2) {
     const exit = exitRect(pair);
     assert.ok(exit.x >= 0 && exit.y >= 0 && exit.x + exit.w <= level.width && exit.y + exit.h <= level.height, `${level.id}.${portal.id} exit is out of bounds`);
     assert.ok(!solids.some((solid) => !solid.broken && rectsOverlap(bodyRect(exit), solid)), `${level.id}.${portal.id} exit overlaps a solid platform`);
+    assert.ok(
+      !solids.some((solid) => solid.phase && rectsOverlap({ x: exit.x - 18, y: exit.y - 18, w: exit.w + 36, h: exit.h + 36 }, solid)),
+      `${level.id}.${portal.id} exit should not sit inside a phase bridge activation zone`
+    );
   }
 }
 
@@ -63,4 +69,4 @@ assert.ok(source.includes("portalLock"), "Portal runtime should require the play
 assert.ok(source.includes("portalExitRectIsSafe"), "Portal runtime should guard unsafe exits");
 assert.ok(source.includes("drawPortal"), "Portal runtime should render portals on canvas");
 
-console.log("portal-mechanics-v1.3.0: portal pairs, exits, cooldown, and rendering guards passed");
+console.log("portal-mechanics-v1.4.0: portal pairs, exits, cooldown, phase-adjacent safety, and rendering guards passed");

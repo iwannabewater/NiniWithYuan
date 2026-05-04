@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "nini-yuan-save-v1";
   const SAVE_SCHEMA_VERSION = 2;
-  const DEFAULT_LEVEL_COUNT = 8;
+  const DEFAULT_LEVEL_COUNT = 15;
 
   const defaultSave = {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -74,6 +74,9 @@
     let unlocked = sanitizeInteger(data.unlocked, defaultSave.unlocked, 1, levelCount);
     if (levelCount >= 6 && (bestTimes.auroracitadel || levelStars.auroracitadel > 0)) {
       unlocked = Math.max(unlocked, 6);
+    }
+    if (levelCount >= 9 && (bestTimes.ringconservatory || levelStars.ringconservatory > 0)) {
+      unlocked = Math.max(unlocked, 9);
     }
     return {
       schemaVersion: SAVE_SCHEMA_VERSION,

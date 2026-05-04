@@ -12,7 +12,9 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.2.4 aurora cartography plan](OPTIMIZATION_PLAN_v1.2.4.md)
 - [v1.3.0 world 2 star gates plan](OPTIMIZATION_PLAN_v1.3.0.md)
 - [v1.3.1 typography and copy bugfix plan](OPTIMIZATION_PLAN_v1.3.1.md)
+- [v1.4.0 world 2 completion and world 3 phase-tide plan](OPTIMIZATION_PLAN_v1.4.0.md)
 
 ## Design Specs
 
 - [World 2 star gates design](WORLD_2_STAR_GATES_DESIGN.md)
+- [World 3 phase-tide design](../superpowers/specs/2026-05-04-world-3-phase-tide-design.md)

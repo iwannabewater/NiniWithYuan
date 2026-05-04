@@ -14,11 +14,11 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 // --- version metadata --------------------------------------------------------
 
-assert.ok(["1.2.4", "1.3.0", "1.3.1"].includes(pkg.version), "package.json should be at least v1.2.4");
-assert.ok(["1.2.4", "1.3.0", "1.3.1"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
-assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix))"/, "service worker cache should be v1.2.4, v1.3.0, or v1.3.1");
-assert.ok(/versionCode="(7|8|9)"/.test(androidManifest), "Android versionCode should be 7, 8, or 9");
-assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1))"/.test(androidManifest), "Android versionName should be 1.2.4, 1.3.0, or 1.3.1");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0"].includes(pkg.version), "package.json should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
+assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide)"/, "service worker cache should be v1.2.4 or later");
+assert.ok(/versionCode="(7|8|9|10)"/.test(androidManifest), "Android versionCode should be 7 through 10");
+assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1)|1\.4\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 through 1.4.0");
 
 // --- new keyframes -----------------------------------------------------------
 

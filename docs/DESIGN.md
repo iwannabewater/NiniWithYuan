@@ -62,7 +62,7 @@ Pills are pill-shaped with translucent night fill, hairline edge, and tabular nu
 
 ### Chapter Cards
 
-The chapter grid is grouped by world headings. World 1 / 破碎星图 contains the original five chapters; World 2 / 星门群岛 contains the three star-gate chapters. Headings use a slim gilded divider and compact subtitle so the grid reads as an atlas table of contents without becoming a marketing section.
+The chapter grid is grouped by world headings. World 1 / 破碎星图 contains the original five chapters, World 2 / 星门群岛 contains five star-gate chapters, and World 3 / 星潮镜域 contains five phase-tide chapters. Headings use a slim gilded divider and compact subtitle so the grid reads as an atlas table of contents without becoming a marketing section.
 
 The featured chapter carries an **atlas compass** — a gold conic ring that rotates at 18 s per revolution and a four-point compass mark (`✦`) at its core. Locked chapters dim by opacity rather than CSS filters. Hover lifts and brightens. On grid hover, a hairline **meridian rail** (a single decorative `.level-list::after`) traces between the ordinary chapters and the featured chapter, surfacing the level grid as one inked map without any DOM-shape change.
 
@@ -71,6 +71,10 @@ The chapter score line is built from three readable groups: filled stars set in 
 ### Star Gates
 
 Star gates are canvas-native gameplay objects in World 2. They use paired cyan/gold/rose rings with a soft inner field and a short activation flare. Their rendering is intentionally readable at gameplay scale: the ring sits in front of the background, behind the player, and avoids dense decorative strokes that could be mistaken for hazards. The HUD status pill appends `星门` briefly after travel, matching the existing wind and power-up state language.
+
+### Phase-Tide Bridges
+
+Phase-tide bridges are canvas-native World 3 objects. Active phase bridges use cold cyan / jade mirror-water fills and participate in collision; inactive phase objects render as translucent dashed silhouettes so the player can read the next route before it becomes solid. The level background adds a subtle vertical tide-line motif during World 3 chapters, and the HUD status pill reports `星潮 甲相` or `星潮 乙相` while the tide clock is active.
 
 ### Ambient Side Layer
 

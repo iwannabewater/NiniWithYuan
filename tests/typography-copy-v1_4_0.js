@@ -24,11 +24,11 @@ const WOFF2_KNOWN_TAGS = [
   "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"
 ];
 
-assert.equal(pkg.version, "1.3.1", "package.json should be bumped to 1.3.1");
-assert.equal(lock.version, "1.3.1", "package-lock.json root version should be bumped to 1.3.1");
-assert.match(sw, /CACHE = "nini-yuan-v1\.3\.1-typography-copy-fix"/, "service worker cache should use the v1.3.1 typography/copy key");
-assert.ok(/versionCode="9"/.test(androidManifest), "Android versionCode should be 9");
-assert.ok(/versionName="1\.3\.1"/.test(androidManifest), "Android versionName should be 1.3.1");
+assert.equal(pkg.version, "1.4.0", "package.json should be bumped to 1.4.0");
+assert.equal(lock.version, "1.4.0", "package-lock.json root version should be bumped to 1.4.0");
+assert.match(sw, /CACHE = "nini-yuan-v1\.4\.0-world-3-phase-tide"/, "service worker cache should use the v1.4.0 phase-tide key");
+assert.ok(/versionCode="10"/.test(androidManifest), "Android versionCode should be 10");
+assert.ok(/versionName="1\.4\.0"/.test(androidManifest), "Android versionName should be 1.4.0");
 
 assert.ok(css.includes("--font-ui:"), "styles.css should define the shared UI font stack");
 assert.ok(css.includes("--font-canvas:"), "styles.css should define the shared Canvas font stack");
@@ -61,7 +61,7 @@ for (const fontPath of [
   assert.deepEqual(missing, [], `${fontPath} should cover every current runtime Chinese glyph`);
 }
 
-for (const phrase of ["五枚心石碎片", "星门重新接合路线", "星门浅湾", "回环灯塔", "星环温室"]) {
+for (const phrase of ["五枚心石碎片", "星门重新接合路线", "星门浅湾", "回环灯塔", "星环温室", "第三星域 星潮镜域", "星潮相位路线", "相位浅滩", "群岛星核"]) {
   for (const fontPath of ["assets/fonts/lxgw-wenkai-500.woff2", "assets/fonts/lxgw-wenkai-700.woff2"]) {
     const supported = readWoff2Cmap(fontPath);
     const missing = [...phrase].filter((ch) => isCjk(ch) && !supported.has(ch.codePointAt(0)));
@@ -69,7 +69,7 @@ for (const phrase of ["五枚心石碎片", "星门重新接合路线", "星门�
   }
 }
 
-console.log("typography-copy-v1.3.1: shared font stack, local CJK glyph coverage, and count-free current UI/easter-egg copy passed");
+console.log("typography-copy-v1.4.0: shared font stack, local CJK glyph coverage, and count-free current UI/easter-egg copy passed");
 
 function isCjk(ch) {
   const code = ch.codePointAt(0);

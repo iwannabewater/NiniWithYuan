@@ -4,11 +4,11 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.3.0 expands the game from five chapters to eight while preserving the v1.2.x physics, controls, visual shell, audio routing, and offline storage model. The original five chapters are grouped as World 1, **第一星域 破碎星图**. The new World 2, **第二星域 星门群岛**, adds three handcrafted chapters built around paired star gates, route choice, collection loops, and readable movement momentum rather than a hard postgame difficulty spike.
+Version 1.4.0 expands the game to fifteen chapters while preserving the v1.2.x physics, controls, visual shell, audio routing, and offline storage model. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, now contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, adds five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
 
 ## Fiction
 
-The setting is a floating night city above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes. After Aurora Citadel is restored, dormant star gates wake across nearby islands and fold the atlas into a second playable world.
+The setting is a floating night city above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes. After Aurora Citadel is restored, dormant star gates wake across nearby islands and fold the atlas into a second playable world. Once the island star core is rejoined, the atlas opens a mirror-water domain where star tides alternate which routes are physically present.
 
 Playable characters:
 
@@ -63,6 +63,10 @@ The ammunition cap is 14. The default regeneration rate is one unit per 1.6 s. D
 
 World 2 introduces paired star gates. A gate activates only when the player's body overlaps its field and its pair is available, then teleports the player to the paired gate's safe exit point. The transition preserves velocity, facing, health, skill state, projectile ammo, and collection progress; it applies a short cooldown plus an exit-gate lock so the player cannot bounce back and forth while standing inside the target field. Portal exits are authored and tested against platform solids and level bounds.
 
+### Phase-Tide Bridges
+
+World 3 introduces phase-tide bridges. A level-local tide clock alternates between phase `a` and phase `b`. Phase-tagged platforms, moving platforms, hazards, coins, and gems participate only when their phase is active. Inactive phase objects render as ghosted mirror silhouettes so the player can read the next route before committing. The mechanic does not change fixed-step physics, character jump/dash/glide tuning, or input handling.
+
 ## Chapters
 
 | Chapter | English Name | Theme | Design Focus |
@@ -74,7 +78,14 @@ World 2 introduces paired star gates. A gate activates only when the player's bo
 | 5 | Aurora Citadel | Aurora throne | Combined wind, moving platform, crystal, and jump-chain tests. |
 | 6 | Star Gate Cove | Tide-lit gate islands | First paired-gate route split with low punishment. |
 | 7 | Looping Lighthouse | Vertical beacon tower | Layered gate loops, glides, dashes, and collection routing. |
-| 8 | Ring Conservatory | Floating greenhouse rings | World 2 finale combining gates, wind, moving platforms, and crystals. |
+| 8 | Ring Conservatory | Floating greenhouse rings | Mid-World 2 route combining gates, wind, moving platforms, and crystals. |
+| 9 | Star Bridge Tide | Tide-lit star bridge | Star gates plus wind fields and momentum preservation. |
+| 10 | Island Star Core | Star-core archipelago | World 2 finale combining gates, wind, moving platforms, crystals, and a longer collection route. |
+| 11 | Phase Shallows | Mirror-water shallows | Phase-tide tutorial with low-risk bridge timing. |
+| 12 | Tide Corridor | Alternating star corridor | Phase pickups and route timing. |
+| 13 | Moon-Mirror Break | Broken mirror bridge | Phase bridges plus wind-field landing prediction. |
+| 14 | Twin-Star Clocktower | Star gate clocktower | Hybrid phase bridges plus star gates. |
+| 15 | Phase Tide Court | Mirror-tide court | Final synthesis of phase bridges, portals, wind, moving platforms, crystals, and hazards. |
 
 Star ratings are determined by collection ratio:
 
@@ -113,7 +124,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.3.0; existing saves clamp to the new eight-chapter cap, and completed Aurora Citadel progress derives World 2 access while saves that merely unlocked chapter 5 still require finishing chapter 5. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.4.0; existing saves clamp to the new fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -123,5 +134,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.2.2: cover copy, chapter-card alignment, and static menu star-chart polish.
 - v1.3.0: World 2 content expansion with three star-gate chapters, world-grouped chapter select, and save-compatible eight-chapter release metadata.
 - v1.3.1: typography and copy bugfix pass for local WenKai glyph coverage, shared DOM/Canvas font usage, count-free current scope copy, and Chinese easter-egg overlays.
+- v1.4.0: World 2 completion with two additional star-gate chapters, World 3 phase-tide expansion with five chapters, and save-compatible fifteen-chapter release metadata.
 - Future release: production character sprite sheets, expanded enemy variants, or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

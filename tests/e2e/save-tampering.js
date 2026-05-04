@@ -10,7 +10,7 @@ async function run() {
         touchSize: getComputedStyle(document.documentElement).getPropertyValue("--touch-size").trim(),
       }));
 
-      if (menuState.selected !== "nini" || !menuState.saveStrip.includes("8 / 8") || menuState.touchSize !== "140px") {
+      if (menuState.selected !== "nini" || !menuState.saveStrip.includes("15 / 15") || menuState.touchSize !== "140px") {
         throw new Error(`Tampered save was not sanitized on menu render: ${JSON.stringify(menuState)}`);
       }
 

@@ -1,10 +1,14 @@
 const assert = require("node:assert/strict");
 const storage = require("../../src/core/storage");
 
-const levelOptions = { levelCount: 8, levelIds: ["sakura", "moonruin"] };
+const levelOptions = { levelCount: 15, levelIds: ["sakura", "moonruin"] };
 const expansionOptions = {
-  levelCount: 8,
-  levelIds: ["sakura", "moonruin", "cloudsea", "crystalforge", "auroracitadel", "stargatecove", "loopinglighthouse", "ringconservatory"],
+  levelCount: 15,
+  levelIds: [
+    "sakura", "moonruin", "cloudsea", "crystalforge", "auroracitadel",
+    "stargatecove", "loopinglighthouse", "ringconservatory", "starbridgetide", "islandstarcore",
+    "phaseshallows", "tidecorridor", "moonmirrorbreak", "twinstarclocktower", "phasetidecourt",
+  ],
 };
 
 {
@@ -22,7 +26,7 @@ const expansionOptions = {
 
   assert.equal(save.schemaVersion, 2);
   assert.equal(save.selected, "nini");
-  assert.equal(save.unlocked, 8);
+  assert.equal(save.unlocked, 15);
   assert.equal(save.totalCoins, 12);
   assert.deepEqual(save.bestTimes, { sakura: 42.5 });
   assert.deepEqual(save.levelStars, { moonruin: 3 });
@@ -49,7 +53,7 @@ const expansionOptions = {
 
   assert.equal(storage.persist({ ...loaded, unlocked: 900 }, { ...levelOptions, storage: stub }), true);
   const written = JSON.parse(stub.written);
-  assert.equal(written.unlocked, 8);
+  assert.equal(written.unlocked, 15);
   assert.equal(written.schemaVersion, 2);
 }
 
@@ -71,6 +75,18 @@ const expansionOptions = {
     expansionOptions
   );
   assert.equal(onlyUnlocked.unlocked, 5);
+
+  const completedWorld2ByTime = storage.sanitizeSave(
+    { unlocked: 8, bestTimes: { ringconservatory: 91.3 } },
+    expansionOptions
+  );
+  assert.equal(completedWorld2ByTime.unlocked, 9);
+
+  const completedWorld2ByStars = storage.sanitizeSave(
+    { unlocked: 8, levelStars: { ringconservatory: 2 } },
+    expansionOptions
+  );
+  assert.equal(completedWorld2ByStars.unlocked, 9);
 }
 
 {

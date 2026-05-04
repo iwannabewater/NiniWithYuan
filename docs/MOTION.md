@@ -43,6 +43,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 18 | `.settings-list label[data-rune]::before` | Static decoration | Gold rune chip (♪ / ♬ / ◐ / ✦) with hairline ribbon stub. CSS-only, reads `attr(data-rune)`. |
 | 19 | `.ambient-spark.lit` | Constellation-hunt click | `spark-lit` 1.4 s ease-soft scales the spark to 2.2× with a doubled glow then settles. Active only on `(hover: hover) and (pointer: fine)`. |
 | 20 | Canvas star gate | Player overlap | Paired rings pulse once, teleport the player to the paired safe exit, and show a brief `星门` status/float cue while preserving movement momentum. |
+| 21 | Canvas phase-tide bridges | World 3 tide clock | Active phase objects render solid while inactive phase bridges draw as translucent dashed mirror silhouettes; the background tide-line motif breathes with the current phase and the HUD status reports `星潮 甲相 / 乙相`. |
 
 ## Continuous Motion
 
@@ -72,6 +73,7 @@ Under `prefers-reduced-motion: reduce`:
 - v1.2.4 keyframes pause: featured-chapter compass rotation, brand sub-aurora sweep, HUD pulse, bossbar shimmer, hero breath, modal seal breathe, spark-lit, and the chapter-intro orchestration `bossbar-rise` / `tips-rise`.
 - Cover-hero parallax stops writing `--mx` / `--my` because the script gates on reduced-motion at attach time, so the heroes return to their static rotated transforms.
 - Canvas particles and star-gate fields remain available because they communicate gameplay events; players can reduce optional pickup bursts through the visual effects setting.
+- Canvas phase-tide silhouettes remain visible because they communicate route availability; they are tied to gameplay readability rather than decorative-only motion.
 
 ## BGM and Audio
 

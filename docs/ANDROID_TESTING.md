@@ -69,3 +69,7 @@ Start-Sleep -Seconds 5
 - v1.3.1 — menu/install metadata reads `多世界章节`; Yuan-to-Nini easter-egg copy no longer mentions a fixed chapter count, and Canvas float text uses the same WenKai-led typography as the DOM UI.
 - v1.3.1 — chapter-select world subtitles and World 2 chapter names render without mixed Chinese font fallback, especially `五枚心石碎片`, `星门重新接合路线`, `星门浅湾`, `回环灯塔`, and `星环温室`.
 - v1.3.1 — APK badging reports `versionCode=9` / `versionName=1.3.1`.
+- v1.4.0 — chapter select shows three world headings: `第一星域 破碎星图`, `第二星域 星门群岛`, and `第三星域 星潮镜域`; all 15 chapter cards remain readable in Android landscape and browser portrait review.
+- v1.4.0 — World 2 chapters 9 and 10 contain paired star gates with safe exits and no immediate back-bounce; chapter 10 reads as the star-gate finale rather than a new mechanic tutorial.
+- v1.4.0 — World 3 chapters 11-15 show phase-tide bridges: active bridges are solid, inactive bridges appear as ghosted mirror silhouettes, pickups/hazards obey the current phase, and the HUD status reports `星潮 甲相` or `星潮 乙相`.
+- v1.4.0 — existing v1.3.1 saves that completed chapter 8 unlock chapter 9, while tampered saves clamp to `15 / 15`; APK badging reports `versionCode=10` / `versionName=1.4.0`.

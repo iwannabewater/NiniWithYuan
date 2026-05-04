@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.4.0
+
+- Expanded the game from eight chapters to fifteen across three worlds: World 2 now has five star-gate chapters, and World 3, **星潮镜域**, adds five phase-tide chapters.
+- Added World 2 chapters 第九章 星桥潮汐 and 第十章 群岛星核, extending star-gate routing with wind, moving platforms, breakable crystals, and longer collection paths without changing the portal runtime contract.
+- Added World 3 chapters 第十一章 相位浅滩 through 第十五章 星潮王庭, built around phase-tide bridges that alternate platforms, pickups, and hazards between two readable star-tide phases.
+- Added phase-tide runtime support, inactive phase ghost rendering, HUD phase status, chapter-intro phase metadata, and soft phase-transition recovery to avoid trapping the player in newly active geometry.
+- Kept save schema version 2 while increasing the default chapter cap to 15; completed Ring Conservatory progress now derives chapter 9 access for v1.3.1 saves.
+- Bumped the web package to `1.4.0`, Android `versionCode` to 10 / `versionName` to `1.4.0`, and the service worker cache to `nini-yuan-v1.4.0-world-3-phase-tide`.
+- Updated regression coverage for fifteen chapters, three world headings, five World 2 portal chapters, two World 3 portal/phase hybrid chapters, phase-object validity, storage compatibility, browser smoke launch from chapter 11, and local WenKai glyph coverage.
+
 ## v1.3.1
 
 - Fixed mixed-font presentation on in-game canvas float text by using the same LXGW WenKai-led font stack as the DOM UI.

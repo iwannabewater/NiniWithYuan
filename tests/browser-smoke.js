@@ -262,6 +262,7 @@ async function run() {
             totalCards: document.querySelectorAll(".level-item").length,
             headings,
             world2Unlocked: ![...document.querySelectorAll(".level-item")].find((card) => card.textContent.includes("第六章 星门浅湾"))?.disabled,
+            world3Unlocked: ![...document.querySelectorAll(".level-item")].find((card) => card.textContent.includes("第十一章 相位浅滩"))?.disabled,
             offsets,
           };
         });
@@ -284,11 +285,13 @@ async function run() {
         };
         if (
           !levelState.visible ||
-          levelState.totalCards !== 8 ||
+          levelState.totalCards !== 15 ||
           !levelState.world2Unlocked ||
-          levelState.headings.length !== 2 ||
+          !levelState.world3Unlocked ||
+          levelState.headings.length !== 3 ||
           !levelState.headings.some((heading) => heading.world === "world1" && heading.text.includes("第一星域")) ||
           !levelState.headings.some((heading) => heading.world === "world2" && heading.text.includes("第二星域")) ||
+          !levelState.headings.some((heading) => heading.world === "world3" && heading.text.includes("第三星域")) ||
           !copyLefts.every(expectedLeftEdge) ||
           !metaLefts.every(expectedLeftEdge) ||
           Math.max(...copyLefts) - Math.min(...copyLefts) > 2 ||
@@ -300,15 +303,15 @@ async function run() {
           throw new Error(`Level card text alignment or score-line gold invalid: ${JSON.stringify(levelState)}`);
         }
 
-        await page.locator(".level-item").filter({ hasText: "第六章 星门浅湾" }).click();
+        await page.locator(".level-item").filter({ hasText: "第十一章 相位浅滩" }).click();
         await page.waitForTimeout(500);
-        const chapterSixState = await page.evaluate(() => ({
+        const chapterElevenState = await page.evaluate(() => ({
           hud: document.querySelector("#overlay").classList.contains("active"),
           title: document.querySelector("#chapterIntroTitle").textContent.trim(),
           status: document.querySelector("#hudStatus").textContent.trim(),
         }));
-        if (!chapterSixState.hud || chapterSixState.title !== "第六章 星门浅湾") {
-          throw new Error(`Chapter 6 did not start from grouped level select: ${JSON.stringify(chapterSixState)}`);
+        if (!chapterElevenState.hud || chapterElevenState.title !== "第十一章 相位浅滩" || !chapterElevenState.status.includes("星潮")) {
+          throw new Error(`Chapter 11 did not start from grouped level select: ${JSON.stringify(chapterElevenState)}`);
         }
       },
       {
@@ -318,10 +321,10 @@ async function run() {
             JSON.stringify({
               schemaVersion: 2,
               selected: "nini",
-              unlocked: 8,
+            unlocked: 15,
               totalCoins: 389,
-              bestTimes: { sakura: 22, moonruin: 15, cloudsea: 19, crystalforge: 16, auroracitadel: 28, stargatecove: 31, loopinglighthouse: 35 },
-              levelStars: { sakura: 3, moonruin: 3, cloudsea: 3, crystalforge: 2, auroracitadel: 3, stargatecove: 2, loopinglighthouse: 2 },
+              bestTimes: { sakura: 22, moonruin: 15, cloudsea: 19, crystalforge: 16, auroracitadel: 28, stargatecove: 31, loopinglighthouse: 35, ringconservatory: 44, starbridgetide: 52, islandstarcore: 60, phaseshallows: 38 },
+              levelStars: { sakura: 3, moonruin: 3, cloudsea: 3, crystalforge: 2, auroracitadel: 3, stargatecove: 2, loopinglighthouse: 2, ringconservatory: 2, starbridgetide: 2, islandstarcore: 1, phaseshallows: 2 },
               settings: { volume: 70, touch: 98, fx: true, bgmVolume: 60 },
             })
           );
