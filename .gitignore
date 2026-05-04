@@ -27,3 +27,6 @@ Thumbs.db
 # Temporary files
 tmp/
 *.log
+
+# Brainstorm visual-companion session files
+.superpowers/
