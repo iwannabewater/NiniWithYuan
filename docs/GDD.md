@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.4.0 expands the game to fifteen chapters while preserving the v1.2.x physics, controls, visual shell, audio routing, and offline storage model. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, now contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, adds five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
+Version 1.5.0 keeps the fifteen-chapter v1.4.0 structure and adds a focused game-feel and sound-design polish pass while preserving the v1.2.x physics, controls, visual shell, offline storage model, and content layout. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
 
 ## Fiction
 
@@ -24,6 +24,7 @@ Playable characters:
 - Coyote time: 0.12 s.
 - Jump buffer: 0.14 s.
 - The main loop clamps accumulated time after background or foreground transitions.
+- v1.5.0 adds presentation-only hit-stop, camera lookahead, landing dust, shake clamping, and respawn veil polish. These do not change jump height, gravity, dash distance, coyote time, jump buffer, or level solvability.
 
 ### Wind Fields
 
@@ -124,7 +125,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.4.0; existing saves clamp to the new fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.5.0; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -135,5 +136,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.3.0: World 2 content expansion with three star-gate chapters, world-grouped chapter select, and save-compatible eight-chapter release metadata.
 - v1.3.1: typography and copy bugfix pass for local WenKai glyph coverage, shared DOM/Canvas font usage, count-free current scope copy, and Chinese easter-egg overlays.
 - v1.4.0: World 2 completion with two additional star-gate chapters, World 3 phase-tide expansion with five chapters, and save-compatible fifteen-chapter release metadata.
+- v1.5.0: game-feel and sound-design polish with hit-stop, dash anticipation, landing dust, shake clamp, BGM retry, respawn veil, camera lookahead, and semantic audio cues.
 - Future release: production character sprite sheets, expanded enemy variants, or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

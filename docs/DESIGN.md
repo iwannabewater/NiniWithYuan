@@ -107,6 +107,12 @@ Each settings row carries a `data-rune` attribute (♪ / ♬ / ◐ / ✦) that t
 
 The chapter progress bar (`.bossbar span`) carries a layered auroral wash (`cyan → jade → gold → rose` over a `200 %` background) animated by `bossbar-shimmer` at 7 s linear, plus a soft leading-edge gleam pseudo at the 100 % end. Width still transitions over `var(--d-base)` so the existing game-loop progress wiring remains untouched. Reduced-motion forces the shimmer off and zeroes the gleam opacity.
 
+### Game-Feel and Audio Cues
+
+v1.5.0 keeps the Aurora Inkwash visual identity and adds presentation-layer feel polish rather than new UI chrome. Hit-stop, landing dust, camera lookahead, shake clamping, and the respawn veil are gameplay readability effects: they clarify impact, speed, landing, and recovery states without changing collision, jump, dash, glide, portal, or phase-tide tuning.
+
+Sound effects use a semantic Web Audio cue table in `src/core/audio.js`. Gameplay code calls cue names (`jump`, `dash`, `stomp`, `portal`, `pickup_coin`, `pickup_gem`, `complete`, `fail`) instead of hard-coded frequency/duration pairs, so future tuning stays declarative. The BGM retry path is also owned by the audio bus: it attaches gesture listeners once, keeps them through pre-game clicks, and removes them after a successful blocked-autoplay recovery.
+
 ## Layout
 
 Desktop menus use a two-column structure: title and actions on the left, character presentation on the right. Mobile portrait places character presentation above title and actions. Mobile landscape restores a compact two-column structure and reduces the HUD, chapter intro, and touch controls so gameplay visibility is preserved. Chapter cards keep their copy pinned to a consistent left edge even though they are implemented as buttons.
@@ -134,6 +140,7 @@ Motion uses `transform` and `opacity`. Expensive full-screen animated filters, m
 - `hero-breath` — touch-only cover-hero tilt, 7 s ease-soft infinite.
 - `seal-breathe` — modal atlas seal pulse, 9 s ease-soft infinite.
 - `spark-lit` — constellation-hunt spark feedback, 1.4 s ease-soft forwards.
+- `respawn-veil-flash` — v1.5.0 respawn ink flash, 180 ms with a brief opaque hold and reduced-motion 40 ms collapse.
 
 The pointer stardust layer is a fixed full-viewport overlay above the active menu panel, with pointer events disabled. It is scoped by JS to pointer movement over `.menu-heroes` and `#menu .brand h1`, interpolates particles along fast movement so the trail stays continuous, and lets particles escape their source boxes without affecting gameplay hit targets.
 

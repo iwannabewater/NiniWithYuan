@@ -16,7 +16,7 @@ for (const icon of manifest.icons) {
   assert.ok(serviceWorker.includes(icon.src), `Service worker should cache ${icon.src}`);
 }
 
-for (const asset of ["./src/core/storage.js", "./src/core/audio.js", "./src/render/hud.js", "./src/game.js"]) {
+for (const asset of ["./src/core/storage.js", "./src/core/audio.js", "./src/render/hud.js", "./src/render/game-feel.js", "./src/render/respawn-veil.js", "./src/game.js"]) {
   assert.ok(serviceWorker.includes(asset), `Service worker missing cache asset: ${asset}`);
 }
 

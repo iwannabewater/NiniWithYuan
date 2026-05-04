@@ -170,7 +170,7 @@ Tuning values and call sites are concrete. Numbers were chosen to match SOTA ref
   - `window.addEventListener("keydown", retry, { passive: true })`
 - The `{ once: true }` option is intentionally NOT used. The handler self-removes on success. This allows the case where the listener fires while the page is `document.hidden` to skip without losing the listener.
 - Retry behavior: when fired, if `bgmRequested && bgm.paused && !document.hidden && bgmGain() > 0`, call `playBgm()` and, on the resulting promise resolution, remove both listeners and set `armed = false`.
-- Edge: if `bgmRequested === false` (player has not yet entered gameplay), remove listeners and set `armed = false` — no point listening forever for a BGM that was never requested.
+- Edge: if `bgmRequested === false` (player has not yet entered gameplay), keep the listeners attached and return. The first real gameplay-start click fires `pointerdown` before the menu click handler calls `playBgm()`, so removing early would lose the retry path.
 - Site: called in `init()` (game.js:2673) after `audioBus.setBgmSource(...)`.
 
 ### 8. Snappy respawn fade
@@ -390,7 +390,7 @@ These rows extend the existing reduced-motion list at docs/MOTION.md lines 64–
 - Test env loads modules under Node: each module's tail uses `if (typeof module !== "undefined" && module.exports) module.exports = api;` — matches existing pattern (storage.js:130, audio.js:118, hud.js:129).
 - Script load order: new `<script defer>` tags inserted in `index.html` BEFORE `<script src="./src/game.js"></script>`. `defer` preserves document order.
 - `armAutoplayRetry()` called twice: idempotent via instance-local `armed` flag (owned by the bus instance returned from `createAudioBus()`); second call no-ops.
-- Listener fires but `bgmRequested === false`: remove listeners and clear `armed`.
+- Listener fires but `bgmRequested === false`: return and keep listeners attached; the same click may still start gameplay through the menu handler.
 - Listener fires but page is `document.hidden`: skip retry; keep listeners attached for next gesture (the reason `{ once: true }` is intentionally not used).
 
 ## Test Plan

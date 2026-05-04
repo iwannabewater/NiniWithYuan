@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5.0
+
+- Added a focused game-feel and sound-design polish pass on top of v1.4.0 without changing chapters, save schema, physics constants, input bindings, or dependencies.
+- Added hit-stop for stomps, projectile hits, hurt reactions, crystal breaks, and Yuan dash anticipation. Hit-stop takes the maximum request, caps at 120 ms, and disables under reduced-motion.
+- Added landing dust, camera lookahead, mobile/reduced-motion screen-shake clamping, and a snappy respawn ink veil to make moment-to-moment movement read more clearly.
+- Replaced scattered gameplay `beep()` call sites with a 16-cue semantic Web Audio table while retaining the low-level helper for compatibility.
+- Added BGM autoplay retry on pointer and keyboard gestures so blocked browser/WebView starts can recover after gameplay begins.
+- Bumped the web package to `1.5.0`, Android `versionCode` to 11 / `versionName` to `1.5.0`, and the service worker cache to `nini-yuan-v1.5.0-game-feel`.
+- Added v1.5.0 regression coverage for hit-stop math, camera lookahead, shake clamps, cue table graph shape, BGM retry, landing puff behavior, and pinned platforming constants.
+
 ## v1.4.0
 
 - Expanded the game from eight chapters to fifteen across three worlds: World 2 now has five star-gate chapters, and World 3, **星潮镜域**, adds five phase-tide chapters.

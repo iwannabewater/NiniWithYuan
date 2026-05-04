@@ -13,6 +13,7 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.3.0 world 2 star gates plan](OPTIMIZATION_PLAN_v1.3.0.md)
 - [v1.3.1 typography and copy bugfix plan](OPTIMIZATION_PLAN_v1.3.1.md)
 - [v1.4.0 world 2 completion and world 3 phase-tide plan](OPTIMIZATION_PLAN_v1.4.0.md)
+- [v1.5.0 game-feel and sound-design polish plan](OPTIMIZATION_PLAN_v1.5.0.md)
 
 ## Design Specs
 

@@ -1,7 +1,7 @@
 /* ============================================================================
-   Nini & Yuan v1.3.1 — "Aurora Inkwash · Night Atlas Cinematic"
+   Nini & Yuan v1.5.0 — "Aurora Inkwash · Night Atlas Cinematic"
    v1.2.0 visual shell + v1.2.3 ambient/cursor/easter-egg layer + v1.2.4
-   Aurora Cartography polish + World 2 Star Gates expansion.
+   Aurora Cartography polish + World 2/3 expansion + v1.5.0 game-feel polish.
    Pure visual layer. Every selector, ID, data-attribute, and CSS custom
    property name relied upon by src/game.js or tests/* is preserved verbatim.
    ============================================================================ */
@@ -2190,6 +2190,21 @@
     animation: modal-veil var(--d-base) var(--ease-out);
   }
 
+  .respawn-veil {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 9;
+    background:
+      radial-gradient(circle at 50% 55%, rgba(242, 211, 137, 0.18), transparent 65%),
+      var(--c-night-1000);
+  }
+
+  .respawn-veil.playing {
+    animation: respawn-veil-flash var(--respawn-veil-duration, 180ms) var(--ease-out);
+  }
+
   .modal.active {
     display: grid;
   }
@@ -2671,6 +2686,21 @@
     100% {
       transform: scale(1);
       box-shadow: 0 0 16px rgba(242, 211, 137, 0.6);
+    }
+  }
+
+  @keyframes respawn-veil-flash {
+    0% {
+      opacity: 0;
+    }
+    22% {
+      opacity: 0.92;
+    }
+    55% {
+      opacity: 0.92;
+    }
+    100% {
+      opacity: 0;
     }
   }
 }
@@ -3250,6 +3280,10 @@
 
     .hud-pill.pulse {
       animation: none;
+    }
+
+    .respawn-veil.playing {
+      animation-duration: 40ms !important;
     }
   }
 

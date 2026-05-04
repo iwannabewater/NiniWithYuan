@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.4.0-world-3-phase-tide";
+const CACHE = "nini-yuan-v1.5.0-game-feel";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,8 @@ const ASSETS = [
   "./src/core/storage.js",
   "./src/core/audio.js",
   "./src/render/hud.js",
+  "./src/render/game-feel.js",
+  "./src/render/respawn-veil.js",
   "./src/render/cursor-trail.js",
   "./src/render/easter-eggs.js",
   "./src/game.js",

@@ -32,6 +32,8 @@
   const Storage = window.NiniYuanStorage;
   const Audio = window.NiniYuanAudio;
   const Hud = window.NiniYuanHud;
+  const GameFeel = window.NiniYuanGameFeel;
+  const RespawnVeil = window.NiniYuanRespawnVeil;
   const TILE = 48;
   const FIXED_DT = 1 / 120;
   const PICKUP_REACH_X = 10;
@@ -63,13 +65,13 @@
   const rectsOverlap = (a, b) =>
     a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
-  let view = { w: 1280, h: 720, dpr: 1 };
+  let view = { w: 1280, h: 720, dpr: 1, isMobileLandscape: false, reducedMotion: false };
   let screen = "menu";
   let mode = "menu";
   let currentLevelIndex = 0;
   let activeLevel = null;
   let player = null;
-  let camera = { x: 0, y: 0, shake: 0 };
+  let camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
   let particles = [];
   let floatTexts = [];
   let keys = Object.create(null);
@@ -746,7 +748,14 @@
 
   function resize() {
     const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
-    view = { w: innerWidth, h: innerHeight, dpr };
+    const media = typeof window.matchMedia === "function" ? window.matchMedia.bind(window) : null;
+    view = {
+      w: innerWidth,
+      h: innerHeight,
+      dpr,
+      isMobileLandscape: media ? media("(max-width: 900px) and (orientation: landscape)").matches : false,
+      reducedMotion: media ? media("(prefers-reduced-motion: reduce)").matches : false,
+    };
     canvas.width = Math.floor(view.w * dpr);
     canvas.height = Math.floor(view.h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -807,13 +816,16 @@
       elapsed: 0,
       completed: false,
       hurtFlash: 0,
+      prevVy: 0,
+      dashFreeze: 0,
     };
     particles = [];
     floatTexts = [];
     projectiles = [];
-    camera = { x: 0, y: 0, shake: 0 };
+    camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
     keys = Object.create(null);
     hudState = { character: null, cooling: null };
+    GameFeel?.resetHitstop?.();
     mode = "play";
     modal.classList.remove("active");
     showScreen("");
@@ -841,7 +853,18 @@
     player.elapsed += dt;
     updateInputs();
     updateMoving(dt);
+    const wasOnGround = player.onGround;
+    player.prevVy = player.vy;
     updatePlayer(dt);
+    if (player.onGround && !wasOnGround && player.prevVy > 380) {
+      GameFeel?.landingPuff?.(
+        spawnSpark,
+        player.x + player.w / 2,
+        player.y + player.h,
+        clamp((player.prevVy - 380) / 800, 0.2, 1),
+        save.settings.fx
+      );
+    }
     updateEnemies(dt);
     updateProjectiles(dt);
     updatePickups();
@@ -934,6 +957,7 @@
     player.coyote -= dt;
     player.skillCd = Math.max(0, player.skillCd - dt);
     player.skillTimer = Math.max(0, player.skillTimer - dt);
+    player.dashFreeze = Math.max(0, (player.dashFreeze || 0) - dt);
     player.shootCd = Math.max(0, player.shootCd - dt);
     player.turnTimer = Math.max(0, player.turnTimer - dt);
     player.invuln = Math.max(0, player.invuln - dt);
@@ -996,10 +1020,13 @@
         player.skillTimer = YUAN_DASH_TIME;
         player.dashDir = player.facing;
         player.skillCd = skillCooldown;
+        player.dashFreeze = 0.045;
+        GameFeel?.requestHitstop?.(45);
         player.vx = player.dashDir * YUAN_DASH_SPEED;
         player.vy *= 0.45;
-        camera.shake = Math.max(camera.shake, 7);
+        shake(7);
         burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22);
+        cue("dash");
         toastMsg("青岚冲刺！");
       } else if (!player.onGround) {
         player.skillCd = skillCooldown;
@@ -1030,7 +1057,7 @@
       player.jumpBuffer = 0;
       if (usedAir) player.airJumps -= 1;
       burst(player.x + player.w / 2, player.y + player.h, ch.accent2, 12);
-      beep(540, 0.045);
+      cue("jump");
     }
     if (inputs.jumpReleased && player.vy < -160) player.vy *= 0.56;
 
@@ -1044,9 +1071,9 @@
         player.vy = -spring.power;
         player.onGround = false;
         player.coyote = 0;
-        camera.shake = 5;
+        shake(5);
         burst(spring.x + spring.w / 2, spring.y, "#fff070", 24);
-        beep(780, 0.06);
+        cue("spring");
       }
     }
 
@@ -1063,9 +1090,10 @@
         e.alive = false;
         player.vy = -620;
         player.coins += 2;
+        GameFeel?.requestHitstop?.(50);
         burst(e.x + e.w / 2, e.y + e.h / 2, "#ffd36d", 20);
         floatText("+2", e.x, e.y, "#ffd36d");
-        beep(680, 0.04);
+        cue("stomp");
       } else if (player.superInvuln > 0) {
         e.alive = false;
         player.coins += 2;
@@ -1087,9 +1115,11 @@
           p.broken = true;
           player.vx *= 0.55;
           player.skillTimer = Math.min(player.skillTimer, 0.06);
-          camera.shake = 11;
+          GameFeel?.requestHitstop?.(35);
+          shake(11);
           burst(p.x + p.w / 2, p.y + p.h / 2, "#ffbe66", 30);
           floatText("碎晶", p.x, p.y, "#ffbe66");
+          cue("break_crystal");
         }
       }
     }
@@ -1184,7 +1214,7 @@
       color: player.ammoTimer > 0 ? "#fff2a6" : ch.accent2,
     });
     burst(player.x + player.w / 2 + player.facing * 18, player.y + player.h * 0.42, ch.accent2, 8);
-    beep(save.selected === "nini" ? 860 : 520, 0.035);
+    cue(save.selected === "nini" ? "shoot_nini" : "shoot_yuan");
   }
 
   function bodyRect(p) {
@@ -1237,12 +1267,13 @@
     player.portalCd = PORTAL_COOLDOWN;
     player.portalTimer = 0.42;
     player.portalLock = target.id;
+    GameFeel?.cameraLookaheadReset?.(camera);
     refreshGroundedState();
-    camera.shake = Math.max(camera.shake, 4);
+    shake(4);
     const color = portalColor(target);
     burst(player.x + player.w / 2, player.y + player.h / 2, color, 16);
     floatText("星门", player.x + player.w / 2, player.y, color);
-    beep(640, 0.045);
+    cue("portal");
   }
 
   function activePortalForPlayer() {
@@ -1332,8 +1363,10 @@
         if (p.type === "breakable" && (pr.owner === "yuan" || pr.damage > 2)) {
           p.broken = true;
           pr.life = 0;
+          GameFeel?.requestHitstop?.(35);
           burst(p.x + p.w / 2, p.y + p.h / 2, "#ffbe66", 22);
           floatText("碎晶", p.x, p.y, "#ffbe66");
+          cue("break_crystal");
         } else {
           pr.life = 0;
         }
@@ -1341,7 +1374,9 @@
       for (const e of activeLevel.enemies) {
         if (!e.alive || pr.life <= 0 || !rectsOverlap(pr, e)) continue;
         e.hp = (e.hp || (e.type === "ember" ? 3 : 2)) - pr.damage;
+        GameFeel?.requestHitstop?.(35);
         burst(e.x + e.w / 2, e.y + e.h / 2, pr.color, 14);
+        cue("hit_take");
         if (e.hp <= 0) {
           e.alive = false;
           player.coins += 2 + pr.damage;
@@ -1425,7 +1460,7 @@
       if (c.kind === "gem") player.gems += 1;
       floatText(`+${amount}`, c.x, c.y, c.kind === "gem" ? "#8cf6ff" : "#ffd36d");
       burst(c.x + 10, c.y + 10, c.kind === "gem" ? "#8cf6ff" : "#ffd36d", c.kind === "gem" ? 18 : 9);
-      beep(c.kind === "gem" ? 920 : 720, 0.035);
+      cue(c.kind === "gem" ? "pickup_gem" : "pickup_coin");
     }
     for (const p of activeLevel.powerups || []) {
       if (p.taken || !phaseIsActive(p) || !rectsOverlap(reach, p)) continue;
@@ -1465,26 +1500,29 @@
     }
     burst(player.x + player.w / 2, player.y + player.h / 2, powerupColor(kind), 28);
     toastMsg(labels[kind] || "获得强化");
-    beep(980, 0.075);
+    cue("pickup_powerup");
   }
 
   function hurt(damage, forceRespawn = false) {
     if (player.superInvuln > 0 && !forceRespawn) {
-      camera.shake = Math.max(camera.shake, 5);
+      shake(5);
       burst(player.x + player.w / 2, player.y + player.h / 2, "#fff2a6", 12);
+      cue("hit_super");
       return;
     }
     if (player.invuln > 0 && !forceRespawn) return;
+    GameFeel?.requestHitstop?.(70);
     player.health -= damage;
     player.invuln = 1.1;
     player.hurtFlash = 0.3;
     player.vx = -player.facing * 360;
     player.vy = -540;
-    camera.shake = 13;
+    shake(13);
     burst(player.x + player.w / 2, player.y + player.h / 2, "#ff5c7a", 24);
-    beep(180, 0.08);
+    cue("hit_take");
     if (player.health <= 0 || forceRespawn) {
       if (player.health <= 0) {
+        cue("fail");
         openModal("再试一次", "星光暂时黯淡，但路线已经记住了。", [
           ["重新挑战", () => startLevel(currentLevelIndex), "primary"],
           ["返回菜单", backToMenu],
@@ -1496,6 +1534,7 @@
   }
 
   function respawn() {
+    RespawnVeil?.flash?.(180);
     player.x = player.spawn.x;
     player.y = player.spawn.y;
     player.vx = 0;
@@ -1504,7 +1543,9 @@
     player.skillTimer = 0;
     player.glide = 0;
     player.dashDir = player.facing;
-    camera.shake = 9;
+    GameFeel?.cameraLookaheadReset?.(camera);
+    GameFeel?.resetHitstop?.();
+    shake(9);
   }
 
   function completeLevel() {
@@ -1517,7 +1558,7 @@
     save.levelStars[id] = Math.max(save.levelStars[id] || 0, starCount());
     persist();
     burst(activeLevel.goal.x + 35, activeLevel.goal.y + 50, "#ffe46b", 80);
-    beep(980, 0.1);
+    cue("complete");
     openModal(
       "通关完成",
       `${activeLevel.name} 已通关。获得星露 ${player.coins}，评级 ${"★".repeat(starCount())}${"☆".repeat(3 - starCount())}。`,
@@ -1536,8 +1577,9 @@
   }
 
   function updateCamera(dt) {
-    const targetX = clamp(player.x - view.w * 0.38, 0, Math.max(0, activeLevel.width - view.w));
-    const targetY = clamp(player.y - view.h * 0.55, 0, Math.max(0, activeLevel.height - view.h));
+    const lookahead = GameFeel?.cameraLookaheadOffset?.(player, view, dt, camera) || { x: 0, y: 0 };
+    const targetX = clamp(player.x + lookahead.x - view.w * 0.38, 0, Math.max(0, activeLevel.width - view.w));
+    const targetY = clamp(player.y + lookahead.y - view.h * 0.55, 0, Math.max(0, activeLevel.height - view.h));
     camera.x = lerp(camera.x, targetX, 1 - Math.pow(0.001, dt));
     camera.y = lerp(camera.y, targetY, 1 - Math.pow(0.001, dt));
     camera.shake = Math.max(0, camera.shake - 35 * dt);
@@ -2400,6 +2442,14 @@
     audioBus.beep(freq, duration);
   }
 
+  function cue(name) {
+    audioBus.cue?.(name);
+  }
+
+  function shake(amount) {
+    camera.shake = GameFeel?.clampShake?.(camera.shake, amount, view.isMobileLandscape, view.reducedMotion) ?? Math.max(camera.shake, amount);
+  }
+
   function updateHud() {
     const characterName = characters[save.selected].name;
     if (hudState.character !== null && hudState.character !== characterName) Hud.pulseHudPill?.(hudEls.character.parentElement);
@@ -2412,7 +2462,10 @@
     hudEls.status.textContent = statusLabel();
     hudEls.skill.textContent = skillLabel();
     const cooling = player.skillCd > 0;
-    if (hudState.cooling !== null && hudState.cooling !== cooling) Hud.pulseHudPill?.(hudEls.skill);
+    if (hudState.cooling !== null && hudState.cooling !== cooling) {
+      Hud.pulseHudPill?.(hudEls.skill);
+      if (hudState.cooling && !cooling) cue("skill_ready");
+    }
     hudState.cooling = cooling;
     hudEls.skill.classList.toggle("cooling", cooling);
     const progress = clamp((player.x + player.w / 2) / activeLevel.width, 0, 1);
@@ -2641,6 +2694,9 @@
     keys = Object.create(null);
     accumulator = 0;
     last = performance.now();
+    GameFeel?.resetHitstop?.();
+    GameFeel?.cameraLookaheadReset?.(camera);
+    RespawnVeil?.clear?.();
     if (pageHidden) audioBus.suspend();
     else audioBus.resume();
   }
@@ -2661,6 +2717,11 @@
     }
     const frameDt = clamp((now - last) / 1000, 0, 0.08);
     last = now;
+    if (mode === "play" && GameFeel?.tickHitstop?.(frameDt)) {
+      render();
+      requestAnimationFrame(loop);
+      return;
+    }
     accumulator = Math.min(accumulator + frameDt, FIXED_DT * 4);
     while (accumulator >= FIXED_DT) {
       update(FIXED_DT);
@@ -2677,11 +2738,15 @@
     window.addEventListener("pagehide", () => {
       pageHidden = true;
       accumulator = 0;
+      GameFeel?.resetHitstop?.();
+      GameFeel?.cameraLookaheadReset?.(camera);
+      RespawnVeil?.clear?.();
       audioBus.suspend();
     });
     window.addEventListener("pageshow", handleVisibilityChange);
     bindUi();
     bindControls();
+    audioBus.armAutoplayRetry?.();
     registerServiceWorker();
     showScreen("menu");
     requestAnimationFrame(loop);

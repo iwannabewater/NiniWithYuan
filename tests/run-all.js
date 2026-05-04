@@ -22,6 +22,7 @@ const checks = [
   ["node", ["tests/ci-workflows.js"]],
   ["node", ["tests/android-wrapper.js"]],
   ["node", ["tests/audio-bgm.js"]],
+  ["node", ["tests/gamefeel-v1_5_0.js"]],
   ["node", ["tests/pwa-assets.js"]],
   ["node", ["tests/e2e/lifecycle.js"]],
   ["node", ["tests/e2e/save-tampering.js"]],

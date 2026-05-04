@@ -86,6 +86,55 @@ async function run() {
     });
 
     await withPage(
+      "bgm autoplay retry",
+      async (page) => {
+        await page.getByText("继续冒险").click();
+        await page.waitForTimeout(100);
+        await page.keyboard.press("Space");
+        await page.waitForTimeout(200);
+        const state = await page.evaluate(() => {
+          const audio = window.__mockAudioInstances?.[0];
+          return {
+            hasAudio: !!audio,
+            paused: audio?.paused,
+            playCalls: audio?.playCalls,
+          };
+        });
+        if (!state.hasAudio || state.paused || state.playCalls < 2) {
+          throw new Error(`BGM autoplay retry failed: ${JSON.stringify(state)}`);
+        }
+      },
+      {
+        init: () => {
+          window.__mockAudioInstances = [];
+          window.Audio = class MockAudio {
+            constructor(src) {
+              this.src = src;
+              this.loop = false;
+              this.preload = "";
+              this.paused = true;
+              this.muted = false;
+              this.volume = 1;
+              this.playCalls = 0;
+              window.__mockAudioInstances.push(this);
+            }
+            play() {
+              this.playCalls += 1;
+              if (this.playCalls === 1) return Promise.reject(new Error("autoplay blocked"));
+              this.paused = false;
+              return Promise.resolve();
+            }
+            pause() {
+              this.paused = true;
+            }
+            removeAttribute() {}
+            load() {}
+          };
+        },
+      }
+    );
+
+    await withPage(
       "roundRect fallback",
       async (page) => {
         await page.getByText("继续冒险").click();
@@ -422,7 +471,7 @@ async function run() {
       { page: { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
     );
 
-    console.log("browser-smoke: 6 passed");
+    console.log("browser-smoke: 7 passed");
   } finally {
     server.kill();
   }

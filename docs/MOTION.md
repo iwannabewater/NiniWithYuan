@@ -44,6 +44,10 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 19 | `.ambient-spark.lit` | Constellation-hunt click | `spark-lit` 1.4 s ease-soft scales the spark to 2.2× with a doubled glow then settles. Active only on `(hover: hover) and (pointer: fine)`. |
 | 20 | Canvas star gate | Player overlap | Paired rings pulse once, teleport the player to the paired safe exit, and show a brief `星门` status/float cue while preserving movement momentum. |
 | 21 | Canvas phase-tide bridges | World 3 tide clock | Active phase objects render solid while inactive phase bridges draw as translucent dashed mirror silhouettes; the background tide-line motif breathes with the current phase and the HUD status reports `星潮 甲相 / 乙相`. |
+| 22 | Canvas hit-stop | Stomp, projectile hit, hurt, crystal break, Yuan dash anticipation | The fixed-step update pauses for 35-70 ms while rendering continues, giving impacts a readable beat without changing physics state. Disabled under reduced-motion. |
+| 23 | Canvas landing puff | Hard landing after a fall | Dust-ivory sparks emit at the character's feet only for meaningful landings and only when high-frame-rate FX is enabled. |
+| 24 | Canvas camera lookahead | Sustained horizontal speed or vertical fall | The camera target leads up to 56 px horizontally and 30 px vertically, then resets on portal travel, respawn, or visibility changes. Reduced-motion contributes 0 px. |
+| 25 | `.respawn-veil` | Non-lethal fall respawn | A reused full-screen night-ink flash with a soft gold center halo marks the teleport back to spawn over 180 ms. Reduced-motion collapses to a 40 ms flash. |
 
 ## Continuous Motion
 
@@ -74,6 +78,7 @@ Under `prefers-reduced-motion: reduce`:
 - Cover-hero parallax stops writing `--mx` / `--my` because the script gates on reduced-motion at attach time, so the heroes return to their static rotated transforms.
 - Canvas particles and star-gate fields remain available because they communicate gameplay events; players can reduce optional pickup bursts through the visual effects setting.
 - Canvas phase-tide silhouettes remain visible because they communicate route availability; they are tied to gameplay readability rather than decorative-only motion.
+- v1.5.0 hit-stop is disabled, dash anticipation inherits that no-op, camera lookahead contributes 0 px, shake is multiplied by 0.30, and the respawn veil uses a single 40 ms flash. Landing puff remains governed by the existing visual effects setting.
 
 ## BGM and Audio
 
@@ -81,9 +86,10 @@ Audio is managed by `src/core/audio.js` through `AudioBus`.
 
 - Master volume uses `settings.volume`.
 - Background music uses `settings.bgmVolume`.
-- SFX uses Web Audio triangle beeps.
+- SFX uses a semantic Web Audio cue table in `src/core/audio.js`. The low-level `beep()` helper remains for compatibility, but gameplay events call named cues such as `jump`, `dash`, `stomp`, `portal`, `pickup_gem`, `complete`, and `fail`.
 - BGM uses a local looped OGG Vorbis file.
 - BGM starts after entering gameplay and pauses in menus, modals, completion states, and failure states.
+- If browser or WebView autoplay blocks BGM, the audio bus keeps pointer and keyboard retry listeners attached until a later gesture successfully starts the requested track.
 - `visibilitychange` and `pagehide` suspend the AudioContext and pause BGM; foreground return resumes only when gameplay remains active.
 
 The current BGM is `Fairy Adventure` by MintoDog, licensed CC0 1.0 Universal. Source and license data are recorded in [assets/audio/NOTICE.md](../assets/audio/NOTICE.md).

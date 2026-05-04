@@ -73,3 +73,6 @@ Start-Sleep -Seconds 5
 - v1.4.0 — World 2 chapters 9 and 10 contain paired star gates with safe exits and no immediate back-bounce; chapter 10 reads as the star-gate finale rather than a new mechanic tutorial.
 - v1.4.0 — World 3 chapters 11-15 show phase-tide bridges: active bridges are solid, inactive bridges appear as ghosted mirror silhouettes, pickups/hazards obey the current phase, and the HUD status reports `星潮 甲相` or `星潮 乙相`.
 - v1.4.0 — existing v1.3.1 saves that completed chapter 8 unlock chapter 9, while tampered saves clamp to `15 / 15`; APK badging reports `versionCode=10` / `versionName=1.4.0`.
+- v1.5.0 — Yuan dash, stomps, projectile hits, crystal breaks, and hurt reactions have short readable impact beats without changing jump or dash reach; reduced-motion disables the freeze.
+- v1.5.0 — hard landings show dust, respawns show a short ink veil, and camera lookahead improves fast Yuan routes in chapters 5, 10, and 15 without hiding nearby hazards.
+- v1.5.0 — BGM starts after gameplay begins; if the first attempt is blocked by WebView autoplay policy, a later tap or key press starts it. APK badging reports `versionCode=11` / `versionName=1.5.0`.
