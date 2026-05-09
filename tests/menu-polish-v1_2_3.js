@@ -14,7 +14,7 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0"].includes(pkg.version), `package.json version should be 1.2.3 through 1.5.0 (got ${pkg.version})`);
 assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0"].includes(lock.version), `package-lock.json root version should be 1.2.3 through 1.5.0 (got ${lock.version})`);
-assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.0-game-feel)"/, "service worker cache should be at a supported v1.2.3+ key");
+assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.0-(game-feel|canonical-url))"/, "service worker cache should be at a supported v1.2.3+ key");
 assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
 assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
 assert.ok(/versionCode="(6|7|8|9|10|11)"/.test(androidManifest), "Android versionCode should be 6 through 11");

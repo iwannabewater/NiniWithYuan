@@ -8,6 +8,31 @@
     <meta name="color-scheme" content="dark" />
     <meta name="description" content="妮妮源源历险记 — 双角色星图冒险 · 多世界章节 · 离线游玩" />
     <title>妮妮源源历险记 | Nini & Yuan</title>
+    <link rel="canonical" href="https://game.whynotsleep.cc/niniwithyuan/" />
+    <script>
+      (() => {
+        const canonicalBase = "https://game.whynotsleep.cc/niniwithyuan/";
+        const host = window.location.hostname;
+        const path = window.location.pathname;
+        const legacyProjectPath = path.match(/^\/NiniWithYuan(?:\/(.*))?$/i);
+        const legacyProjectHost =
+          host === "whynotsleep.cc" ||
+          host === "www.whynotsleep.cc" ||
+          host === "iwannabewater.github.io";
+        const legacyGamePath =
+          host === "game.whynotsleep.cc" && /^\/NiniWithYuan\/?$/.test(path);
+
+        if (!((legacyProjectHost && legacyProjectPath) || legacyGamePath)) {
+          return;
+        }
+
+        const rest = legacyProjectPath?.[1] || "";
+        const target = new URL(rest, canonicalBase);
+        target.search = window.location.search;
+        target.hash = window.location.hash;
+        window.location.replace(target.toString());
+      })();
+    </script>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="preload" href="./assets/fonts/lxgw-wenkai-700.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="./assets/fonts/lxgw-wenkai-500.woff2" as="font" type="font/woff2" crossorigin />

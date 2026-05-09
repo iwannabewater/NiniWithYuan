@@ -20,6 +20,7 @@ const checks = [
   ["node", ["tests/phase-tide-v1_4_0.js"]],
   ["node", ["tests/typography-copy-v1_4_0.js"]],
   ["node", ["tests/ci-workflows.js"]],
+  ["node", ["tests/canonical-url.js"]],
   ["node", ["tests/android-wrapper.js"]],
   ["node", ["tests/audio-bgm.js"]],
   ["node", ["tests/gamefeel-v1_5_0.js"]],

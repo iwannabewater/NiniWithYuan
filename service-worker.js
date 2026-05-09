@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.5.0-game-feel";
+const CACHE = "nini-yuan-v1.5.0-canonical-url";
 const ASSETS = [
   "./",
   "./index.html",
