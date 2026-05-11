@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.1
+
+- Added the canonical public game URL `https://game.whynotsleep.cc/niniwithyuan/`, with legacy project-host redirects for the apex domain, `www`, GitHub Pages, and the old game-subdomain project path.
+- Added GitHub Pages deployment packaging so pushes to `main` test and deploy the static web build from the canonical Pages workflow.
+- Fixed mobile touch-control alignment so the `跳 / 技 / 弹` labels and their glyph marks stay inside the same circular action button on narrow portrait and Android landscape viewports.
+- Reworked the action touch buttons from percentage padding to a stable vertical flex layout driven by `--touch-control-size`, preserving the existing `--touch-size` setting and aria labels.
+- Added canonical URL and browser smoke regression coverage. The mobile smoke path now measures real label bounding boxes in portrait and landscape, verifying the labels remain centered and inside the button with visible glyph marks.
+- Bumped the web package to `1.5.1`, Android `versionCode` to 12 / `versionName` to `1.5.1`, and the service worker cache to `nini-yuan-v1.5.1-mobile-skill-control`.
+
 ## v1.5.0
 
 - Added a focused game-feel and sound-design polish pass on top of v1.4.0 without changing chapters, save schema, physics constants, input bindings, or dependencies.

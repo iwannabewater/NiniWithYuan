@@ -76,3 +76,4 @@ Start-Sleep -Seconds 5
 - v1.5.0 — Yuan dash, stomps, projectile hits, crystal breaks, and hurt reactions have short readable impact beats without changing jump or dash reach; reduced-motion disables the freeze.
 - v1.5.0 — hard landings show dust, respawns show a short ink veil, and camera lookahead improves fast Yuan routes in chapters 5, 10, and 15 without hiding nearby hazards.
 - v1.5.0 — BGM starts after gameplay begins; if the first attempt is blocked by WebView autoplay policy, a later tap or key press starts it. APK badging reports `versionCode=11` / `versionName=1.5.0`.
+- v1.5.1 — Android landscape touch controls keep the `跳 / 技 / 弹` labels and glyph marks centered inside the circular buttons. APK badging reports `versionCode=12` / `versionName=1.5.1`.

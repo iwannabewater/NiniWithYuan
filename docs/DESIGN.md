@@ -89,7 +89,7 @@ Visibility is gated by `body:has(.screen.active)` and forced off immediately und
 
 Each touch button is a 50 % radius coin with a tactile inner specular and a deep drop shadow. The jump, skill, and shoot buttons emit a slow breath-pulse aura when ready (paused under reduced-motion). Press collapses the button and lights a gold halo.
 
-Each action button also carries a refined inline-SVG glyph mark above its label (jump → star arrow, skill → aurora swirl, shoot → diamond burst). The glyph is rendered via `mask-image: url("data:image/svg+xml,…")` and `background-color: currentColor`, so it inherits the button's gradient and adds no asset payload to the service worker cache.
+Each action button also carries a refined inline-SVG glyph mark above its label (jump → star arrow, skill → aurora swirl, shoot → diamond burst). The glyph and label are stacked by the button's flex layout, not by percentage padding, so mobile portrait and Android landscape keep the label centered inside the circular control. The glyph is rendered via `mask-image: url("data:image/svg+xml,…")` and `background-color: currentColor`, so it inherits the button's gradient and adds no asset payload to the service worker cache.
 
 ### Pause and Completion Modal
 

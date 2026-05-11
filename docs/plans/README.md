@@ -14,6 +14,7 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.3.1 typography and copy bugfix plan](OPTIMIZATION_PLAN_v1.3.1.md)
 - [v1.4.0 world 2 completion and world 3 phase-tide plan](OPTIMIZATION_PLAN_v1.4.0.md)
 - [v1.5.0 game-feel and sound-design polish plan](OPTIMIZATION_PLAN_v1.5.0.md)
+- [v1.5.1 mobile skill-control alignment plan](OPTIMIZATION_PLAN_v1.5.1.md)
 
 ## Design Specs
 

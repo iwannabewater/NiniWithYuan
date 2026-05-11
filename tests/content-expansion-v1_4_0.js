@@ -19,11 +19,11 @@ const levels = new Function(
   `const TILE = 48; const ENEMY_WIDTH = 38; const ENEMY_HEIGHT = 34; const WISP_FLOAT_GAP = 24; const WISP_HOVER_RANGE = 6; ${game.slice(buildStart, buildEnd)}; return buildLevels();`
 )();
 
-assert.ok(["1.4.0", "1.5.0"].includes(pkg.version), "package.json should be v1.4.0 or later");
-assert.ok(["1.4.0", "1.5.0"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
-assert.match(sw, /CACHE = "nini-yuan-v(1\.4\.0-world-3-phase-tide|1\.5\.0-(game-feel|canonical-url))"/, "service worker cache should use a v1.4.0+ key");
-assert.ok(/versionCode="(10|11)"/.test(androidManifest), "Android versionCode should be 10 or later");
-assert.ok(/versionName="(1\.4\.0|1\.5\.0)"/.test(androidManifest), "Android versionName should be 1.4.0 or later");
+assert.ok(["1.4.0", "1.5.0", "1.5.1"].includes(pkg.version), "package.json should be v1.4.0 or later");
+assert.ok(["1.4.0", "1.5.0", "1.5.1"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
+assert.match(sw, /CACHE = "nini-yuan-v(1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/, "service worker cache should use a v1.4.0+ key");
+assert.ok(/versionCode="(10|11|12)"/.test(androidManifest), "Android versionCode should be 10 or later");
+assert.ok(/versionName="(1\.4\.0|1\.5\.(0|1))"/.test(androidManifest), "Android versionName should be 1.4.0 or later");
 
 assert.equal(levels.length, 15, "v1.4.0 should ship fifteen chapters");
 assert.deepEqual(

@@ -1,7 +1,8 @@
 /* ============================================================================
-   Nini & Yuan v1.5.0 — "Aurora Inkwash · Night Atlas Cinematic"
+   Nini & Yuan v1.5.1 — "Aurora Inkwash · Night Atlas Cinematic"
    v1.2.0 visual shell + v1.2.3 ambient/cursor/easter-egg layer + v1.2.4
-   Aurora Cartography polish + World 2/3 expansion + v1.5.0 game-feel polish.
+   Aurora Cartography polish + World 2/3 expansion + v1.5.0 game-feel polish
+   + v1.5.1 mobile touch-control alignment.
    Pure visual layer. Every selector, ID, data-attribute, and CSS custom
    property name relied upon by src/game.js or tests/* is preserved verbatim.
    ============================================================================ */
