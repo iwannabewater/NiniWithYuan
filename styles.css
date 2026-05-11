@@ -2310,9 +2310,10 @@
   }
 
   .touch-btn {
+    --touch-control-size: min(var(--touch-size), 20vw);
     position: relative;
-    width: min(var(--touch-size), 20vw);
-    height: min(var(--touch-size), 20vw);
+    width: var(--touch-control-size);
+    height: var(--touch-control-size);
     min-height: 0;
     padding: 0;
     border-radius: 50%;
@@ -2402,23 +2403,26 @@
   .touch-btn.jump,
   .touch-btn.skill,
   .touch-btn.shoot {
-    padding-top: 32%;
+    flex-direction: column;
+    gap: max(3px, calc(var(--touch-control-size) * 0.05));
+    padding: 0;
     line-height: 1;
     font-size: 22px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0;
   }
 
   .touch-btn.jump::after,
   .touch-btn.skill::after,
   .touch-btn.shoot::after {
     content: "";
-    position: absolute;
-    top: 16%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 32%;
-    height: 32%;
-    background-color: currentColor;
+    position: static;
+    display: block;
+    order: -1;
+    flex: 0 0 auto;
+    width: calc(var(--touch-control-size) * 0.32);
+    height: calc(var(--touch-control-size) * 0.32);
+    border-radius: 0;
+    background: currentColor;
     -webkit-mask-position: center;
     mask-position: center;
     -webkit-mask-repeat: no-repeat;
@@ -3153,8 +3157,7 @@
     }
 
     .touch-btn {
-      width: min(var(--touch-size), 11vw);
-      height: min(var(--touch-size), 11vw);
+      --touch-control-size: min(var(--touch-size), 11vw);
       font-size: 24px;
     }
 
@@ -3210,8 +3213,7 @@
     }
 
     .touch-btn {
-      width: min(var(--touch-size), 16.5vw);
-      height: min(var(--touch-size), 16.5vw);
+      --touch-control-size: min(var(--touch-size), 16.5vw);
       font-size: 26px;
     }
   }

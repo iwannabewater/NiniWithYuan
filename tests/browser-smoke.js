@@ -391,17 +391,42 @@ async function run() {
             const rect = button.getBoundingClientRect();
             return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, label: button.textContent.trim() };
           });
+          const actionControls = [...document.querySelectorAll(".touch-btn.jump, .touch-btn.skill, .touch-btn.shoot")].map((button) => {
+            const rect = button.getBoundingClientRect();
+            const labelRange = document.createRange();
+            labelRange.selectNodeContents(button);
+            const label = labelRange.getBoundingClientRect();
+            const glyph = getComputedStyle(button, "::after");
+            return {
+              text: button.textContent.trim(),
+              rect: { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right },
+              label: { top: label.top, bottom: label.bottom, left: label.left, right: label.right, width: label.width },
+              glyph: { width: Number.parseFloat(glyph.width), height: Number.parseFloat(glyph.height) },
+            };
+          });
           const tips = document.querySelector("#controlTips").getBoundingClientRect();
           return {
             hud: document.querySelector("#overlay").classList.contains("active"),
             intro: document.querySelector("#chapterIntro").classList.contains("active"),
             touchDisplay: getComputedStyle(document.querySelector("#touchControls")).display,
             allVisible: controls.every((rect) => rect.left >= -1 && rect.right <= innerWidth + 1),
+            actionLabelsAligned: actionControls.every((button) => {
+              const controlCenter = (button.rect.left + button.rect.right) / 2;
+              const labelCenter = (button.label.left + button.label.right) / 2;
+              return (
+                button.label.top >= button.rect.top + 1 &&
+                button.label.bottom <= button.rect.bottom - 1 &&
+                Math.abs(controlCenter - labelCenter) <= 1.5 &&
+                button.glyph.width > 0 &&
+                button.glyph.height > 0
+              );
+            }),
             tipsAboveControls: tips.bottom <= Math.min(...controls.map((rect) => rect.top)) - 6,
             controls,
+            actionControls,
           };
         });
-        if (!state.hud || !state.intro || state.touchDisplay === "none" || !state.allVisible || !state.tipsAboveControls) {
+        if (!state.hud || !state.intro || state.touchDisplay === "none" || !state.allVisible || !state.actionLabelsAligned || !state.tipsAboveControls) {
           throw new Error(`Mobile controls invalid: ${JSON.stringify(state)}`);
         }
         if (!state.controls.some((button) => button.label === "弹")) {
@@ -444,6 +469,18 @@ async function run() {
             return { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right, width: rect.width, height: rect.height };
           };
           const controls = [...document.querySelectorAll(".touch-btn")].map(rectOf);
+          const actionControls = [...document.querySelectorAll(".touch-btn.jump, .touch-btn.skill, .touch-btn.shoot")].map((button) => {
+            const rect = button.getBoundingClientRect();
+            const labelRange = document.createRange();
+            labelRange.selectNodeContents(button);
+            const label = labelRange.getBoundingClientRect();
+            const glyph = getComputedStyle(button, "::after");
+            return {
+              rect: { top: rect.top, bottom: rect.bottom, left: rect.left, right: rect.right },
+              label: { top: label.top, bottom: label.bottom, left: label.left, right: label.right, width: label.width },
+              glyph: { width: Number.parseFloat(glyph.width), height: Number.parseFloat(glyph.height) },
+            };
+          });
           const hudRects = [...document.querySelectorAll(".top-hud > *")].map(rectOf);
           const intro = rectOf(document.querySelector("#chapterIntro"));
           const bossbar = rectOf(document.querySelector("#chapterBar"));
@@ -455,16 +492,28 @@ async function run() {
             touchDisplay: getComputedStyle(document.querySelector("#touchControls")).display,
             tipsDisplay: getComputedStyle(document.querySelector("#controlTips")).display,
             allControlsVisible: controls.every((rect) => rect.left >= -1 && rect.right <= innerWidth + 1 && rect.bottom <= innerHeight + 1),
+            actionLabelsAligned: actionControls.every((button) => {
+              const controlCenter = (button.rect.left + button.rect.right) / 2;
+              const labelCenter = (button.label.left + button.label.right) / 2;
+              return (
+                button.label.top >= button.rect.top + 1 &&
+                button.label.bottom <= button.rect.bottom - 1 &&
+                Math.abs(controlCenter - labelCenter) <= 1.5 &&
+                button.glyph.width > 0 &&
+                button.glyph.height > 0
+              );
+            }),
             hudAboveControls: hudBottom <= controlsTop - 8,
             introWithinViewport: intro.left >= -1 && intro.right <= innerWidth + 1 && intro.bottom <= controlsTop - 8,
             bossbarWithinViewport: bossbar.left >= -1 && bossbar.right <= innerWidth + 1,
             controls,
+            actionControls,
             hudRects,
             intro,
             bossbar,
           };
         });
-        if (!state.hud || !state.introActive || state.touchDisplay === "none" || state.tipsDisplay !== "none" || !state.allControlsVisible || !state.hudAboveControls || !state.introWithinViewport || !state.bossbarWithinViewport) {
+        if (!state.hud || !state.introActive || state.touchDisplay === "none" || state.tipsDisplay !== "none" || !state.allControlsVisible || !state.actionLabelsAligned || !state.hudAboveControls || !state.introWithinViewport || !state.bossbarWithinViewport) {
           throw new Error(`Landscape mobile layout invalid: ${JSON.stringify(state)}`);
         }
       },
