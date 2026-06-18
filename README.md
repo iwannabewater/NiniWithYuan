@@ -1,11 +1,11 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current v1.5.1 build keeps the **Aurora Inkwash · Night Atlas Cinematic** visual shell, v1.2.x gameplay/menu polish, Starlit Whispers ambient layer, Aurora Cartography interaction pass, World 2 star-gate expansion, v1.3.1 typography/copy hardening, the v1.4.0 World 2 / World 3 phase-tide expansion, and the v1.5.0 game-feel and sound-design pass, then fixes mobile touch-control label alignment for the `跳 / 技 / 弹` action buttons. The baseline remains offline, local-only, dependency-light, and WebView-ready: two playable characters, fifteen handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. Version 1.6.0 introduces the **宋式星图器物幻想 / Song-atlas Night Observatory** visual system: paired protagonist cover art, production Nini and Yuan action atlases, a Xuanji Union Seal app icon, lacquer-and-jade UI tokens, a corner-instrument HUD, and a crafted portrait rotate prompt. The game remains offline, local-only, dependency-light, and WebView-ready: two playable characters, fifteen handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
 
 ## Gameplay
 
-- Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes.
-- Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes.
+- Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes through the Xuanji Star Dial.
+- Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes through the Jade Gui Sword.
 - The game ships fifteen chapters across three worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, World 2 / 星门群岛 contains five star-gate chapters, and World 3 / 星潮镜域 contains five phase-tide chapters.
 - World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
 - World 3 introduces phase-tide bridges: platforms, pickups, and hazards can alternate between two readable star-tide phases without changing the base character physics.
@@ -45,7 +45,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration and retry, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.4.0 expansion adds content, portal, phase-tide, storage, browser-smoke, and typography/copy regression files for three-world grouping, fifteen-chapter save compatibility, safe portal authoring, phase-object validity, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy. The v1.5.0 game-feel suite pins hit-stop math, camera lookahead, shake clamping, semantic cue shape, landing puff behavior, and unchanged platforming constants. The v1.5.1 browser smoke path additionally measures mobile action-button label geometry so touch labels cannot drift away from their circular buttons again.
+The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration and retry, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.4.0 expansion adds content, portal, phase-tide, storage, browser-smoke, and typography/copy regression files for three-world grouping, fifteen-chapter save compatibility, safe portal authoring, phase-object validity, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy. The v1.5.0 game-feel suite pins hit-stop math, camera lookahead, shake clamping, semantic cue shape, landing puff behavior, and unchanged platforming constants. The v1.5.1 browser smoke path additionally measures mobile action-button label geometry. The v1.6.0 coverage validates production atlas geometry, authored versus mirrored direction rules, expressive pose priority, Song-atlas tokens, paired artwork, launcher assets, offline caching, and portrait orientation guidance.
 
 ## Android APK
 
@@ -88,7 +88,7 @@ dist/store-assets/
 │   ├── core/                  # Storage and audio helpers
 │   └── render/                # DOM rendering helpers
 ├── assets/
-│   ├── characters/            # Character PNGs and atlas placeholders
+│   ├── characters/            # Character source art and production atlases
 │   ├── audio/                 # Bundled CC0 BGM and provenance notice
 │   ├── fonts/                 # Local LXGW WenKai subsets
 │   └── icons/                 # PWA icons

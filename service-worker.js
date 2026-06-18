@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.5.1-mobile-skill-control";
+const CACHE = "nini-yuan-v1.6.0-song-atlas";
 const ASSETS = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const ASSETS = [
   "./src/core/storage.js",
   "./src/core/audio.js",
   "./src/render/hud.js",
+  "./src/render/character-motion.js",
   "./src/render/game-feel.js",
   "./src/render/respawn-veil.js",
   "./src/render/cursor-trail.js",
@@ -14,10 +15,12 @@ const ASSETS = [
   "./manifest.webmanifest",
   "./assets/icons/icon-192.png",
   "./assets/icons/icon-512.png",
+  "./assets/icons/xuanji-union-seal.svg",
   "./assets/fonts/lxgw-wenkai-500.woff2",
   "./assets/fonts/lxgw-wenkai-700.woff2",
-  "./assets/characters/nini-v2.png",
-  "./assets/characters/yuan-v2.png",
+  "./assets/characters/nini/nini-atlas-v1.png",
+  "./assets/characters/yuan/yuan-atlas-v1.png",
+  "./assets/characters/concepts/nini-yuan-song-atlas-v1.png",
   "./assets/characters/nini/atlas.json",
   "./assets/characters/yuan/atlas.json",
   "./assets/audio/fairy-adventure.ogg",

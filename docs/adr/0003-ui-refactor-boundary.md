@@ -1,0 +1,3 @@
+# Preserve game contracts while allowing interface restructuring
+
+The visual overhaul may restructure HTML, CSS, HUD rendering, responsive layout, visible copy, and the tests that pin those interface details. It must preserve gameplay mechanics, level behavior, save compatibility, input semantics, offline operation, and accessibility outcomes. This deliberately replaces the previous byte-stability rule for selectors, IDs, classes, and button text, because retaining the old DOM shape would limit the work to a cosmetic reskin and block the paired-protagonist cover, corner-instrument HUD, and coherent mobile adaptation.

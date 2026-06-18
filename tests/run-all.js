@@ -12,6 +12,8 @@ const checks = [
   ["node", ["tests/portal-mechanics-v1_4_0.js"]],
   ["node", ["tests/unit/storage.test.js"]],
   ["node", ["tests/character-atlas.js"]],
+  ["node", ["tests/character-motion.js"]],
+  ["node", ["tests/song-atlas-ui.js"]],
   ["node", ["tests/docs-links.js"]],
   ["node", ["tests/render-touch-polish.js"]],
   ["node", ["tests/menu-polish-v1_2_3.js"]],

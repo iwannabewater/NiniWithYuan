@@ -55,7 +55,10 @@ else
 fi
 
 mkdir -p "$BUILD_DIR/dex"
-mapfile -t CLASS_FILES < <(find "$BUILD_DIR/classes" -name "*.class" -type f | sort)
+CLASS_FILES=()
+while IFS= read -r class_file; do
+  CLASS_FILES+=("$class_file")
+done < <(find "$BUILD_DIR/classes" -name "*.class" -type f | sort)
 
 "$BUILD_TOOLS/d8" \
   --classpath "$ANDROID_JAR" \

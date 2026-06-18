@@ -189,7 +189,7 @@ async function run() {
           return {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
-            chapterScopeCopy: document.querySelector(".brand p").textContent.includes("多世界章节") && document.querySelector('meta[name="description"]').content.includes("多世界章节"),
+            chapterScopeCopy: document.querySelector('meta[name="description"]').content.includes("多世界章节"),
             heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
             ambient,
             ambientStripVisible: stripStyle.opacity !== "0",
@@ -200,7 +200,9 @@ async function run() {
         });
         if (
           menuState.subtitle.includes("平台跳跃") ||
-          !menuState.subtitle.includes("双角色星图冒险") ||
+          !menuState.subtitle.includes("循星图而行") ||
+          !menuState.subtitle.includes("璇玑渡空") ||
+          !menuState.subtitle.includes("青玉破风") ||
           menuState.description.includes("平台跳跃") ||
           !menuState.heroHasStarChart ||
           !menuState.chapterScopeCopy ||

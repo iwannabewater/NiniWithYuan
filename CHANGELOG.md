@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.0
+
+- Rebuilt the visual direction as **宋式星图器物幻想 / Song-atlas Night Observatory**, with lacquer, aged-gold, carved-jade, indigo-silk, and dusty-rose materials carried consistently across the menu, chapter atlas, HUD, touch controls, modals, and Android theme.
+- Redesigned Nini and Yuan as a paired protagonist system with an authored cover illustration, individual source pose sheets, transparent 4 by 4 production atlases, and fifteen named runtime states for idle, run, rise, fall, land, turn, shoot, skill, hurt, victory, and directional variants.
+- Added a character-motion resolver that selects poses from velocity, grounded state, direction changes, shooting, landing, and each character's signature skill. Motion artifacts reinforce Nini's Xuanji Star Dial and Yuan's Jade Gui Sword without changing platforming physics.
+- Replaced the app and PWA identity with the Xuanji Union Seal across SVG master art, maskable icons, Android foreground/background layers, monochrome theming, round launchers, and all density buckets.
+- Added the paired-character first-screen composition, four-corner instrument HUD, star-dial touch controls, production Chinese copy, complete local WenKai glyph subsets, and a crafted portrait orientation prompt that preserves the landscape game camera.
+- Expanded the design, motion, atlas, GDD, ADR, PWA, and regression documentation. Added automated checks for production atlas geometry, pose priority, paired artwork, semantic tokens, icon/cache coverage, and orientation guidance.
+- Bumped the web package to `1.6.0`, Android `versionCode` to 13 / `versionName` to `1.6.0`, and the service worker cache to `nini-yuan-v1.6.0-song-atlas`.
+
 ## v1.5.1
 
 - Added the canonical public game URL `https://game.whynotsleep.cc/niniwithyuan/`, with legacy project-host redirects for the apex domain, `www`, GitHub Pages, and the old game-subdomain project path.

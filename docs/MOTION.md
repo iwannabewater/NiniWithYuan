@@ -2,7 +2,7 @@
 
 ## Principles
 
-Motion confirms input, clarifies hierarchy, and supports the **Aurora Inkwash · Night Atlas Cinematic** identity. Decorative motion must not impair control response or produce measurable frame loss on low-end Android WebView devices.
+Motion confirms input, clarifies hierarchy, and supports the **宋式星图器物幻想 / Song-atlas Night Observatory** identity. Decorative motion must not impair control response or produce measurable frame loss on low-end Android WebView devices.
 
 Animation is limited to `transform` and `opacity` on small surfaces. Full-screen animated blur, masks, `backdrop-filter`, and `transition: all` are not used.
 
@@ -24,7 +24,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | # | Element | Trigger | Behavior |
 | --- | --- | --- | --- |
 | 1 | `.brand h1` | Menu enters | Brushwork title reveal: opacity rises and the title settles over 1.1 s. |
-| 2 | `.menu-heroes::before/.menu-heroes::after` | Static | Aurora halo and star-chart tracery behind the heroes add color depth without animation or blur filters. |
+| 2 | `.menu-heroes::before/.menu-heroes::after` | Static | Lacquer halo and star-chart tracery behind the heroes add color depth without animation or blur filters. |
 | 3 | `.character-card[data-character]::after` | Hover, focus, selected | Character-tinted halo (rose for Nini, jade for Yuan) fades in and lights a gold ring. |
 | 4 | `.level-item.featured::before` | Static | Atlas ring marks the next available chapter with a hairline arc and star core. |
 | 5 | `.touch-btn.jump/.skill/.shoot::before` | Idle | Breath aura ring scales 0.96 -> 1.04 over 3.2 s; cancels instantly on press. |
@@ -34,7 +34,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 9 | `.level-item.featured::before` | Static featured chapter | `compass-rotate` slowly turns the gold conic ring at 18 s per revolution; the four-point `✦` core stays static for legibility. Paused under reduced-motion. |
 | 10 | `.level-list::after` | Hover (fine pointer) | Hairline meridian rail fades from 0 to 0.42 opacity over `--d-slow`, connecting the four ordinary chapters and the featured chapter into one inked map. |
 | 11 | `.brand::after` | Menu enters | `aurora-sweep` paints a gold/rose/jade/cyan brushwork under the wordmark at 1.4 s ease-out with a 220 ms delay, then settles at 60 % horizontal scale and 50 % opacity. Hidden under reduced-motion. |
-| 12 | `.menu-heroes` `--mx` / `--my` | Pointer move (fine pointer) | Two-axis parallax: nini drifts up to ±6 px and yuan counter-drifts. Touch devices substitute a 7 s `hero-breath` tilt. Both pause under reduced-motion. |
+| 12 | `.menu-hero-art` `--mx` / `--my` | Pointer move (fine pointer) | The paired scroll illustration drifts up to 4 px against the pointer, preserving the protagonists as one composed artwork. Touch devices substitute a 7 s `hero-breath` tilt. Both pause under reduced-motion. |
 | 13 | `.hud-pill.pulse` | Character / skill state actually flips | `hud-pulse` 420 ms ease-spring scales 1.0 → 1.04 → 1.0 with a gold inset-glow flash. Fired only when the cached previous value differs. Static under reduced-motion. |
 | 14 | `.bossbar span` | Continuous during gameplay | `bossbar-shimmer` 7 s linear loops the auroral wash; the leading-edge gleam pseudo sits at 100 % of the fill. Paused under reduced-motion. |
 | 15 | `body:has(.chapter-intro.active) .bossbar / #controlTips` | Chapter starts | `bossbar-rise` and `tips-rise` stagger the bossbar (0 ms), chapter intro card (its own 240 ms transition), and control tips (160 ms delay) into a single orchestrated entrance. Collapsed to zero under reduced-motion. |

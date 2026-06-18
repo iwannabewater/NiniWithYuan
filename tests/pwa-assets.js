@@ -16,14 +16,21 @@ for (const icon of manifest.icons) {
   assert.ok(serviceWorker.includes(icon.src), `Service worker should cache ${icon.src}`);
 }
 
-for (const asset of ["./src/core/storage.js", "./src/core/audio.js", "./src/render/hud.js", "./src/render/game-feel.js", "./src/render/respawn-veil.js", "./src/game.js"]) {
+for (const asset of ["./src/core/storage.js", "./src/core/audio.js", "./src/render/hud.js", "./src/render/character-motion.js", "./src/render/game-feel.js", "./src/render/respawn-veil.js", "./src/game.js"]) {
   assert.ok(serviceWorker.includes(asset), `Service worker missing cache asset: ${asset}`);
 }
+
+assert.ok(serviceWorker.includes("./assets/characters/concepts/nini-yuan-song-atlas-v1.png"), "Service worker should cache the approved paired protagonist art");
+assert.ok(fs.existsSync("assets/icons/xuanji-union-seal.svg"), "Xuanji Union Seal master icon should exist");
+assert.ok(serviceWorker.includes("./assets/icons/xuanji-union-seal.svg"), "Service worker should cache the Xuanji Union Seal master icon");
 
 for (const atlas of ["./assets/characters/nini/atlas.json", "./assets/characters/yuan/atlas.json"]) {
   assert.ok(fs.existsSync(atlas.replace(/^\.\//, "")), `Missing character atlas: ${atlas}`);
   assert.ok(serviceWorker.includes(atlas), `Service worker missing character atlas: ${atlas}`);
 }
+
+assert.ok(serviceWorker.includes("./assets/characters/nini/nini-atlas-v1.png"), "Service worker should cache the production Nini atlas");
+assert.ok(serviceWorker.includes("./assets/characters/yuan/yuan-atlas-v1.png"), "Service worker should cache the production Yuan atlas");
 
 for (const audioAsset of ["./assets/audio/fairy-adventure.ogg", "./assets/audio/NOTICE.md"]) {
   assert.ok(fs.existsSync(audioAsset.replace(/^\.\//, "")), `Missing audio asset: ${audioAsset}`);

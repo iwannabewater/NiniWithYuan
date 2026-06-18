@@ -32,6 +32,7 @@
   const Storage = window.NiniYuanStorage;
   const Audio = window.NiniYuanAudio;
   const Hud = window.NiniYuanHud;
+  const CharacterMotion = window.NiniYuanCharacterMotion;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
   const TILE = 48;
@@ -99,7 +100,7 @@
     nini: {
       id: "nini",
       name: "妮妮",
-      subtitle: "星羽旅者",
+      subtitle: "璇玑星旅",
       accent: "#ff86bd",
       accent2: "#ffe07a",
       speed: 445,
@@ -107,7 +108,7 @@
       jump: 1040,
       gravity: 2250,
       maxFall: 1360,
-      skillName: "星羽滑翔",
+      skillName: "璇玑星渡",
       projectileName: "星露弹",
       projectileSpeed: 760,
       projectileDamage: 1,
@@ -118,7 +119,7 @@
     yuan: {
       id: "yuan",
       name: "源源",
-      subtitle: "青岚剑心",
+      subtitle: "青衡剑心",
       accent: "#66d8ff",
       accent2: "#7ff1ba",
       speed: 485,
@@ -126,7 +127,7 @@
       jump: 980,
       gravity: 2300,
       maxFall: 1460,
-      skillName: "青岚冲刺",
+      skillName: "青衡破风",
       projectileName: "青岚弹",
       projectileSpeed: 640,
       projectileDamage: 2,
@@ -137,8 +138,8 @@
   };
 
   const characterSprites = {
-    nini: loadSprite("./assets/characters/nini-v2.png"),
-    yuan: loadSprite("./assets/characters/yuan-v2.png"),
+    nini: loadSprite("./assets/characters/nini/nini-atlas-v1.png"),
+    yuan: loadSprite("./assets/characters/yuan/yuan-atlas-v1.png"),
   };
   const characterAtlases = {
     nini: loadAtlas("./assets/characters/nini/atlas.json"),
@@ -800,7 +801,9 @@
       skillCd: 0,
       skillTimer: 0,
       shootCd: 0,
+      shootTimer: 0,
       turnTimer: 0,
+      landingTimer: 0,
       glide: 0,
       bigTimer: 0,
       ammoTimer: 0,
@@ -857,6 +860,7 @@
     player.prevVy = player.vy;
     updatePlayer(dt);
     if (player.onGround && !wasOnGround && player.prevVy > 380) {
+      player.landingTimer = 0.18;
       GameFeel?.landingPuff?.(
         spawnSpark,
         player.x + player.w / 2,
@@ -959,7 +963,9 @@
     player.skillTimer = Math.max(0, player.skillTimer - dt);
     player.dashFreeze = Math.max(0, (player.dashFreeze || 0) - dt);
     player.shootCd = Math.max(0, player.shootCd - dt);
+    player.shootTimer = Math.max(0, player.shootTimer - dt);
     player.turnTimer = Math.max(0, player.turnTimer - dt);
+    player.landingTimer = Math.max(0, player.landingTimer - dt);
     player.invuln = Math.max(0, player.invuln - dt);
     player.superInvuln = Math.max(0, player.superInvuln - dt);
     player.bigTimer = Math.max(0, player.bigTimer - dt);
@@ -1003,7 +1009,7 @@
       if (player.glide === 0) {
         player.skillCd = skillCooldown;
         burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 14);
-        toastMsg("星羽滑翔！");
+        toastMsg("璇玑星渡");
       }
       player.glide = Math.min(NINI_GLIDE_DURATION, player.glide + dt);
       gravity *= player.vy < -80 ? 0.68 : 0.26;
@@ -1027,12 +1033,12 @@
         shake(7);
         burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22);
         cue("dash");
-        toastMsg("青岚冲刺！");
+        toastMsg("青衡破风");
       } else if (!player.onGround) {
         player.skillCd = skillCooldown;
         player.vy = Math.min(player.vy, 120);
         burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 14);
-        toastMsg("星羽滑翔！");
+        toastMsg("璇玑星渡");
       }
     }
 
@@ -1196,6 +1202,7 @@
     const ch = characters[save.selected];
     if (player.shootCd > 0 || player.ammo <= 0) return;
     player.shootCd = player.ammoTimer > 0 ? 0.12 : save.selected === "nini" ? 0.22 : 0.34;
+    player.shootTimer = save.selected === "nini" ? 0.18 : 0.22;
     player.ammo -= 1;
     player.ammoRegen = 0;
     const pierce = ch.projectilePierce + (player.ammoTimer > 0 ? 1 : 0);
@@ -2142,6 +2149,11 @@
       vy: player.vy,
       onGround: player.onGround,
       turnTimer: player.turnTimer,
+      landingTimer: player.landingTimer,
+      shootTimer: player.shootTimer,
+      glide: player.glide,
+      skillTimer: player.skillTimer,
+      hurtFlash: player.hurtFlash,
     });
   }
 
@@ -2253,26 +2265,36 @@
     const image = characterSprites[id];
     if (!image || !image.complete || !image.naturalWidth) return false;
     const atlas = characterAtlases[id]?.data;
-    const animName = characterAnimName(id, pose);
+    const motion = CharacterMotion?.resolveCharacterMotion?.({
+      id,
+      facing,
+      speed: characters[id].speed,
+      now: performance.now(),
+      ...pose,
+    });
+    const animName = motion?.animation || characterAnimName(id, pose);
+    const animConfig = atlas?.animations?.[animName] || atlas?.animations?.idle;
     const sourceFrame = atlasFrame(atlas, animName, image);
+    const orientation = CharacterMotion?.resolveSpriteOrientation?.(animName, facing, animConfig) || {
+      frameScaleX: facing,
+      leanScale: 1,
+      artifactScale: facing,
+    };
     const targetH = (id === "nini" ? 238 : 232) * scale;
     const targetW = targetH * (image.naturalWidth / image.naturalHeight);
-    const movement = pose ? clamp((pose.vx || 0) / characters[id].speed, -1, 1) : 0;
-    const stride = Math.abs(movement);
-    const turning = pose ? clamp((pose.turnTimer || 0) / 0.16, 0, 1) : 0;
-    const bob = pose && pose.onGround ? Math.sin(performance.now() / (stride > 0.18 ? 72 : 140)) * (1.2 + stride * 3.2) * scale : 0;
-    const airborne = pose && !pose.onGround ? clamp((pose.vy || 0) / 1000, -0.8, 0.8) : 0;
-    const lean = movement * 0.07 + facing * Math.sin(turning * Math.PI) * 0.08 + airborne * 0.035;
-    const stretchX = 1 + stride * 0.035 + turning * 0.035;
-    const stretchY = 1 + (pose && !pose.onGround ? 0.025 : 0) - turning * 0.025;
-    const lift = targetH * (id === "nini" ? 0.045 : 0.03);
+    const bob = (motion?.bob || 0) * scale;
+    const lean = motion?.lean || 0;
+    const stretchX = motion?.scaleX || 1;
+    const stretchY = motion?.scaleY || 1;
+    const lift = targetH * (id === "nini" ? 0.045 : 0.03) + (motion?.lift || 0) * scale;
     ctx.save();
     ctx.translate(snap(x), snap(y + lift + bob));
-    ctx.scale(facing, 1);
-    ctx.rotate(lean);
+    ctx.scale(orientation.frameScaleX, 1);
+    ctx.rotate(lean * orientation.leanScale);
     ctx.scale(stretchX, stretchY);
     ctx.shadowColor = characters[id].accent;
     ctx.shadowBlur = 14 * scale;
+    drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale);
     ctx.drawImage(
       image,
       sourceFrame.sx,
@@ -2286,6 +2308,48 @@
     );
     ctx.restore();
     return true;
+  }
+
+  function drawMotionArtifact(id, artifact, targetW, targetH, scale, directionScale = 1) {
+    if (!artifact || artifact === "rest") return;
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.lineCap = "round";
+    if (artifact.startsWith("star-dial")) {
+      const open = artifact === "star-dial-open" ? 1 : 0.72;
+      const radius = targetW * (0.42 + open * 0.08);
+      ctx.translate(targetW * 0.18 * directionScale, -targetH * 0.58);
+      ctx.rotate((performance.now() / 900) * directionScale);
+      ctx.strokeStyle = "rgba(195,164,104,.72)";
+      ctx.lineWidth = Math.max(1, 1.4 * scale);
+      for (let ring = 0; ring < 3; ring += 1) {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, radius * (1 - ring * 0.18), radius * (0.42 + ring * 0.07), ring * 0.6, 0, Math.PI * 1.72);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "rgba(184,123,134,.80)";
+      ctx.beginPath();
+      ctx.arc(radius * 0.72, 0, Math.max(2, 3 * scale), 0, Math.PI * 2);
+      ctx.fill();
+    } else if (artifact.startsWith("gui-sword")) {
+      const cut = artifact === "gui-sword-cut";
+      ctx.translate(0, -targetH * 0.46);
+      ctx.scale(directionScale, 1);
+      ctx.strokeStyle = cut ? "rgba(109,168,149,.82)" : "rgba(195,164,104,.62)";
+      ctx.lineWidth = Math.max(1.2, (cut ? 3 : 1.5) * scale);
+      ctx.beginPath();
+      ctx.moveTo(-targetW * 0.58, targetH * 0.18);
+      ctx.quadraticCurveTo(targetW * 0.12, -targetH * 0.25, targetW * 0.72, -targetH * 0.03);
+      ctx.stroke();
+      if (cut) {
+        ctx.globalAlpha = 0.34;
+        ctx.beginPath();
+        ctx.moveTo(-targetW * 0.48, targetH * 0.24);
+        ctx.quadraticCurveTo(targetW * 0.18, -targetH * 0.16, targetW * 0.62, targetH * 0.02);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   function characterAnimName(id, pose) {
