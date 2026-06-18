@@ -77,3 +77,4 @@ Start-Sleep -Seconds 5
 - v1.5.0 — hard landings show dust, respawns show a short ink veil, and camera lookahead improves fast Yuan routes in chapters 5, 10, and 15 without hiding nearby hazards.
 - v1.5.0 — BGM starts after gameplay begins; if the first attempt is blocked by WebView autoplay policy, a later tap or key press starts it. APK badging reports `versionCode=11` / `versionName=1.5.0`.
 - v1.5.1 — Android landscape touch controls keep the `跳 / 技 / 弹` labels and glyph marks centered inside the circular buttons. APK badging reports `versionCode=12` / `versionName=1.5.1`.
+- v1.6.0 — the launcher uses the Xuanji Union Seal, both protagonists use production motion atlases, and portrait web play shows the crafted orientation prompt. APK badging reports `versionCode=13` / `versionName=1.6.0`.

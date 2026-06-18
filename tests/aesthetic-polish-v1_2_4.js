@@ -14,11 +14,15 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 // --- version metadata --------------------------------------------------------
 
-assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1"].includes(pkg.version), "package.json should be at least v1.2.4");
-assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
-assert.match(sw, /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/, "service worker cache should be v1.2.4 or later");
-assert.ok(/versionCode="(7|8|9|10|11|12)"/.test(androidManifest), "Android versionCode should be 7 through 12");
-assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1)|1\.4\.0|1\.5\.(0|1))"/.test(androidManifest), "Android versionName should be 1.2.4 through 1.5.1");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0"].includes(pkg.version), "package.json should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
+assert.ok(
+  sw.includes('CACHE = "nini-yuan-v1.6.0-song-atlas"') ||
+    /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/.test(sw),
+  "service worker cache should be v1.2.4 or later"
+);
+assert.ok(/versionCode="(7|8|9|10|11|12|13)"/.test(androidManifest), "Android versionCode should be 7 through 13");
+assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1)|1\.4\.0|1\.5\.(0|1)|1\.6\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 through 1.6.0");
 
 // --- new keyframes -----------------------------------------------------------
 
@@ -50,8 +54,7 @@ assert.ok(/\.brand::after\s*{[\s\S]*?animation: aurora-sweep 1400ms/.test(css), 
 // --- hero parallax + breath -------------------------------------------------
 
 assert.ok(/\.menu-heroes\s*{[\s\S]*?--mx: 0;[\s\S]*?--my: 0;/.test(css), ".menu-heroes should declare --mx and --my custom properties");
-assert.ok(/\.nini-hero\s*{[\s\S]*?translate3d\(calc\(var\(--mx, 0\) \* 6px\)/.test(css), "nini-hero transform should respond to --mx");
-assert.ok(/\.yuan-hero\s*{[\s\S]*?translate3d\(calc\(var\(--mx, 0\) \* -6px\)/.test(css), "yuan-hero transform should counter-respond to --mx");
+assert.ok(/\.menu-hero-art\s*{[\s\S]*?translate3d\(calc\(var\(--mx, 0\) \* -4px\)/.test(css), "paired hero artwork should respond to --mx");
 assert.ok(/@media \(hover: none\) and \(pointer: coarse\) {[\s\S]*?\.menu-heroes\s*{[\s\S]*?animation: hero-breath 7s/.test(css), "touch viewports should animate hero-breath on .menu-heroes");
 assert.ok(cursor.includes("attachHeroParallax"), "cursor-trail.js should expose attachHeroParallax");
 assert.ok(/setProperty\("--mx"/.test(cursor), "cursor-trail.js should write --mx via setProperty");

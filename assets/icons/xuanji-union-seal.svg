@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">璇玑合璧印</title>
+  <desc id="desc">璇玑星盘环绕青玉圭剑，胭脂与青玉嵌片象征妮妮与源源。</desc>
+  <defs>
+    <radialGradient id="ground" cx="50%" cy="36%" r="76%">
+      <stop offset="0" stop-color="#202c3a"/>
+      <stop offset="0.58" stop-color="#111821"/>
+      <stop offset="1" stop-color="#0b1016"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e2d0a7"/>
+      <stop offset="0.46" stop-color="#c3a468"/>
+      <stop offset="1" stop-color="#80683f"/>
+    </linearGradient>
+    <linearGradient id="jade" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9ac3b5"/>
+      <stop offset="0.56" stop-color="#6da895"/>
+      <stop offset="1" stop-color="#416f64"/>
+    </linearGradient>
+    <linearGradient id="rose" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d0a2aa"/>
+      <stop offset="1" stop-color="#8d5964"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#ground)"/>
+  <circle cx="256" cy="256" r="214" fill="none" stroke="#c3a468" stroke-opacity=".13" stroke-width="2"/>
+  <circle cx="256" cy="256" r="198" fill="none" stroke="#c3a468" stroke-opacity=".08" stroke-width="1" stroke-dasharray="2 12"/>
+
+  <g>
+    <path d="M256 61 286 119 276 340 256 441 236 340 226 119Z" fill="url(#jade)" stroke="url(#gold)" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M256 91 269 132 264 326 256 374 248 326 243 132Z" fill="#dce9df" fill-opacity=".22"/>
+    <path d="M205 345H307L325 365 307 385H205L187 365Z" fill="url(#gold)" stroke="#e2d0a7" stroke-opacity=".44" stroke-width="3"/>
+
+    <circle cx="256" cy="246" r="158" fill="#0b1016" fill-opacity=".72" stroke="url(#gold)" stroke-width="12"/>
+    <circle cx="256" cy="246" r="132" fill="none" stroke="#c3a468" stroke-opacity=".74" stroke-width="4" stroke-dasharray="3 10"/>
+    <circle cx="256" cy="246" r="106" fill="none" stroke="#e2d0a7" stroke-opacity=".52" stroke-width="3"/>
+    <ellipse cx="256" cy="246" rx="132" ry="46" fill="none" stroke="#c3a468" stroke-opacity=".46" stroke-width="3" transform="rotate(-19 256 246)"/>
+    <ellipse cx="256" cy="246" rx="132" ry="46" fill="none" stroke="#c3a468" stroke-opacity=".38" stroke-width="3" transform="rotate(41 256 246)"/>
+
+    <path d="M256 166 269 228 331 246 269 264 256 326 243 264 181 246 243 228Z" fill="url(#gold)"/>
+    <circle cx="226" cy="246" r="17" fill="url(#rose)" stroke="#e2d0a7" stroke-width="4"/>
+    <circle cx="286" cy="246" r="17" fill="url(#jade)" stroke="#e2d0a7" stroke-width="4"/>
+    <circle cx="256" cy="246" r="13" fill="#eee7d5" stroke="#80683f" stroke-width="4"/>
+  </g>
+</svg>

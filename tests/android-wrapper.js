@@ -46,6 +46,14 @@ if (!buildScript.includes('cp -R "$ROOT/src/." "$ASSET_DIR/src/"')) {
   throw new Error("Android build must copy the whole src tree, not only src/game.js");
 }
 
+if (buildScript.includes("mapfile")) {
+  throw new Error("Android build must remain compatible with the Bash 3.2 shipped on macOS");
+}
+
+if (!buildScript.includes('while IFS= read -r class_file; do')) {
+  throw new Error("Android build should collect class files with a portable read loop");
+}
+
 for (const forbidden of [
   "setAllowFileAccessFromFileURLs(true)",
   "setAllowUniversalAccessFromFileURLs(true)",

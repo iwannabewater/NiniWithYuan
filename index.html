@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#0e1530" media="(prefers-color-scheme: dark)" />
-    <meta name="theme-color" content="#0e1530" />
+    <meta name="theme-color" content="#111821" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#111821" />
     <meta name="color-scheme" content="dark" />
-    <meta name="description" content="妮妮源源历险记 — 双角色星图冒险 · 多世界章节 · 离线游玩" />
+    <meta name="description" content="妮妮源源历险记 — 宋式星图双主角冒险 · 多世界章节 · 离线游玩" />
     <title>妮妮源源历险记 | Nini & Yuan</title>
     <link rel="canonical" href="https://game.whynotsleep.cc/niniwithyuan/" />
     <script>
@@ -39,21 +39,21 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <a class="skip-link" href="#menu">跳到菜单</a>
+    <a class="skip-link" href="#shell">跳到主要内容</a>
     <div class="ambient ambient-left" aria-hidden="true">
       <span class="ambient-streamer"></span>
-      <span class="ambient-rune ambient-rune-a">星</span>
-      <span class="ambient-rune ambient-rune-b">露</span>
-      <span class="ambient-rune ambient-rune-c">花</span>
+      <span class="ambient-rune ambient-rune-a">璇</span>
+      <span class="ambient-rune ambient-rune-b">玑</span>
+      <span class="ambient-rune ambient-rune-c">星</span>
       <span class="ambient-spark ambient-spark-1"></span>
       <span class="ambient-spark ambient-spark-2"></span>
       <span class="ambient-spark ambient-spark-3"></span>
     </div>
     <div class="ambient ambient-right" aria-hidden="true">
       <span class="ambient-streamer"></span>
-      <span class="ambient-rune ambient-rune-a">月</span>
-      <span class="ambient-rune ambient-rune-b">镜</span>
-      <span class="ambient-rune ambient-rune-c">极</span>
+      <span class="ambient-rune ambient-rune-a">青</span>
+      <span class="ambient-rune ambient-rune-b">玉</span>
+      <span class="ambient-rune ambient-rune-c">衡</span>
       <span class="ambient-spark ambient-spark-1"></span>
       <span class="ambient-spark ambient-spark-2"></span>
       <span class="ambient-spark ambient-spark-3"></span>
@@ -70,7 +70,7 @@
     </div>
     <footer class="ambient-strip" aria-hidden="true">
       <span class="ambient-strip-mark">✦</span>
-      <span class="ambient-strip-text">星图 · v1.5.1 · 多世界章节 · 离线游玩</span>
+      <span class="ambient-strip-text">星图 · v1.6.0 · 多世界章节 · 离线游玩</span>
       <span class="ambient-strip-divider"></span>
       <span class="ambient-strip-quote" id="ambientQuote">愿每一次跳跃，都落在你想去的星上。</span>
       <span class="ambient-strip-divider"></span>
@@ -81,14 +81,20 @@
 
       <section id="menu" class="panel screen active">
         <div class="brand">
-          <span class="eyebrow">Nini & Yuan</span>
+          <span class="eyebrow">璇玑合璧 · Nini & Yuan</span>
           <h1><span>妮妮源源</span><span>历险记</span></h1>
-          <p>双角色星图冒险 · 多世界章节 · 自动存档</p>
+          <p>循星图而行，以璇玑渡空，以青玉破风。</p>
         </div>
-        <div class="menu-heroes" aria-hidden="true">
-          <div class="hero-card nini-hero"></div>
-          <div class="hero-card yuan-hero"></div>
-        </div>
+        <figure class="menu-heroes">
+          <img
+            class="menu-hero-art"
+            src="./assets/characters/concepts/nini-yuan-song-atlas-v1.png"
+            width="1024" height="1536"
+            alt="妮妮手持璇玑星盘，源源佩青玉圭剑"
+            decoding="async"
+          />
+          <figcaption>星盘为圆，圭剑为衡</figcaption>
+        </figure>
         <div class="menu-actions">
           <button class="primary" data-action="play">继续冒险</button>
           <button data-action="levels">选择关卡</button>
@@ -110,10 +116,10 @@
           <article class="character-card" data-character="nini">
             <div class="portrait nini"></div>
             <h3>妮妮</h3>
-            <p>轻盈、二段跳、滞空滑翔，适合精细跳台与收集路线。</p>
+            <p>轻灵端雅，以璇玑星盘校正星轨，适合精细跳台与收集路线。</p>
             <dl class="ability-list">
-              <div><dt>主动技能</dt><dd>星羽滑翔：空中缓降并微调落点</dd></div>
-              <div><dt>弹药</dt><dd>星露弹：射速快、轻微追踪</dd></div>
+              <div><dt>主动技能</dt><dd>璇玑星渡：展开星盘，空中缓降并微调落点</dd></div>
+              <div><dt>星术</dt><dd>星露弹：循星轨飞行，射速快且轻微追踪</dd></div>
               <div><dt>食物强化</dt><dd>星莓变大、月糖无敌、晶核强化弹药</dd></div>
             </dl>
             <button data-pick="nini">以妮妮的名义出发</button>
@@ -121,10 +127,10 @@
           <article class="character-card" data-character="yuan">
             <div class="portrait yuan"></div>
             <h3>源源</h3>
-            <p>冲刺、破晶、落地冲击，适合速度通关和危险突破。</p>
+            <p>沉静果决，以青玉圭剑引风，适合速度通关和危险突破。</p>
             <dl class="ability-list">
-              <div><dt>主动技能</dt><dd>青岚冲刺：高速突进并击碎晶块</dd></div>
-              <div><dt>弹药</dt><dd>青岚弹：射速慢、可穿透一次</dd></div>
+              <div><dt>主动技能</dt><dd>青衡破风：圭剑定向，高速突进并击碎晶块</dd></div>
+              <div><dt>剑术</dt><dd>青岚弹：风刃较慢，可穿透一次</dd></div>
               <div><dt>食物强化</dt><dd>风铃果缩短冷却，月糖可撞击敌人</dd></div>
             </dl>
             <button data-pick="yuan">以源源的名义出发</button>
@@ -175,14 +181,18 @@
 
       <section id="overlay" class="hud">
         <div class="top-hud">
-          <div class="hud-pill character"><span id="hudCharacter">妮妮</span></div>
-          <div class="hud-pill hearts" aria-label="生命"><span class="hud-icon">❤</span><span id="hudHealth">❤❤❤</span></div>
-          <div class="hud-pill" aria-label="星露"><span class="hud-icon">✦</span><span id="hudCoins">0</span></div>
-          <div class="hud-pill" aria-label="星弹"><span class="hud-icon">◆</span><span id="hudAmmo">12</span></div>
-          <div class="hud-pill" aria-label="时间"><span class="hud-icon">⏱</span><span id="hudTime">00:00</span></div>
-          <div class="hud-pill status" id="hudStatus">普通</div>
-          <div class="hud-pill skill-state" id="hudSkill">技能 就绪</div>
-          <button class="hud-button" data-action="pause" aria-label="暂停">||</button>
+          <div class="hud-corner hud-corner-left">
+            <div class="hud-pill character"><span id="hudCharacter">妮妮</span></div>
+            <div class="hud-pill hearts" aria-label="生命"><span class="hud-icon">❤</span><span id="hudHealth">❤❤❤</span></div>
+            <div class="hud-pill status" id="hudStatus">普通</div>
+          </div>
+          <div class="hud-corner hud-corner-right">
+            <div class="hud-pill" aria-label="星露"><span class="hud-icon">✦</span><span id="hudCoins">0</span></div>
+            <div class="hud-pill" aria-label="星弹"><span class="hud-icon">◆</span><span id="hudAmmo">12</span></div>
+            <div class="hud-pill" aria-label="时间"><span class="hud-icon">⏱</span><span id="hudTime">00:00</span></div>
+            <div class="hud-pill skill-state" id="hudSkill">技能 就绪</div>
+            <button class="hud-button" data-action="pause" aria-label="暂停">||</button>
+          </div>
         </div>
         <div class="bossbar" id="chapterBar"><span></span></div>
         <div id="chapterIntro" class="chapter-intro" aria-live="polite">
@@ -221,10 +231,21 @@
           <button class="touch-btn shoot" data-touch="shoot" aria-label="发射">弹</button>
         </div>
       </nav>
+
+      <aside id="rotatePrompt" class="rotate-prompt" role="status" aria-live="polite">
+        <div class="rotate-instrument" aria-hidden="true">
+          <span class="rotate-orbit"></span>
+          <span class="rotate-device">✦</span>
+        </div>
+        <span class="eyebrow">星图校向</span>
+        <strong>横持设备，展开完整星路</strong>
+        <p>向左或向右旋转屏幕，星路随转向展开。</p>
+      </aside>
     </main>
     <script src="./src/core/storage.js"></script>
     <script src="./src/core/audio.js"></script>
     <script src="./src/render/hud.js"></script>
+    <script src="./src/render/character-motion.js"></script>
     <script src="./src/render/game-feel.js" defer></script>
     <script src="./src/render/respawn-veil.js" defer></script>
     <script src="./src/render/cursor-trail.js" defer></script>

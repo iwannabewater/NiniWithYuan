@@ -4,16 +4,16 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-Version 1.5.1 keeps the fifteen-chapter v1.4.0 structure and the v1.5.0 game-feel and sound-design polish pass while fixing mobile touch-control label alignment. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
+The current workspace build keeps the fifteen-chapter v1.4.0 structure and the v1.5.0 game-feel and sound-design polish pass, then re-anchors the presentation around **宋式星图器物幻想 / Song-atlas Night Observatory**. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
 
 ## Fiction
 
-The setting is a floating night city above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes. After Aurora Citadel is restored, dormant star gates wake across nearby islands and fold the atlas into a second playable world. Once the island star core is rejoined, the atlas opens a mirror-water domain where star tides alternate which routes are physically present.
+The setting is a floating night observatory above a sea of starlight. The heart stone of the celestial atlas has broken into five fragments, each lost in a different domain. Nini and Yuan follow the atlas to recover the fragments and reconnect the broken routes. After Aurora Citadel is restored, dormant star gates wake across nearby islands and fold the atlas into a second playable world. Once the island star core is rejoined, the atlas opens a mirror-water domain where star tides alternate which routes are physically present.
 
 Playable characters:
 
-- Nini is a starlight traveler. Her mechanics emphasize double jumps, gliding, and precise landings.
-- Yuan is a gale-blade traveler. Her mechanics emphasize dashing, crystal breaking, and direct traversal through high-risk spaces.
+- Nini is the Xuanji Star Dial bearer. Her mechanics emphasize double jumps, gliding, and precise landings.
+- Yuan is the Jade Gui Sword bearer. His mechanics emphasize dashing, crystal breaking, and direct traversal through high-risk spaces.
 
 ## Core Mechanics
 
@@ -38,15 +38,15 @@ Slimes and embers are ground enemies across all chapters. They spawn bottom-alig
 
 | Character | Skill | Design Function |
 | --- | --- | --- |
-| Nini | Starlight Glide | Slows descent, corrects landing position, and supports elevated routes. |
-| Yuan | Gale Dash | Provides fast horizontal movement, breaks crystals, and defeats enemies on contact. |
+| Nini | 璇玑星渡 | Slows descent, corrects landing position, and supports elevated routes. |
+| Yuan | 青衡破风 | Provides fast horizontal movement, breaks crystals, and defeats enemies on contact. |
 
 ### Projectiles
 
 | Character | Projectile | Properties |
 | --- | --- | --- |
-| Nini | Starlight Shot | Fast projectile with mild homing and lower damage. |
-| Yuan | Gale Shot | Slower projectile with one pierce and higher damage. |
+| Nini | 星露弹 | Fast projectile with mild homing and lower damage. |
+| Yuan | 青岚弹 | Slower projectile with one pierce and higher damage. |
 
 The ammunition cap is 14. The default regeneration rate is one unit per 1.6 s. During the core power-up, projectile speed, damage, and pierce increase.
 
@@ -125,7 +125,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.5.1; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.0; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -138,5 +138,7 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.4.0: World 2 completion with two additional star-gate chapters, World 3 phase-tide expansion with five chapters, and save-compatible fifteen-chapter release metadata.
 - v1.5.0: game-feel and sound-design polish with hit-stop, dash anticipation, landing dust, shake clamp, BGM retry, respawn veil, camera lookahead, and semantic audio cues.
 - v1.5.1: mobile touch-control action labels and glyph marks are centered inside their circular buttons in portrait and Android landscape.
-- Future release: production character sprite sheets, expanded enemy variants, or optional challenge routes, subject to a separate scope review.
+- v1.6.0: Song-atlas cover art, production character atlases, motion-resolved poses, the Xuanji Union Seal icon, instrument HUD, and portrait orientation guidance form one visual system without changing physics or save compatibility.
+- Current workspace: Song-atlas visual overhaul, paired protagonist cover art, production 4 x 4 character atlases, Xuanji Union Seal app icon, and four-corner HUD refinement.
+- Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.
