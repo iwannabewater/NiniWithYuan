@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.6.1
+
+- Reduced grounded full-speed reversal to under 190 ms while preserving each character's launch speed, jump tuning, dash distance, and fixed-step physics. Camera lookahead now responds to explicit movement intent and crosses the previous direction within 100 ms.
+- Made procedural run motion follow actual horizontal travel through a distance-driven gait phase, shortened the turn-pose window, and assigned both production atlases' authored frame 15 as a non-mirrored front-facing idle pose.
+- Fixed captured touch controls so pointer drift no longer releases movement early; controls now release on pointer up, cancellation, or lost capture.
+- Normalized the lowercase no-trailing-slash public path and HTTP canonical path to the fixed `https://game.whynotsleep.cc/niniwithyuan/` root before relative assets load, preserving query strings and hashes without accepting redirect suffixes.
+- Compacted chapter-world headings, removed the decorative footer from long mobile sub-screens, dismissed chapter guidance when gameplay input begins, and moved the modal seal away from action buttons.
+- Repaired store-asset capture so portrait orientation guidance, mobile landscape gameplay, pause, desktop gameplay, and feature artwork are all generated through valid interaction paths; Android packaging now replaces only its APK outputs and preserves independently generated store assets.
+- Added regression coverage for motion response, front-facing atlas orientation, canonical URL execution, mobile browsing density, and release metadata. Bumped Android to `versionCode=14`, `versionName=1.6.1`, and the service-worker cache to `nini-yuan-v1.6.1-responsive-motion`.
+
 ## v1.6.0
 
 - Rebuilt the visual direction as **宋式星图器物幻想 / Song-atlas Night Observatory**, with lacquer, aged-gold, carved-jade, indigo-silk, and dusty-rose materials carried consistently across the menu, chapter atlas, HUD, touch controls, modals, and Android theme.

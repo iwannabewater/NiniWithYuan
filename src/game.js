@@ -46,6 +46,7 @@
   const YUAN_DASH_MAX_DISTANCE = 170;
   const NINI_GLIDE_DURATION = 1.25;
   const NINI_GLIDE_FALL_SPEED = 190;
+  const TURN_POSE_DURATION = 0.1;
   const ENEMY_WIDTH = 38;
   const ENEMY_HEIGHT = 34;
   const WISP_FLOAT_GAP = 24;
@@ -797,6 +798,7 @@
       jumpBuffer: 0,
       airJumps: ch.airJumps,
       facing: 1,
+      moveIntent: 0,
       dashDir: 1,
       skillCd: 0,
       skillTimer: 0,
@@ -821,6 +823,7 @@
       hurtFlash: 0,
       prevVy: 0,
       dashFreeze: 0,
+      gaitPhase: 0,
     };
     particles = [];
     floatTexts = [];
@@ -855,6 +858,7 @@
     if (mode !== "play" || !player || !activeLevel) return;
     player.elapsed += dt;
     updateInputs();
+    if (inputs.left || inputs.right || inputs.jump || inputs.skill || inputs.shoot) dismissChapterIntro();
     updateMoving(dt);
     const wasOnGround = player.onGround;
     player.prevVy = player.vy;
@@ -950,9 +954,10 @@
   function updatePlayer(dt) {
     const ch = characters[save.selected];
     const leftRight = (inputs.right ? 1 : 0) - (inputs.left ? 1 : 0);
+    player.moveIntent = leftRight;
     if (leftRight) {
       const nextFacing = Math.sign(leftRight);
-      if (nextFacing !== player.facing) player.turnTimer = 0.16;
+      if (nextFacing !== player.facing) player.turnTimer = TURN_POSE_DURATION;
       player.facing = nextFacing;
     }
 
@@ -991,8 +996,12 @@
     const windTarget = windDirection * ch.speed * (player.onGround ? WIND_GROUND_DRIFT : WIND_AIR_DRIFT) * windStrength;
     const target = clamp(leftRight * ch.speed + windTarget, -ch.speed * WIND_MAX_SPEED, ch.speed * WIND_MAX_SPEED);
     const accel = player.onGround ? ch.accel : ch.accel * 0.74;
-    player.vx = moveToward(player.vx, target, accel * dt);
-    if (!leftRight && player.onGround && !windDirection) player.vx = moveToward(player.vx, 0, 2800 * dt);
+    player.vx = GameFeel?.horizontalVelocity?.(player.vx, target, {
+      baseAcceleration: accel,
+      grounded: player.onGround,
+      intent: leftRight,
+      turning: player.turnTimer > 0,
+    }, dt) ?? moveToward(player.vx, target, accel * dt);
     if (windZone) {
       player.windTimer = 0.18;
       spawnWind(player.x + player.w / 2, player.y + player.h / 2, windDirection);
@@ -1068,7 +1077,9 @@
     if (inputs.jumpReleased && player.vy < -160) player.vy *= 0.56;
 
     player.vy = Math.min(ch.maxFall, player.vy + gravity * dt);
+    const previousX = player.x;
     moveAxis("x", player.vx * dt);
+    if (player.onGround) player.gaitPhase = (player.gaitPhase + Math.abs(player.x - previousX) / 22) % (Math.PI * 2);
     moveAxis("y", player.vy * dt);
 
     for (const spring of activeLevel.springs) {
@@ -2149,11 +2160,13 @@
       vy: player.vy,
       onGround: player.onGround,
       turnTimer: player.turnTimer,
+      turnDuration: TURN_POSE_DURATION,
       landingTimer: player.landingTimer,
       shootTimer: player.shootTimer,
       glide: player.glide,
       skillTimer: player.skillTimer,
       hurtFlash: player.hurtFlash,
+      gaitPhase: player.gaitPhase,
     });
   }
 
@@ -2559,6 +2572,12 @@
     hudEls.intro.classList.add("active");
   }
 
+  function dismissChapterIntro() {
+    if (introTimer <= 0) return;
+    introTimer = 0;
+    hudEls.intro.classList.remove("active");
+  }
+
   function updateChapterIntro(dt) {
     if (introTimer <= 0) return;
     introTimer = Math.max(0, introTimer - dt);
@@ -2740,9 +2759,13 @@
       btn.addEventListener("pointerdown", down, { passive: false });
       btn.addEventListener("pointerup", up, { passive: false });
       btn.addEventListener("pointercancel", up, { passive: false });
-      btn.addEventListener("pointerleave", up, { passive: false });
+      btn.addEventListener("lostpointercapture", up, { passive: false });
     }
-    window.addEventListener("blur", () => { keys = Object.create(null); });
+    window.addEventListener("blur", () => {
+      keys = Object.create(null);
+      touchState.clear();
+      document.querySelectorAll("[data-touch].active").forEach((button) => button.classList.remove("active"));
+    });
   }
 
   function haptic(duration = 8) {

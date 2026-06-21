@@ -29,7 +29,10 @@ for (const id of ["nini", "yuan"]) {
     assert.equal(anim.frames.length > 0, true, `${id}.${name} frames empty`);
     assert.equal(Number.isFinite(anim.fps), true, `${id}.${name} fps invalid`);
     assert.equal(anim.mirror === undefined || typeof anim.mirror === "boolean", true, `${id}.${name} mirror flag invalid`);
+    assert.equal(anim.frontFacing === undefined || typeof anim.frontFacing === "boolean", true, `${id}.${name} front-facing flag invalid`);
   }
+  assert.deepEqual(atlas.animations.idle.frames, [15], `${id} idle should use the authored front-facing frame`);
+  assert.equal(atlas.animations.idle.frontFacing, true, `${id} idle should opt out of directional mirroring`);
   if (atlas.frame.w > 1 && atlas.frame.h > 1) {
     const imagePath = `assets/characters/${id}/${atlas.image}`;
     assert.ok(fs.existsSync(imagePath), `${id} production atlas image missing`);

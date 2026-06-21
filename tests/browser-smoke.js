@@ -31,10 +31,14 @@ async function withPage(testName, fn, options = {}) {
   if (options.init) await page.addInitScript(options.init);
   await page.addInitScript(() => {
     window.__characterSpriteDraws = 0;
+    window.__lastCharacterFrame = null;
     const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
     CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(source, ...args) {
       if (source instanceof HTMLImageElement && source.src.includes("/assets/characters/")) {
         window.__characterSpriteDraws += 1;
+        if (args.length >= 8) {
+          window.__lastCharacterFrame = { sx: args[0], sy: args[1], sw: args[2], sh: args[3] };
+        }
       }
       return originalDrawImage.call(this, source, ...args);
     };
@@ -57,7 +61,12 @@ async function run() {
 
     await withPage("desktop gameplay", async (page) => {
       await page.getByText("继续冒险").click();
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(800);
+      const idleFrame = await page.evaluate(() => {
+        const frame = window.__lastCharacterFrame;
+        return frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1;
+      });
+      if (idleFrame !== 15) throw new Error(`Nini should begin in the front-facing idle frame: ${idleFrame}`);
       await page.keyboard.down("ArrowRight");
       await page.keyboard.press("Space");
       await page.keyboard.press("KeyK");
@@ -74,16 +83,39 @@ async function run() {
           ambientHidden: getComputedStyle(document.querySelector(".ambient-left")).opacity === "0" && getComputedStyle(document.querySelector(".ambient-strip")).opacity === "0",
           ammo: Number(document.querySelector("#hudAmmo").textContent),
           skill: document.querySelector("#hudSkill").textContent.trim(),
-          intro: document.querySelector("#chapterIntro").classList.contains("active"),
+          introDismissed: !document.querySelector("#chapterIntro").classList.contains("active"),
           tips: [...document.querySelectorAll("#controlTips span")].map((tip) => tip.textContent.trim()),
           characterSpriteDraws: window.__characterSpriteDraws,
           pixel,
         };
       });
-      if (!state.hud || state.menu || state.modal || !state.ambientHidden || state.ammo >= 14 || !state.skill.includes("技能") || !state.intro || state.characterSpriteDraws <= 0 || state.tips.length < 5 || state.pixel[3] === 0) {
+      if (!state.hud || state.menu || state.modal || !state.ambientHidden || state.ammo >= 14 || !state.skill.includes("技能") || !state.introDismissed || state.characterSpriteDraws <= 0 || state.tips.length < 5 || state.pixel[3] === 0) {
         throw new Error(`Game did not enter playable state: ${JSON.stringify(state)}`);
       }
     });
+
+    await withPage(
+      "Yuan front-facing idle",
+      async (page) => {
+        await page.getByText("继续冒险").click();
+        await page.waitForTimeout(800);
+        const state = await page.evaluate(() => {
+          const frame = window.__lastCharacterFrame;
+          return {
+            frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+            character: document.querySelector("#hudCharacter").textContent.trim(),
+          };
+        });
+        if (state.frameIndex !== 15 || state.character !== "源源") {
+          throw new Error(`Yuan should begin in the front-facing idle frame: ${JSON.stringify(state)}`);
+        }
+      },
+      {
+        init: () => {
+          localStorage.setItem("nini-yuan-save-v1", JSON.stringify({ schemaVersion: 2, selected: "yuan" }));
+        },
+      },
+    );
 
     await withPage(
       "bgm autoplay retry",
@@ -132,6 +164,56 @@ async function run() {
           };
         },
       }
+    );
+
+    await withPage(
+      "mobile browsing density",
+      async (page) => {
+        await page.getByText("选择角色").tap();
+        await page.waitForTimeout(120);
+        const characterState = await page.evaluate(() => ({
+          footerDisplay: getComputedStyle(document.querySelector(".ambient-strip")).display,
+          panelOverflow: document.querySelector("#characterScreen").scrollWidth <= document.querySelector("#characterScreen").clientWidth + 1,
+        }));
+        if (characterState.footerDisplay !== "none" || !characterState.panelOverflow) {
+          throw new Error(`Mobile character layout should keep decorative footer out of long content: ${JSON.stringify(characterState)}`);
+        }
+
+        await page.locator(".screen.active [data-action='back']").tap();
+        await page.getByText("选择关卡").tap();
+        await page.waitForTimeout(120);
+        const levelState = await page.evaluate(() => ({
+          footerDisplay: getComputedStyle(document.querySelector(".ambient-strip")).display,
+          worldHeights: [...document.querySelectorAll(".level-world")].map((world) => world.getBoundingClientRect().height),
+          panelOverflow: document.querySelector("#levelScreen").scrollWidth <= document.querySelector("#levelScreen").clientWidth + 1,
+        }));
+        if (levelState.footerDisplay !== "none" || !levelState.panelOverflow || !levelState.worldHeights.every((height) => height <= 60)) {
+          throw new Error(`Mobile world headings should stay compact and unobscured: ${JSON.stringify(levelState)}`);
+        }
+      },
+      { page: { viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
+    );
+
+    await withPage(
+      "narrow menu controls",
+      async (page) => {
+        const state = await page.evaluate(() => {
+          const panel = document.querySelector("#menu");
+          const controls = [...document.querySelectorAll(".menu-actions button")].map((button) => {
+            const rect = button.getBoundingClientRect();
+            return { left: rect.left, right: rect.right, height: rect.height };
+          });
+          return {
+            noHorizontalOverflow: panel.scrollWidth <= panel.clientWidth + 1,
+            controlsWithinViewport: controls.every((rect) => rect.left >= -1 && rect.right <= innerWidth + 1),
+            controlsMeetHitTarget: controls.every((rect) => rect.height >= 48),
+          };
+        });
+        if (!state.noHorizontalOverflow || !state.controlsWithinViewport || !state.controlsMeetHitTarget) {
+          throw new Error(`320px menu controls should remain usable: ${JSON.stringify(state)}`);
+        }
+      },
+      { page: { viewport: { width: 320, height: 568 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
     );
 
     await withPage(
@@ -518,11 +600,27 @@ async function run() {
         if (!state.hud || !state.introActive || state.touchDisplay === "none" || state.tipsDisplay !== "none" || !state.allControlsVisible || !state.actionLabelsAligned || !state.hudAboveControls || !state.introWithinViewport || !state.bossbarWithinViewport) {
           throw new Error(`Landscape mobile layout invalid: ${JSON.stringify(state)}`);
         }
+
+        const right = page.locator('[data-touch="right"]');
+        const rightBox = await right.boundingBox();
+        if (!rightBox) throw new Error("Landscape right control should be visible");
+        await page.mouse.move(rightBox.x + rightBox.width / 2, rightBox.y + rightBox.height / 2);
+        await page.mouse.down();
+        await page.waitForTimeout(50);
+        await page.mouse.move(rightBox.x + rightBox.width + 30, rightBox.y - 20);
+        await page.waitForTimeout(50);
+        const heldAfterDrift = await right.evaluate((button) => button.classList.contains("active"));
+        const introDismissed = await page.locator("#chapterIntro").evaluate((intro) => !intro.classList.contains("active"));
+        await page.mouse.up();
+        const releasedAfterUp = await right.evaluate((button) => !button.classList.contains("active"));
+        if (!heldAfterDrift || !introDismissed || !releasedAfterUp) {
+          throw new Error(`Captured touch control lifecycle invalid: ${JSON.stringify({ heldAfterDrift, introDismissed, releasedAfterUp })}`);
+        }
       },
       { page: { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
     );
 
-    console.log("browser-smoke: 7 passed");
+    console.log("browser-smoke: 10 passed");
   } finally {
     server.kill();
   }

@@ -11,8 +11,9 @@ ASSET_DIR="$APP_DIR/assets"
 OUT_DIR="$ROOT/dist"
 PKG="com.iwannabewater.niniyuan"
 
-rm -rf "$BUILD_DIR" "$ASSET_DIR" "$OUT_DIR"
+rm -rf "$BUILD_DIR" "$ASSET_DIR"
 mkdir -p "$BUILD_DIR/classes" "$BUILD_DIR/gen" "$ASSET_DIR/src" "$OUT_DIR"
+rm -f "$OUT_DIR/NiniYuan.apk" "$OUT_DIR/NiniYuan.apk.idsig"
 
 cp "$ROOT/index.html" "$ASSET_DIR/index.html"
 cp "$ROOT/styles.css" "$ASSET_DIR/styles.css"

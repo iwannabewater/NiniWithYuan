@@ -1500,7 +1500,7 @@
   .level-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(260px, 1fr));
-    grid-auto-rows: minmax(112px, auto);
+    grid-auto-rows: auto;
     gap: 12px;
   }
 
@@ -2258,12 +2258,12 @@
     opacity: 0.65;
   }
 
-  /* v1.2.4 — gold atlas seal in the lower-right corner of pause/completion modals */
+  /* Gold atlas seal stays in the upper-right corner, clear of modal actions. */
   .modal-card::after {
     content: "";
     position: absolute;
     right: 22px;
-    bottom: 22px;
+    top: 22px;
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -2836,6 +2836,10 @@
 
     .ambient-strip-credit,
     .ambient-strip-divider {
+      display: none;
+    }
+
+    body:has(.screen.active:not(#menu)) .ambient-strip {
       display: none;
     }
 

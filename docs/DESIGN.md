@@ -114,6 +114,7 @@ Do not:
 - `>= 980px`: two-column menu with full paired composition and horizontal action rail.
 - `680px to 979px`: compact two-column or stacked menu according to available height.
 - `< 680px` portrait: paired art becomes a deliberate upper crop, title and actions follow, all menu surfaces remain scrollable inside safe areas.
+- Mobile character, chapter, and settings screens hide the decorative footer so it never overlays scrollable content; chapter-world headings use content-sized rows rather than inheriting chapter-card height.
 - Mobile landscape: compact menu and full gameplay HUD; touch targets remain at least 48px with non-overlapping hit regions.
 - Mobile portrait gameplay: show a crafted rotate-device prompt rather than compressing the level camera.
 

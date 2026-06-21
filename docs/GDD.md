@@ -125,7 +125,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.0; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.1; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -139,6 +139,7 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.5.0: game-feel and sound-design polish with hit-stop, dash anticipation, landing dust, shake clamp, BGM retry, respawn veil, camera lookahead, and semantic audio cues.
 - v1.5.1: mobile touch-control action labels and glyph marks are centered inside their circular buttons in portrait and Android landscape.
 - v1.6.0: Song-atlas cover art, production character atlases, motion-resolved poses, the Xuanji Union Seal icon, instrument HUD, and portrait orientation guidance form one visual system without changing physics or save compatibility.
-- Current workspace: Song-atlas visual overhaul, paired protagonist cover art, production 4 x 4 character atlases, Xuanji Union Seal app icon, and four-corner HUD refinement.
+- v1.6.1: responsive reversal and camera intent, distance-synchronized gait, front-facing idle poses, stable touch capture, canonical path normalization, compact mobile chapter browsing, and reliable cross-orientation release capture.
+- Current workspace: v1.6.1 responsive-motion patch with unchanged chapters, save schema, abilities, and input bindings.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

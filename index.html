@@ -14,20 +14,22 @@
         const canonicalBase = "https://game.whynotsleep.cc/niniwithyuan/";
         const host = window.location.hostname;
         const path = window.location.pathname;
+        const protocol = window.location.protocol;
         const legacyProjectPath = path.match(/^\/NiniWithYuan(?:\/(.*))?$/i);
         const legacyProjectHost =
           host === "whynotsleep.cc" ||
           host === "www.whynotsleep.cc" ||
           host === "iwannabewater.github.io";
-        const legacyGamePath =
-          host === "game.whynotsleep.cc" && /^\/NiniWithYuan\/?$/.test(path);
+        const canonicalGameHost = host === "game.whynotsleep.cc";
+        const legacyGamePath = canonicalGameHost && /^\/NiniWithYuan\/?$/.test(path);
+        const missingCanonicalSlash = canonicalGameHost && path === "/niniwithyuan";
+        const insecureCanonicalPath = canonicalGameHost && path === "/niniwithyuan/" && protocol !== "https:";
 
-        if (!((legacyProjectHost && legacyProjectPath) || legacyGamePath)) {
+        if (!((legacyProjectHost && legacyProjectPath) || legacyGamePath || missingCanonicalSlash || insecureCanonicalPath)) {
           return;
         }
 
-        const rest = legacyProjectPath?.[1] || "";
-        const target = new URL(rest, canonicalBase);
+        const target = new URL(canonicalBase);
         target.search = window.location.search;
         target.hash = window.location.hash;
         window.location.replace(target.toString());
@@ -70,7 +72,7 @@
     </div>
     <footer class="ambient-strip" aria-hidden="true">
       <span class="ambient-strip-mark">✦</span>
-      <span class="ambient-strip-text">星图 · v1.6.0 · 多世界章节 · 离线游玩</span>
+      <span class="ambient-strip-text">星图 · v1.6.1 · 多世界章节 · 离线游玩</span>
       <span class="ambient-strip-divider"></span>
       <span class="ambient-strip-quote" id="ambientQuote">愿每一次跳跃，都落在你想去的星上。</span>
       <span class="ambient-strip-divider"></span>

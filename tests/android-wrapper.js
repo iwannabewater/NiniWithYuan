@@ -46,6 +46,14 @@ if (!buildScript.includes('cp -R "$ROOT/src/." "$ASSET_DIR/src/"')) {
   throw new Error("Android build must copy the whole src tree, not only src/game.js");
 }
 
+if (buildScript.includes('rm -rf "$BUILD_DIR" "$ASSET_DIR" "$OUT_DIR"')) {
+  throw new Error("Android packaging must preserve independently generated store assets in dist");
+}
+
+if (!buildScript.includes('rm -f "$OUT_DIR/NiniYuan.apk" "$OUT_DIR/NiniYuan.apk.idsig"')) {
+  throw new Error("Android packaging should replace only its own prior APK outputs");
+}
+
 if (buildScript.includes("mapfile")) {
   throw new Error("Android build must remain compatible with the Bash 3.2 shipped on macOS");
 }

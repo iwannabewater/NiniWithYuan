@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.6.0-song-atlas";
+const CACHE = "nini-yuan-v1.6.1-responsive-motion";
 const ASSETS = [
   "./",
   "./index.html",

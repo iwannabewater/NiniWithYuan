@@ -62,11 +62,7 @@ async function run() {
     await phone.locator(".screen.active [data-action='back']").tap();
     await phone.getByRole("button", { name: "继续冒险" }).tap();
     await phone.waitForTimeout(650);
-    await capturePhone(phone, "04-gameplay");
-
-    await phone.getByLabel("暂停").tap();
-    await phone.waitForTimeout(250);
-    await capturePhone(phone, "05-pause-modal");
+    await capturePhone(phone, "04-rotate-prompt");
 
     const landscapePhone = await browser.newPage({
       viewport: { width: 844, height: 390 },
@@ -75,10 +71,30 @@ async function run() {
       hasTouch: true,
     });
     await landscapePhone.goto(BASE, { waitUntil: "networkidle" });
-    await landscapePhone.screenshot({ path: path.join(OUT_DIR, "00-menu-landscape.png"), fullPage: false });
+    await landscapePhone.screenshot({ path: path.join(OUT_DIR, "05-menu-landscape.png"), fullPage: false });
     await landscapePhone.getByRole("button", { name: "继续冒险" }).tap();
-    await landscapePhone.waitForTimeout(650);
+    await landscapePhone.waitForTimeout(350);
+    const rightControl = await landscapePhone.locator('[data-touch="right"]').boundingBox();
+    if (!rightControl) throw new Error("Landscape right control is not visible for capture");
+    await landscapePhone.mouse.move(rightControl.x + rightControl.width / 2, rightControl.y + rightControl.height / 2);
+    await landscapePhone.mouse.down();
+    await landscapePhone.waitForTimeout(120);
+    await landscapePhone.mouse.up();
+    await landscapePhone.waitForTimeout(250);
     await landscapePhone.screenshot({ path: path.join(OUT_DIR, "06-gameplay-landscape.png"), fullPage: false });
+    await landscapePhone.getByLabel("暂停").tap();
+    await landscapePhone.waitForTimeout(250);
+    await landscapePhone.screenshot({ path: path.join(OUT_DIR, "07-pause-landscape.png"), fullPage: false });
+
+    const desktop = await browser.newPage({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 1 });
+    await desktop.goto(BASE, { waitUntil: "networkidle" });
+    await desktop.getByRole("button", { name: "继续冒险" }).click();
+    await desktop.waitForTimeout(700);
+    await desktop.keyboard.down("ArrowRight");
+    await desktop.waitForTimeout(120);
+    await desktop.keyboard.up("ArrowRight");
+    await desktop.waitForTimeout(350);
+    await desktop.screenshot({ path: path.join(OUT_DIR, "08-gameplay-desktop.png"), fullPage: false });
 
     const feature = await browser.newPage({ viewport: { width: 1024, height: 500 }, deviceScaleFactor: 1 });
     await feature.goto(BASE, { waitUntil: "networkidle" });
