@@ -48,5 +48,15 @@ assert.deepEqual(Motion.resolveSpriteOrientation("jump_left", -1), {
 assert.equal(Motion.resolveSpriteOrientation("run", -1).frameScaleX, -1, "generic locomotion poses should mirror for left travel");
 assert.equal(Motion.resolveSpriteOrientation("skill_right", 1).artifactScale, 1, "right-side artifacts should retain their authored direction");
 assert.equal(Motion.resolveSpriteOrientation("skill_left", -1, { mirror: true }).frameScaleX, -1, "manifest mirror flags should create clean left poses from right-side source art");
+assert.deepEqual(Motion.resolveSpriteOrientation("idle", -1, { frontFacing: true }), {
+  authoredDirection: true,
+  frameScaleX: 1,
+  leanScale: 1,
+  artifactScale: 1,
+}, "front-facing idle poses must ignore the previous travel direction");
+
+const strideA = resolve("nini", { vx: 320, gaitPhase: 0 });
+const strideB = resolve("nini", { vx: 320, gaitPhase: Math.PI / 2 });
+assert.notEqual(strideA.bob, strideB.bob, "run motion should follow the distance-driven gait phase");
 
 console.log("character-motion: directional states and expressive pose profiles passed");

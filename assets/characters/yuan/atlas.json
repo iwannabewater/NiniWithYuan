@@ -2,7 +2,7 @@
   "image": "yuan-atlas-v1.png",
   "frame": { "w": 320, "h": 320 },
   "animations": {
-    "idle": { "frames": [0], "fps": 7, "loop": true },
+    "idle": { "frames": [15], "fps": 7, "loop": true, "frontFacing": true },
     "run": { "frames": [1], "fps": 14, "loop": true },
     "turn_left": { "frames": [2], "fps": 18, "loop": false, "mirror": true },
     "turn_right": { "frames": [2], "fps": 18, "loop": false },

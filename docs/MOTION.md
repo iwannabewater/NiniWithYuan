@@ -48,6 +48,16 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 23 | Canvas landing puff | Hard landing after a fall | Dust-ivory sparks emit at the character's feet only for meaningful landings and only when high-frame-rate FX is enabled. |
 | 24 | Canvas camera lookahead | Sustained horizontal speed or vertical fall | The camera target leads up to 56 px horizontally and 30 px vertically, then resets on portal travel, respawn, or visibility changes. Reduced-motion contributes 0 px. |
 | 25 | `.respawn-veil` | Non-lethal fall respawn | A reused full-screen night-ink flash with a soft gold center halo marks the teleport back to spawn over 180 ms. Reduced-motion collapses to a 40 ms flash. |
+| 26 | Canvas character gait | Ground travel | Procedural bob, lean, and stretch follow accumulated horizontal distance instead of wall-clock time, so the pose cadence remains attached to actual movement through starts, collisions, and stops. |
+| 27 | Canvas camera lookahead | Direction reversal | Explicit movement intent retargets lookahead immediately, using a faster crossing response when the player reverses while preserving the existing 56 px bound and reduced-motion zero-output contract. |
+
+## Input Response
+
+- Launch acceleration remains character-specific and reaches full speed within 140 ms.
+- Ground reversals apply a short, bounded turn response and reach full speed in the opposite direction within 190 ms.
+- Neutral ground stopping remains below 120 ms.
+- The authored turn pose lasts 100 ms. Once movement becomes neutral, both characters return to the same front-facing idle pose regardless of the previous travel direction.
+- Captured touch controls ignore pointer drift outside the visible circle and release only on pointer up, cancellation, or lost capture.
 
 ## Continuous Motion
 
@@ -79,6 +89,7 @@ Under `prefers-reduced-motion: reduce`:
 - Canvas particles and star-gate fields remain available because they communicate gameplay events; players can reduce optional pickup bursts through the visual effects setting.
 - Canvas phase-tide silhouettes remain visible because they communicate route availability; they are tied to gameplay readability rather than decorative-only motion.
 - v1.5.0 hit-stop is disabled, dash anticipation inherits that no-op, camera lookahead contributes 0 px, shake is multiplied by 0.30, and the respawn veil uses a single 40 ms flash. Landing puff remains governed by the existing visual effects setting.
+- v1.6.1 movement-response timing remains active because it is gameplay control logic, while camera lookahead still contributes 0 px under reduced motion.
 
 ## BGM and Audio
 

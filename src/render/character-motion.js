@@ -14,20 +14,26 @@
       onGround = true,
       speed = 460,
       turnTimer = 0,
+      turnDuration = 0.1,
       landingTimer = 0,
       shootTimer = 0,
       glide = 0,
       skillTimer = 0,
       hurtFlash = 0,
+      gaitPhase = null,
       now = 0,
     } = input || {};
 
     const direction = facing < 0 ? "left" : "right";
     const stride = clamp(Math.abs(vx) / Math.max(1, speed), 0, 1.35);
     const forward = clamp((vx * facing) / Math.max(1, speed), -1.2, 1.2);
-    const turning = clamp(turnTimer / 0.16, 0, 1);
+    const turnSpan = Number.isFinite(turnDuration) && turnDuration > 0 ? turnDuration : 0.1;
+    const turning = clamp(turnTimer / turnSpan, 0, 1);
     const landing = clamp(landingTimer / 0.18, 0, 1);
     const clock = now / 1000;
+    const gait = Number.isFinite(gaitPhase) ? gaitPhase : clock * 11.5;
+    const gaitWave = Math.sin(gait);
+    const gaitPulse = Math.cos(gait * 2);
 
     let animation = "idle";
     let artifact = "rest";
@@ -54,11 +60,13 @@
     }
 
     let bob = onGround
-      ? Math.sin(clock * (stride > 0.18 ? 11.5 : 2.4)) * (1 + stride * 2.6)
+      ? stride > 0.18
+        ? -Math.abs(gaitWave) * (1.2 + stride * 2.4)
+        : Math.sin(clock * 2.4) * 0.9
       : 0;
-    let lean = forward * (id === "nini" ? 0.055 : 0.07);
-    let scaleX = 1 + stride * 0.025;
-    let scaleY = 1 - stride * 0.012;
+    let lean = forward * (id === "nini" ? 0.055 : 0.07) + gaitWave * stride * 0.012;
+    let scaleX = 1 + stride * 0.025 + gaitPulse * stride * 0.012;
+    let scaleY = 1 - stride * 0.012 - gaitPulse * stride * 0.008;
     let lift = id === "nini" ? -2 : 0;
 
     if (turning > 0) {
@@ -105,6 +113,14 @@
   }
 
   function resolveSpriteOrientation(animation, facing = 1, options = {}) {
+    if (options.frontFacing === true) {
+      return {
+        authoredDirection: true,
+        frameScaleX: 1,
+        leanScale: 1,
+        artifactScale: 1,
+      };
+    }
     const directionScale = facing < 0 ? -1 : 1;
     const authoredDirection = /_(left|right)$/.test(animation || "") && options.mirror !== true;
     return {
