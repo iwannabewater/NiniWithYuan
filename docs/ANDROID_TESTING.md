@@ -79,3 +79,4 @@ Start-Sleep -Seconds 5
 - v1.5.1 — Android landscape touch controls keep the `跳 / 技 / 弹` labels and glyph marks centered inside the circular buttons. APK badging reports `versionCode=12` / `versionName=1.5.1`.
 - v1.6.0 — the launcher uses the Xuanji Union Seal, both protagonists use production motion atlases, and portrait web play shows the crafted orientation prompt. APK badging reports `versionCode=13` / `versionName=1.6.0`.
 - v1.6.1 — both protagonists stop in a front-facing pose, left/right touch holds remain active across small pointer drift, and the first movement input clears chapter guidance from the playfield. APK badging reports `versionCode=14` / `versionName=1.6.1`.
+- v1.6.2 — both protagonists begin facing right, retain the final explicit direction after stopping, and show complete idle heads; the launcher shows both Nini and Yuan under round and rounded-square masks. APK badging reports `versionCode=15` / `versionName=1.6.2`.

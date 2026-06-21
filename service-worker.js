@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.6.1-responsive-motion";
+const CACHE = "nini-yuan-v1.6.2-directional-idle";
 const ASSETS = [
   "./",
   "./index.html",

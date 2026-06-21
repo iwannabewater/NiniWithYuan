@@ -63,7 +63,7 @@ Frames are numbered left to right, then top to bottom:
 12  13  14  15
 ```
 
-The sixteenth frame can remain unused as padding or a future special frame.
+Frame 0 is the production idle silhouette and is mirrored from the retained `facing` state. Frame 15 remains unused because both source figures cross its top cell boundary and would lose hair pixels under fixed-cell sampling.
 
 ## Animation Selection
 
@@ -104,6 +104,7 @@ If an atlas is regenerated on a chroma-key background, remove the key locally, v
 ```bash
 node tests/character-atlas.js
 node tests/character-motion.js
+node tests/browser-smoke.js
 ```
 
-The atlas test validates schema shape, image existence, PNG dimensions, and maximum frame index. The motion test validates state priority and pose hint behavior. Neither test evaluates art quality, so every atlas replacement still requires screenshot review in gameplay.
+The atlas and motion tests validate schema shape, frame selection, directional idle orientation, and state priority. Browser smoke scans the rendered idle cells for transparent head/side safety margins and verifies the retained left-facing transform after movement stops. Every atlas replacement still requires screenshot review in gameplay.

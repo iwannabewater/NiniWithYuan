@@ -27,6 +27,7 @@ const checks = [
   ["node", ["tests/audio-bgm.js"]],
   ["node", ["tests/gamefeel-v1_5_0.js"]],
   ["node", ["tests/gamefeel-v1_6_1.js"]],
+  ["node", ["tests/app-icon-v1_6_2.js"]],
   ["node", ["tests/pwa-assets.js"]],
   ["node", ["tests/e2e/lifecycle.js"]],
   ["node", ["tests/e2e/save-tampering.js"]],

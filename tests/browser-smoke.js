@@ -37,7 +37,13 @@ async function withPage(testName, fn, options = {}) {
       if (source instanceof HTMLImageElement && source.src.includes("/assets/characters/")) {
         window.__characterSpriteDraws += 1;
         if (args.length >= 8) {
-          window.__lastCharacterFrame = { sx: args[0], sy: args[1], sw: args[2], sh: args[3] };
+          window.__lastCharacterFrame = {
+            sx: args[0],
+            sy: args[1],
+            sw: args[2],
+            sh: args[3],
+            transformA: this.getTransform().a,
+          };
         }
       }
       return originalDrawImage.call(this, source, ...args);
@@ -62,11 +68,44 @@ async function run() {
     await withPage("desktop gameplay", async (page) => {
       await page.getByText("继续冒险").click();
       await page.waitForTimeout(800);
-      const idleFrame = await page.evaluate(() => {
+      const initialIdle = await page.evaluate(() => {
         const frame = window.__lastCharacterFrame;
-        return frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1;
+        return {
+          frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+          transformA: frame?.transformA || 0,
+        };
       });
-      if (idleFrame !== 15) throw new Error(`Nini should begin in the front-facing idle frame: ${idleFrame}`);
+      if (initialIdle.frameIndex !== 0 || initialIdle.transformA <= 0) {
+        throw new Error(`Nini should begin in the complete right-facing idle frame: ${JSON.stringify(initialIdle)}`);
+      }
+      await page.keyboard.down("ArrowLeft");
+      await page.waitForTimeout(300);
+      await page.keyboard.up("ArrowLeft");
+      await page.waitForTimeout(500);
+      const leftIdle = await page.evaluate(() => {
+        const frame = window.__lastCharacterFrame;
+        return {
+          frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+          transformA: frame?.transformA || 0,
+        };
+      });
+      if (leftIdle.frameIndex !== 0 || leftIdle.transformA >= 0) {
+        throw new Error(`Nini should keep facing left after movement stops: ${JSON.stringify(leftIdle)}`);
+      }
+      await page.keyboard.down("ArrowRight");
+      await page.waitForTimeout(300);
+      await page.keyboard.up("ArrowRight");
+      await page.waitForTimeout(500);
+      const rightIdle = await page.evaluate(() => {
+        const frame = window.__lastCharacterFrame;
+        return {
+          frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+          transformA: frame?.transformA || 0,
+        };
+      });
+      if (rightIdle.frameIndex !== 0 || rightIdle.transformA <= 0) {
+        throw new Error(`Nini should keep facing right after movement stops: ${JSON.stringify(rightIdle)}`);
+      }
       await page.keyboard.down("ArrowRight");
       await page.keyboard.press("Space");
       await page.keyboard.press("KeyK");
@@ -95,19 +134,34 @@ async function run() {
     });
 
     await withPage(
-      "Yuan front-facing idle",
+      "Yuan directional idle",
       async (page) => {
         await page.getByText("继续冒险").click();
         await page.waitForTimeout(800);
-        const state = await page.evaluate(() => {
+        const initial = await page.evaluate(() => {
           const frame = window.__lastCharacterFrame;
           return {
             frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+            transformA: frame?.transformA || 0,
             character: document.querySelector("#hudCharacter").textContent.trim(),
           };
         });
-        if (state.frameIndex !== 15 || state.character !== "源源") {
-          throw new Error(`Yuan should begin in the front-facing idle frame: ${JSON.stringify(state)}`);
+        if (initial.frameIndex !== 0 || initial.transformA <= 0 || initial.character !== "源源") {
+          throw new Error(`Yuan should begin in the complete right-facing idle frame: ${JSON.stringify(initial)}`);
+        }
+        await page.keyboard.down("ArrowLeft");
+        await page.waitForTimeout(300);
+        await page.keyboard.up("ArrowLeft");
+        await page.waitForTimeout(500);
+        const leftIdle = await page.evaluate(() => {
+          const frame = window.__lastCharacterFrame;
+          return {
+            frameIndex: frame ? (frame.sy / frame.sh) * 4 + frame.sx / frame.sw : -1,
+            transformA: frame?.transformA || 0,
+          };
+        });
+        if (leftIdle.frameIndex !== 0 || leftIdle.transformA >= 0) {
+          throw new Error(`Yuan should keep facing left after movement stops: ${JSON.stringify(leftIdle)}`);
         }
       },
       {
@@ -116,6 +170,54 @@ async function run() {
         },
       },
     );
+
+    await withPage("idle atlas cells keep complete silhouettes", async (page) => {
+      const bounds = await page.evaluate(async () => {
+        const results = {};
+        for (const id of ["nini", "yuan"]) {
+          const atlas = await fetch(`./assets/characters/${id}/atlas.json`).then((response) => response.json());
+          const image = new Image();
+          image.src = `./assets/characters/${id}/${atlas.image}`;
+          await image.decode();
+          const { w, h } = atlas.frame;
+          const frame = atlas.animations.idle.frames[0];
+          const columns = Math.floor(image.naturalWidth / w);
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const context = canvas.getContext("2d", { willReadFrequently: true });
+          context.drawImage(image, (frame % columns) * w, Math.floor(frame / columns) * h, w, h, 0, 0, w, h);
+          const pixels = context.getImageData(0, 0, w, h).data;
+          let minX = w;
+          let minY = h;
+          let maxX = -1;
+          let maxY = -1;
+          const edgeOpaque = { top: 0, right: 0, bottom: 0, left: 0 };
+          for (let y = 0; y < h; y += 1) {
+            for (let x = 0; x < w; x += 1) {
+              if (pixels[(y * w + x) * 4 + 3] === 0) continue;
+              minX = Math.min(minX, x);
+              minY = Math.min(minY, y);
+              maxX = Math.max(maxX, x);
+              maxY = Math.max(maxY, y);
+              if (y === 0) edgeOpaque.top += 1;
+              if (x === w - 1) edgeOpaque.right += 1;
+              if (y === h - 1) edgeOpaque.bottom += 1;
+              if (x === 0) edgeOpaque.left += 1;
+            }
+          }
+          results[id] = { minX, minY, maxX, maxY, w, h, edgeOpaque };
+        }
+        return results;
+      });
+      for (const [id, box] of Object.entries(bounds)) {
+        const unsafeHeadOrSide = box.minY < 8 || box.edgeOpaque.top > 0 || box.edgeOpaque.left > 0 || box.edgeOpaque.right > 0;
+        const unsafeGroundContact = box.edgeOpaque.bottom > 16;
+        if (unsafeHeadOrSide || unsafeGroundContact) {
+          throw new Error(`${id} idle silhouette exceeds its safe atlas bounds: ${JSON.stringify(box)}`);
+        }
+      }
+    });
 
     await withPage(
       "bgm autoplay retry",

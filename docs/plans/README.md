@@ -16,6 +16,7 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.5.0 game-feel and sound-design polish plan](OPTIMIZATION_PLAN_v1.5.0.md)
 - [v1.5.1 mobile skill-control alignment plan](OPTIMIZATION_PLAN_v1.5.1.md)
 - [v1.6.1 responsive motion and release polish plan](OPTIMIZATION_PLAN_v1.6.1.md)
+- [v1.6.2 directional idle and paired icon patch](OPTIMIZATION_PLAN_v1.6.2.md)
 
 ## Design Specs
 
