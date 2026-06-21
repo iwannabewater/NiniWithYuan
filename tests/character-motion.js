@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
 const Motion = require("../src/render/character-motion.js");
 
 function resolve(id, overrides = {}) {
@@ -48,12 +49,19 @@ assert.deepEqual(Motion.resolveSpriteOrientation("jump_left", -1), {
 assert.equal(Motion.resolveSpriteOrientation("run", -1).frameScaleX, -1, "generic locomotion poses should mirror for left travel");
 assert.equal(Motion.resolveSpriteOrientation("skill_right", 1).artifactScale, 1, "right-side artifacts should retain their authored direction");
 assert.equal(Motion.resolveSpriteOrientation("skill_left", -1, { mirror: true }).frameScaleX, -1, "manifest mirror flags should create clean left poses from right-side source art");
-assert.deepEqual(Motion.resolveSpriteOrientation("idle", -1, { frontFacing: true }), {
-  authoredDirection: true,
-  frameScaleX: 1,
-  leanScale: 1,
-  artifactScale: 1,
-}, "front-facing idle poses must ignore the previous travel direction");
+for (const id of ["nini", "yuan"]) {
+  const atlas = JSON.parse(fs.readFileSync(`assets/characters/${id}/atlas.json`, "utf8"));
+  assert.equal(
+    Motion.resolveSpriteOrientation("idle", -1, atlas.animations.idle).frameScaleX,
+    -1,
+    `${id} idle should mirror after left travel`,
+  );
+  assert.equal(
+    Motion.resolveSpriteOrientation("idle", 1, atlas.animations.idle).frameScaleX,
+    1,
+    `${id} idle should face right by default and after right travel`,
+  );
+}
 
 const strideA = resolve("nini", { vx: 320, gaitPhase: 0 });
 const strideB = resolve("nini", { vx: 320, gaitPhase: Math.PI / 2 });

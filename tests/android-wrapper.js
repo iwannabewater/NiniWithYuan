@@ -93,7 +93,6 @@ for (const iconPath of [
   "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml",
   "android/app/src/main/res/drawable-nodpi/ic_launcher_background.png",
   "android/app/src/main/res/drawable-nodpi/ic_launcher_foreground.png",
-  "android/app/src/main/res/drawable/ic_launcher_monochrome.xml",
   "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
 ]) {
   if (!fs.existsSync(iconPath)) {

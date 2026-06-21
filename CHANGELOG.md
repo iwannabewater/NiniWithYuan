@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.2
+
+- Restored directional idle rendering: both protagonists now begin facing right and preserve their last explicit left/right movement direction after stopping.
+- Reassigned idle to the complete frame 0 silhouettes, eliminating the head crop caused by frame 15 crossing its fixed atlas-cell boundary.
+- Replaced the emblem-only Web/PWA and Android launcher artwork with a shared Nini-and-Yuan paired portrait master, including mask-safe adaptive, round, and density-specific assets.
+- Added unit and real-Canvas regression coverage for idle direction, atlas safe bounds, paired icon packaging, and release metadata. Bumped Android to `versionCode=15`, `versionName=1.6.2`, and the service-worker cache to `nini-yuan-v1.6.2-directional-idle`.
+
 ## v1.6.1
 
 - Reduced grounded full-speed reversal to under 190 ms while preserving each character's launch speed, jump tuning, dash distance, and fixed-step physics. Camera lookahead now responds to explicit movement intent and crosses the previous direction within 100 ms.

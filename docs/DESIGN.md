@@ -62,6 +62,10 @@ Panels use black-indigo lacquer outside and deep indigo silk inside. Depth comes
 
 The menu uses one paired composition. Character selection derives two deliberate crops from the same approved direction until production individual portraits are available. Nini keeps purple hair, rose identity, and the Xuanji Star Dial; Yuan keeps deep-blue hair, jade-cyan identity, and the Jade Gui Sword. Both read as fictional adults aged 20 to 24.
 
+### Application icon
+
+Web/PWA and Android launchers use the same close paired portrait of Nini and Yuan. Both adult faces remain recognizable and inside circular, rounded-square, and Android adaptive safe zones; neither protagonist may be replaced by a standalone artifact emblem. The Xuanji Union Seal remains available as an in-product symbolic mark, not as the launcher identity.
+
 ### HUD
 
 Gameplay follows **四角仪轨**. Character seal and health anchor the upper left; resource, ammunition, skill, and pause anchor the upper right; the chapter progress line stays narrow along the top meridian. Information does not form one continuous pill row.
