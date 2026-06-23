@@ -56,7 +56,7 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 - Launch acceleration remains character-specific and reaches full speed within 140 ms.
 - Ground reversals apply a short, bounded turn response and reach full speed in the opposite direction within 190 ms.
 - Neutral ground stopping remains below 120 ms.
-- The authored turn pose lasts 100 ms. Once movement becomes neutral, both characters keep the last explicit travel direction; a fresh level defaults to right-facing idle.
+- The authored turn pose lasts 100 ms. Once movement becomes neutral, both characters keep the last explicit travel direction; a fresh level defaults to right-facing idle. Generic idle source cells must declare `sourceFacing` when their visual source direction is not right-facing.
 - Captured touch controls ignore pointer drift outside the visible circle and release only on pointer up, cancellation, or lost capture.
 
 ## Continuous Motion

@@ -125,7 +125,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.2; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.3; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -141,6 +141,7 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.6.0: Song-atlas cover art, production character atlases, motion-resolved poses, the Xuanji Union Seal icon, instrument HUD, and portrait orientation guidance form one visual system without changing physics or save compatibility.
 - v1.6.1: responsive reversal and camera intent, distance-synchronized gait, front-facing idle poses, stable touch capture, canonical path normalization, compact mobile chapter browsing, and reliable cross-orientation release capture.
 - v1.6.2: directional complete-silhouette idle poses and paired-protagonist Web/PWA plus Android launcher identity, with unchanged physics and save compatibility.
-- Current workspace: v1.6.2 directional-idle and paired-icon patch with unchanged chapters, save schema, abilities, and input bindings.
+- v1.6.3: Nini's complete idle source frame is marked as left-facing so default and rightward idle read forward-right, while last-direction idle behavior remains unchanged.
+- Current workspace: v1.6.3 forward-idle patch with unchanged chapters, save schema, abilities, and input bindings.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

@@ -122,10 +122,11 @@
       };
     }
     const directionScale = facing < 0 ? -1 : 1;
+    const sourceDirectionScale = options.sourceFacing === "left" ? -1 : 1;
     const authoredDirection = /_(left|right)$/.test(animation || "") && options.mirror !== true;
     return {
       authoredDirection,
-      frameScaleX: authoredDirection ? 1 : directionScale,
+      frameScaleX: authoredDirection ? 1 : sourceDirectionScale * directionScale,
       leanScale: authoredDirection ? directionScale : 1,
       artifactScale: directionScale,
     };

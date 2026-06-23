@@ -3,6 +3,8 @@ const { chromium } = require("playwright");
 
 const PORT = 4173;
 const BASE = `http://127.0.0.1:${PORT}`;
+const IDLE_RIGHT_TRANSFORM = { nini: -1, yuan: 1 };
+const IDLE_LEFT_TRANSFORM = { nini: 1, yuan: -1 };
 
 function startServer() {
   const server = spawn("python3", ["-m", "http.server", String(PORT), "--bind", "127.0.0.1"], {
@@ -75,7 +77,7 @@ async function run() {
           transformA: frame?.transformA || 0,
         };
       });
-      if (initialIdle.frameIndex !== 0 || initialIdle.transformA <= 0) {
+      if (initialIdle.frameIndex !== 0 || initialIdle.transformA !== IDLE_RIGHT_TRANSFORM.nini) {
         throw new Error(`Nini should begin in the complete right-facing idle frame: ${JSON.stringify(initialIdle)}`);
       }
       await page.keyboard.down("ArrowLeft");
@@ -89,7 +91,7 @@ async function run() {
           transformA: frame?.transformA || 0,
         };
       });
-      if (leftIdle.frameIndex !== 0 || leftIdle.transformA >= 0) {
+      if (leftIdle.frameIndex !== 0 || leftIdle.transformA !== IDLE_LEFT_TRANSFORM.nini) {
         throw new Error(`Nini should keep facing left after movement stops: ${JSON.stringify(leftIdle)}`);
       }
       await page.keyboard.down("ArrowRight");
@@ -103,7 +105,7 @@ async function run() {
           transformA: frame?.transformA || 0,
         };
       });
-      if (rightIdle.frameIndex !== 0 || rightIdle.transformA <= 0) {
+      if (rightIdle.frameIndex !== 0 || rightIdle.transformA !== IDLE_RIGHT_TRANSFORM.nini) {
         throw new Error(`Nini should keep facing right after movement stops: ${JSON.stringify(rightIdle)}`);
       }
       await page.keyboard.down("ArrowRight");
@@ -146,7 +148,7 @@ async function run() {
             character: document.querySelector("#hudCharacter").textContent.trim(),
           };
         });
-        if (initial.frameIndex !== 0 || initial.transformA <= 0 || initial.character !== "源源") {
+        if (initial.frameIndex !== 0 || initial.transformA !== IDLE_RIGHT_TRANSFORM.yuan || initial.character !== "源源") {
           throw new Error(`Yuan should begin in the complete right-facing idle frame: ${JSON.stringify(initial)}`);
         }
         await page.keyboard.down("ArrowLeft");
@@ -160,7 +162,7 @@ async function run() {
             transformA: frame?.transformA || 0,
           };
         });
-        if (leftIdle.frameIndex !== 0 || leftIdle.transformA >= 0) {
+        if (leftIdle.frameIndex !== 0 || leftIdle.transformA !== IDLE_LEFT_TRANSFORM.yuan) {
           throw new Error(`Yuan should keep facing left after movement stops: ${JSON.stringify(leftIdle)}`);
         }
       },

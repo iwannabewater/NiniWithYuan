@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.3
+
+- Corrected Nini's default idle orientation by recording the idle source frame as left-facing, so fresh levels and rightward stops now read forward-right for the game's left-to-right route.
+- Updated the motion resolver and browser regression checks to compare runtime transforms against atlas source-facing metadata instead of assuming every complete idle source frame faces right.
+- Preserved all physics, chapters, input bindings, save schema, launcher artwork, and paired-protagonist atlas boundaries. Bumped Android to `versionCode=16`, `versionName=1.6.3`, and the service-worker cache to `nini-yuan-v1.6.3-forward-idle`.
+
 ## v1.6.2
 
 - Restored directional idle rendering: both protagonists now begin facing right and preserve their last explicit left/right movement direction after stopping.

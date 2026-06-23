@@ -29,7 +29,7 @@ Each atlas JSON file is relative to its character directory:
   "image": "nini-atlas-v1.png",
   "frame": { "w": 320, "h": 320 },
   "animations": {
-    "idle": { "frames": [0], "fps": 7, "loop": true },
+    "idle": { "frames": [0], "fps": 7, "loop": true, "sourceFacing": "left" },
     "run": { "frames": [1], "fps": 14, "loop": true },
     "turn_left": { "frames": [2], "fps": 18, "loop": false },
     "turn_right": { "frames": [3], "fps": 18, "loop": false },
@@ -48,6 +48,8 @@ Each atlas JSON file is relative to its character directory:
 }
 ```
 
+Generic poses may set `"sourceFacing": "left"` or `"sourceFacing": "right"` when the source cell's visual direction differs from the runtime default. Nini's complete frame 0 idle source faces left, so it records `"sourceFacing": "left"` and is mirrored for rightward travel. Yuan's frame 0 idle source faces right and does not need this override.
+
 Yuan may use a higher `skill_left` and `skill_right` FPS because dash poses should feel sharper than Nini glide poses. An animation may set `"mirror": true` when the paired authored cell is unusable and a clean opposite-facing pose is safer. The runtime never mirrors a named left or right pose unless this flag is present, which prevents authored direction from being flipped twice.
 
 Yuan v1 deliberately mirrors frame 2 for `turn_left` and frame 12 for `skill_left`. This avoids the invalid left-turn drawing and the contaminated frame 11 cell in the generated source sheet while keeping the clean garment and sword silhouette visible in both travel directions.
@@ -63,7 +65,7 @@ Frames are numbered left to right, then top to bottom:
 12  13  14  15
 ```
 
-Frame 0 is the production idle silhouette and is mirrored from the retained `facing` state. Frame 15 remains unused because both source figures cross its top cell boundary and would lose hair pixels under fixed-cell sampling.
+Frame 0 is the production idle silhouette and is mirrored from the retained `facing` state plus any `sourceFacing` metadata. Frame 15 remains unused because both source figures cross its top cell boundary and would lose hair pixels under fixed-cell sampling.
 
 ## Animation Selection
 
@@ -107,4 +109,4 @@ node tests/character-motion.js
 node tests/browser-smoke.js
 ```
 
-The atlas and motion tests validate schema shape, frame selection, directional idle orientation, and state priority. Browser smoke scans the rendered idle cells for transparent head/side safety margins and verifies the retained left-facing transform after movement stops. Every atlas replacement still requires screenshot review in gameplay.
+The atlas and motion tests validate schema shape, frame selection, source-facing metadata, directional idle orientation, and state priority. Browser smoke scans the rendered idle cells for transparent head/side safety margins and verifies retained left and right idle transforms against each character's source-facing contract. Every atlas replacement still requires screenshot review in gameplay.

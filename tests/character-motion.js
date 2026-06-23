@@ -51,14 +51,16 @@ assert.equal(Motion.resolveSpriteOrientation("skill_right", 1).artifactScale, 1,
 assert.equal(Motion.resolveSpriteOrientation("skill_left", -1, { mirror: true }).frameScaleX, -1, "manifest mirror flags should create clean left poses from right-side source art");
 for (const id of ["nini", "yuan"]) {
   const atlas = JSON.parse(fs.readFileSync(`assets/characters/${id}/atlas.json`, "utf8"));
+  const rightFacingScale = id === "nini" ? -1 : 1;
+  const leftFacingScale = id === "nini" ? 1 : -1;
   assert.equal(
     Motion.resolveSpriteOrientation("idle", -1, atlas.animations.idle).frameScaleX,
-    -1,
+    leftFacingScale,
     `${id} idle should mirror after left travel`,
   );
   assert.equal(
     Motion.resolveSpriteOrientation("idle", 1, atlas.animations.idle).frameScaleX,
-    1,
+    rightFacingScale,
     `${id} idle should face right by default and after right travel`,
   );
 }

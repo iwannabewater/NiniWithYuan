@@ -46,10 +46,10 @@ assert.ok(adaptive.includes("@drawable/ic_launcher_foreground"));
 assert.ok(adaptive.includes("@drawable/ic_launcher_background"));
 assert.ok(!adaptive.includes("monochrome"), "Android themed icon must not fall back to the retired emblem");
 assert.ok(!fs.existsSync("android/app/src/main/res/drawable/ic_launcher_monochrome.xml"), "retired emblem-only launcher resource should be removed");
-assert.equal(pkg.version, "1.6.2");
-assert.equal(lock.version, "1.6.2");
-assert.match(androidManifest, /versionCode="15"[\s\S]*versionName="1\.6\.2"/);
-assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"'));
-assert.ok(html.includes("星图 · v1.6.2"));
+assert.equal(pkg.version, "1.6.3");
+assert.equal(lock.version, "1.6.3");
+assert.match(androidManifest, /versionCode="16"[\s\S]*versionName="1\.6\.3"/);
+assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"'));
+assert.ok(html.includes("星图 · v1.6.3"));
 
-console.log("app-icon-v1.6.2: paired-protagonist Web and Android launcher assets passed");
+console.log("app-icon-v1.6.3: paired-protagonist Web and Android launcher assets passed");
