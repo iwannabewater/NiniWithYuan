@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.7.0
+
+- Added one-decimal World 3 phase-tide countdowns to the HUD status pill, so phase routes communicate timing without adding a new control surface.
+- Added low-noise enemy intent marks: ground enemies show a support-platform patrol rail and direction notch, while wisps show a dashed hover tether that keeps them visually distinct from grounded foes.
+- Added short projectile-hit flashes on enemies, with type-specific ground enemy palette refinements and stronger wisp impact glow, while preserving enemy health, patrol, collision, physics constants, chapters, save schema, and input bindings.
+- Stabilized the accessibility E2E navigation path by waiting for the active screen's entry animation before clicking back buttons, without waiting for decorative infinite child animations.
+- Bumped the web package to `1.7.0`, Android to `versionCode=17`, `versionName=1.7.0`, and the service-worker cache to `nini-yuan-v1.7.0-readability-polish`.
+
 ## v1.6.3
 
 - Corrected Nini's default idle orientation by recording the idle source frame as left-facing, so fresh levels and rightward stops now read forward-right for the game's left-to-right route.

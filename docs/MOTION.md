@@ -50,6 +50,8 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 25 | `.respawn-veil` | Non-lethal fall respawn | A reused full-screen night-ink flash with a soft gold center halo marks the teleport back to spawn over 180 ms. Reduced-motion collapses to a 40 ms flash. |
 | 26 | Canvas character gait | Ground travel | Procedural bob, lean, and stretch follow accumulated horizontal distance instead of wall-clock time, so the pose cadence remains attached to actual movement through starts, collisions, and stops. |
 | 27 | Canvas camera lookahead | Direction reversal | Explicit movement intent retargets lookahead immediately, using a faster crossing response when the player reverses while preserving the existing 56 px bound and reduced-motion zero-output contract. |
+| 28 | Canvas enemy intent | Enemy render | Ground enemies draw a quiet patrol rail and direction notch tied to their current support platform; wisps draw a dashed hover tether instead of ground feet. |
+| 29 | Canvas enemy hit flash | Projectile impact | A 180 ms ivory halo and body-core flash confirms non-lethal projectile hits without moving the enemy or altering hit-stop, health, patrol, or collision rules. |
 
 ## Input Response
 
@@ -90,6 +92,7 @@ Under `prefers-reduced-motion: reduce`:
 - Canvas phase-tide silhouettes remain visible because they communicate route availability; they are tied to gameplay readability rather than decorative-only motion.
 - v1.5.0 hit-stop is disabled, dash anticipation inherits that no-op, camera lookahead contributes 0 px, shake is multiplied by 0.30, and the respawn veil uses a single 40 ms flash. Landing puff remains governed by the existing visual effects setting.
 - v1.6.1 movement-response timing remains active because it is gameplay control logic, while camera lookahead still contributes 0 px under reduced motion.
+- v1.7.0 enemy intent marks remain static geometry, and projectile hit flashes use the same short feedback window as existing combat hit-stop so they do not add decorative looping motion.
 
 ## BGM and Audio
 

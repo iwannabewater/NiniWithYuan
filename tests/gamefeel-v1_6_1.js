@@ -78,15 +78,16 @@ assert.ok(game.includes('btn.addEventListener("lostpointercapture", up'), "touch
 assert.ok(!game.includes('btn.addEventListener("pointerleave", up'), "captured touch controls must not release on pointer drift");
 assert.ok(game.includes("touchState.clear()"), "focus loss should clear captured touch state");
 assert.ok(game.includes("dismissChapterIntro"), "gameplay input should dismiss the chapter intro");
-assert.ok(["1.6.1", "1.6.2", "1.6.3"].includes(pkg.version));
-assert.ok(["1.6.1", "1.6.2", "1.6.3"].includes(lock.version));
-assert.match(androidManifest, /versionCode="(14|15|16)"[\s\S]*versionName="1\.6\.(1|2|3)"/);
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version));
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version));
+assert.match(androidManifest, /versionCode="(14|15|16|17)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0)"/);
 assert.ok(
+  serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-readability-polish"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"'),
 );
-assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3"));
+assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3") || html.includes("星图 · v1.7.0"));
 for (const assetMarker of ["04-rotate-prompt", "06-gameplay-landscape.png", "07-pause-landscape.png", "08-gameplay-desktop.png"]) {
   assert.ok(capture.includes(assetMarker), `store capture should produce ${assetMarker}`);
 }

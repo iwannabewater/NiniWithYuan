@@ -49,6 +49,7 @@ assert.ok(source.includes("function phaseIsActive"), "Phase runtime should expos
 assert.ok(source.includes("function updatePhaseTransition"), "Phase runtime should handle phase switches");
 assert.ok(source.includes("drawPhaseGhostPlatform"), "Inactive phase bridges should render as ghost geometry");
 assert.ok(source.includes("drawPhaseTide"), "World 3 should render a phase-tide canvas motif");
-assert.ok(source.includes('states.push(tide.active === "a" ? "星潮 甲相" : "星潮 乙相")'), "HUD status should expose current phase");
+assert.ok(source.includes("phaseTideLabel(tide)"), "HUD status should expose current phase through the phase label helper");
+assert.ok(source.includes("remaining.toFixed(1)"), "HUD status should expose readable phase countdown precision");
 
 console.log("phase-tide-v1.4.0: World 3 phase data, timing, runtime hooks, and rendering guards passed");
