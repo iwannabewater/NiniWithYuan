@@ -32,7 +32,7 @@ Wind fields appear in chapter 3 and chapter 5. They are directional horizontal c
 
 ### Enemies
 
-Slimes and embers are ground enemies across all chapters. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, and use their current supporting platform as the patrol boundary, turning around at platform-safe limits. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow and no feet.
+Slimes and embers are ground enemies across all chapters. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, use their current supporting platform as the patrol boundary, and show a quiet ground intent rail so the player can read their path before contact. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow, no feet, and a dashed hover tether. Projectile hits add a short ivory flash on the enemy body without changing enemy health, patrol, or collision rules.
 
 ### Skills
 
@@ -66,7 +66,7 @@ World 2 introduces paired star gates. A gate activates only when the player's bo
 
 ### Phase-Tide Bridges
 
-World 3 introduces phase-tide bridges. A level-local tide clock alternates between phase `a` and phase `b`. Phase-tagged platforms, moving platforms, hazards, coins, and gems participate only when their phase is active. Inactive phase objects render as ghosted mirror silhouettes so the player can read the next route before committing. The mechanic does not change fixed-step physics, character jump/dash/glide tuning, or input handling.
+World 3 introduces phase-tide bridges. A level-local tide clock alternates between phase `a` and phase `b`. Phase-tagged platforms, moving platforms, hazards, coins, and gems participate only when their phase is active. Inactive phase objects render as ghosted mirror silhouettes so the player can read the next route before committing, and the HUD reports the active phase with a one-decimal remaining-time countdown. The mechanic does not change fixed-step physics, character jump/dash/glide tuning, or input handling.
 
 ## Chapters
 
@@ -125,7 +125,7 @@ Fields:
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.6.3; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.7.0; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -142,6 +142,7 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.6.1: responsive reversal and camera intent, distance-synchronized gait, front-facing idle poses, stable touch capture, canonical path normalization, compact mobile chapter browsing, and reliable cross-orientation release capture.
 - v1.6.2: directional complete-silhouette idle poses and paired-protagonist Web/PWA plus Android launcher identity, with unchanged physics and save compatibility.
 - v1.6.3: Nini's complete idle source frame is marked as left-facing so default and rightward idle read forward-right, while last-direction idle behavior remains unchanged.
-- Current workspace: v1.6.3 forward-idle patch with unchanged chapters, save schema, abilities, and input bindings.
+- v1.7.0: phase-tide countdown readability, enemy patrol/hover intent marks, projectile-hit flash feedback, and stable accessibility navigation checks ship without changing physics, chapters, save schema, abilities, or input bindings.
+- Current workspace: v1.7.0 readability polish with unchanged chapters, save schema, abilities, and input bindings.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

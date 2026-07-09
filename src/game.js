@@ -60,6 +60,7 @@
   const PORTAL_COOLDOWN = 0.34;
   const PHASE_DEFAULT_PERIOD = 3.2;
   const PHASE_WARNING_DEFAULT = 0.45;
+  const ENEMY_HIT_FLASH_DURATION = 0.18;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
@@ -911,10 +912,13 @@
     const t = ((elapsed + offset) % cycle + cycle) % cycle;
     const active = t < period ? "a" : "b";
     const phaseTime = t % period;
+    const remaining = Math.max(0, period - phaseTime);
     return {
       active,
       progress: phaseTime / period,
-      warning: phaseTime >= period - warningWindow,
+      remaining,
+      warning: warningWindow > 0 && remaining <= warningWindow,
+      urgency: warningWindow > 0 ? clamp(1 - remaining / warningWindow, 0, 1) : 0,
       enabled: true,
       period,
     };
@@ -1392,6 +1396,7 @@
       for (const e of activeLevel.enemies) {
         if (!e.alive || pr.life <= 0 || !rectsOverlap(pr, e)) continue;
         e.hp = (e.hp || (e.type === "ember" ? 3 : 2)) - pr.damage;
+        e.hitTimer = ENEMY_HIT_FLASH_DURATION;
         GameFeel?.requestHitstop?.(35);
         burst(e.x + e.w / 2, e.y + e.h / 2, pr.color, 14);
         cue("hit_take");
@@ -1424,6 +1429,7 @@
   function updateEnemies(dt) {
     for (const e of activeLevel.enemies) {
       if (!e.alive) continue;
+      e.hitTimer = Math.max(0, (e.hitTimer || 0) - dt);
       e.phase += dt;
       if (e.type === "wisp") {
         e.y = e.baseY + Math.sin(e.phase * 4) * WISP_HOVER_RANGE;
@@ -1719,9 +1725,10 @@
     const t = performance.now() / 1000;
     const startX = Math.floor((camera.x - 160) / 220) * 220;
     ctx.save();
-    ctx.globalAlpha = tide.warning ? 0.18 : 0.11;
+    const urgency = tide.warning ? tide.urgency || 0 : 0;
+    ctx.globalAlpha = tide.warning ? 0.18 + urgency * 0.08 : 0.11;
     ctx.strokeStyle = color;
-    ctx.lineWidth = tide.warning ? 3 : 2;
+    ctx.lineWidth = tide.warning ? 2 + urgency * 2 : 2;
     for (let x = startX; x < camera.x + view.w + 220; x += 220) {
       ctx.beginPath();
       for (let y = -80; y < level.height + 120; y += 44) {
@@ -1923,6 +1930,8 @@
   }
 
   function drawEnemy(e) {
+    drawEnemyIntent(e);
+    if (e.hitTimer > 0) drawEnemyHitFlash(e);
     if (e.type === "wisp") {
       drawWispEnemy(e);
       return;
@@ -1930,22 +1939,130 @@
     drawGroundEnemy(e);
   }
 
+  function enemyPalette(type) {
+    if (type === "ember") {
+      return {
+        body: "#ff855f",
+        bodyDark: "#b84c3f",
+        foot: "#7a2f33",
+        eye: "#2b1820",
+        intent: "#ffd36d",
+        core: "#fff2a6",
+      };
+    }
+    return {
+      body: "#a5f0a1",
+      bodyDark: "#5fae72",
+      foot: "#38744f",
+      eye: "#1b2433",
+      intent: "#82e3b8",
+      core: "#e9ffd8",
+    };
+  }
+
+  function drawEnemyIntent(e) {
+    const dir = Math.sign(e.vx) || 1;
+    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
+    ctx.save();
+    if (e.type === "wisp") {
+      const color = "#8cf6ff";
+      const centerX = e.x + e.w / 2;
+      const centerY = e.y + e.h * 0.72;
+      const tetherY = e.baseY + e.h + WISP_FLOAT_GAP + 2;
+      ctx.globalAlpha = 0.18 + hit * 0.18;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 7]);
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.quadraticCurveTo(centerX - dir * 18, tetherY - 18, centerX - dir * 30, tetherY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = color;
+      ellipse(centerX - dir * 30, tetherY, 5, 2.5, 0);
+      ctx.restore();
+      return;
+    }
+
+    const support = enemySupportPlatform(e);
+    const palette = enemyPalette(e.type);
+    const y = support ? support.y - 4 : e.y + e.h + 3;
+    const minX = support ? support.x + 10 : e.x - 28;
+    const maxX = support ? support.x + support.w - 10 : e.x + e.w + 28;
+    const arrowX = clamp(e.x + e.w / 2 + dir * 21, minX + 10, maxX - 10);
+    ctx.globalAlpha = 0.16 + hit * 0.18;
+    ctx.strokeStyle = palette.intent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(minX, y);
+    ctx.lineTo(maxX, y);
+    ctx.stroke();
+    ctx.globalAlpha = 0.36 + hit * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(minX, y - 4);
+    ctx.lineTo(minX, y + 4);
+    ctx.moveTo(maxX, y - 4);
+    ctx.lineTo(maxX, y + 4);
+    ctx.stroke();
+    ctx.fillStyle = palette.intent;
+    ctx.beginPath();
+    ctx.moveTo(arrowX + dir * 8, y - 8);
+    ctx.lineTo(arrowX - dir * 5, y - 13);
+    ctx.lineTo(arrowX - dir * 2, y - 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawEnemyHitFlash(e) {
+    const t = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = 0.56 * t;
+    ctx.strokeStyle = "#fff7d1";
+    ctx.lineWidth = 2 + t * 2;
+    ctx.beginPath();
+    ctx.ellipse(e.x + e.w / 2, e.y + e.h / 2, e.w * (0.62 + t * 0.16), e.h * (0.54 + t * 0.12), 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawGroundEnemy(e) {
+    const palette = enemyPalette(e.type);
+    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
     ctx.save();
     ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
     const footY = e.h / 2;
-    const color = e.type === "ember" ? "#ff855f" : "#a5f0a1";
     ctx.fillStyle = "rgba(0,0,0,.26)";
     ellipse(0, footY + 1, e.w * 0.46, 4, 0);
-    ctx.fillStyle = e.type === "ember" ? "#b84c3f" : "#5fae72";
+    ctx.fillStyle = palette.foot;
     ellipse(-9, footY - 1, 6, 4, 0);
     ellipse(9, footY - 1, 6, 4, 0);
-    ctx.fillStyle = color;
+    const body = ctx.createRadialGradient(-6, -7, 3, 0, 3, e.w * 0.58);
+    body.addColorStop(0, hit > 0 ? "#fff7d1" : palette.core);
+    body.addColorStop(0.36, palette.body);
+    body.addColorStop(1, palette.bodyDark);
+    ctx.fillStyle = body;
     ellipse(0, 2, e.w * 0.55, e.h * 0.45, 0);
+    if (e.type === "ember") {
+      ctx.fillStyle = "#ffd36d";
+      ctx.beginPath();
+      ctx.moveTo(-7, -11);
+      ctx.quadraticCurveTo(-3, -23, 2, -11);
+      ctx.quadraticCurveTo(8, -20, 10, -7);
+      ctx.quadraticCurveTo(2, -11, -7, -11);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = "rgba(233,255,216,.72)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-13, -9);
+      ctx.quadraticCurveTo(0, -17, 13, -9);
+      ctx.stroke();
+    }
     ctx.fillStyle = "rgba(255,255,255,.85)";
     ellipse(-8, -4, 5, 6, 0);
     ellipse(8, -4, 5, 6, 0);
-    ctx.fillStyle = "#1b2433";
+    ctx.fillStyle = palette.eye;
     ellipse(-8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
     ellipse(8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
     ctx.restore();
@@ -1954,6 +2071,7 @@
   function drawWispEnemy(e) {
     const phase = e.phase || 0;
     const dir = Math.sign(e.vx) || 1;
+    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
     const footY = e.h / 2;
     const hoverOffset = Math.sin(phase * 4) * WISP_HOVER_RANGE;
     const wingLift = Math.sin(phase * 11) * 3;
@@ -1988,9 +2106,9 @@
 
     ctx.globalAlpha = 1;
     ctx.shadowColor = "#8cf6ff";
-    ctx.shadowBlur = 16;
+    ctx.shadowBlur = 16 + hit * 10;
     const core = ctx.createRadialGradient(-4, -6, 2, 0, 0, 20);
-    core.addColorStop(0, "#f6feff");
+    core.addColorStop(0, hit > 0 ? "#fff7d1" : "#f6feff");
     core.addColorStop(0.45, "#8cf6ff");
     core.addColorStop(1, "#2f9fd0");
     ctx.fillStyle = core;
@@ -2587,7 +2705,7 @@
   function statusLabel() {
     const states = [];
     const tide = phaseTideState();
-    if (tide.enabled) states.push(tide.active === "a" ? "星潮 甲相" : "星潮 乙相");
+    if (tide.enabled) states.push(phaseTideLabel(tide));
     if (player.windTimer > 0) states.push("风场");
     if (player.portalTimer > 0) states.push("星门");
     if (player.bigTimer > 0) states.push(`巨大 ${Math.ceil(player.bigTimer)}`);
@@ -2595,6 +2713,12 @@
     if (player.ammoTimer > 0) states.push(`强化 ${Math.ceil(player.ammoTimer)}`);
     if (player.boostTimer > 0) states.push(`疾风 ${Math.ceil(player.boostTimer)}`);
     return states.length ? states.join(" · ") : characters[save.selected].projectileName;
+  }
+
+  function phaseTideLabel(tide) {
+    const phaseName = tide.active === "a" ? "甲相" : "乙相";
+    const remaining = Math.max(0, Number(tide.remaining) || 0);
+    return `星潮 ${phaseName} ${remaining.toFixed(1)}`;
   }
 
   function skillLabel() {

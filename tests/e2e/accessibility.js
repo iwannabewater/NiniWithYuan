@@ -23,18 +23,29 @@ async function scan(page, label) {
   }
 }
 
+async function clickActiveBack(page) {
+  const activeScreen = page.locator(".screen.active");
+  await activeScreen.evaluate(async (screen) => {
+    const animations = screen
+      .getAnimations()
+      .filter((animation) => animation.playState !== "finished");
+    await Promise.allSettled(animations.map((animation) => animation.finished));
+  });
+  await page.locator(".screen.active [data-action='back']").click();
+}
+
 async function run() {
   await withPage("accessibility", async (page) => {
     await scan(page, "menu");
     await page.getByRole("button", { name: "选择角色" }).click();
     await scan(page, "characters");
-    await page.locator(".screen.active [data-action='back']").click();
+    await clickActiveBack(page);
     await page.getByRole("button", { name: "选择关卡" }).click();
     await scan(page, "levels");
-    await page.locator(".screen.active [data-action='back']").click();
+    await clickActiveBack(page);
     await page.getByRole("button", { name: "设置" }).click();
     await scan(page, "settings");
-    await page.locator(".screen.active [data-action='back']").click();
+    await clickActiveBack(page);
     await page.getByRole("button", { name: "继续冒险" }).click();
     await page.waitForTimeout(350);
     await scan(page, "game hud");

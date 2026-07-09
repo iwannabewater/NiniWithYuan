@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.6.3-forward-idle";
+const CACHE = "nini-yuan-v1.7.0-readability-polish";
 const ASSETS = [
   "./",
   "./index.html",
