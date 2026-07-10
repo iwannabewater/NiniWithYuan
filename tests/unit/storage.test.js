@@ -30,7 +30,7 @@ const expansionOptions = {
   assert.equal(save.totalCoins, 12);
   assert.deepEqual(save.bestTimes, { sakura: 42.5 });
   assert.deepEqual(save.levelStars, { moonruin: 3 });
-  assert.deepEqual(save.settings, { volume: 0, touch: 140, fx: true, bgmVolume: 0 });
+  assert.deepEqual(save.settings, { volume: 0, touch: 84, fx: true, bgmVolume: 0 });
 }
 
 {

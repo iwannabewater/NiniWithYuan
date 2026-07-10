@@ -15,7 +15,7 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version), `package.json version should be 1.2.3 through 1.7.0 (got ${pkg.version})`);
 assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version), `package-lock.json root version should be 1.2.3 through 1.7.0 (got ${lock.version})`);
 assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.7.0-readability-polish"') ||
+  sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"') ||

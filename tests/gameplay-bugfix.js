@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 
 const source = fs.readFileSync("src/game.js", "utf8");
+const playfieldSource = fs.readFileSync("src/render/playfield-material.js", "utf8");
 
 function constant(name) {
   const match = source.match(new RegExp(`const ${name} = ([0-9.]+);`));
@@ -150,11 +151,11 @@ if (
   throw new Error("Wisp enemies need a distinct flying silhouette with a distant shadow, wings, and glow core");
 }
 
-if (!source.includes("const localX = i * WIND_ARROW_SPACING + (dir > 0 ? arrowPhase : -arrowPhase)")) {
+if (!playfieldSource.includes("const localX = i * spacing + (direction > 0 ? arrowPhase : -arrowPhase)")) {
   throw new Error("Wind arrow position must move left for negative wind and right for positive wind");
 }
 
-if (!source.includes("ctx.lineTo(px - dir * 9")) {
+if (!playfieldSource.includes("ctx.lineTo(x - direction * 9")) {
   throw new Error("Wind fields need visible directional arrowheads");
 }
 

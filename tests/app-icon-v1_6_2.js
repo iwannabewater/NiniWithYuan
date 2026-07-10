@@ -49,7 +49,7 @@ assert.ok(!fs.existsSync("android/app/src/main/res/drawable/ic_launcher_monochro
 assert.equal(pkg.version, "1.7.0");
 assert.equal(lock.version, "1.7.0");
 assert.match(androidManifest, /versionCode="17"[\s\S]*versionName="1\.7\.0"/);
-assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-readability-polish"'));
+assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"'));
 assert.ok(html.includes("星图 · v1.7.0"));
 
 console.log("app-icon-v1.7.0: paired-protagonist Web and Android launcher assets passed");

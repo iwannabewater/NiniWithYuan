@@ -78,8 +78,8 @@
       <span class="ambient-strip-divider"></span>
       <span class="ambient-strip-credit">© Nini & Yuan · iwannabewater</span>
     </footer>
-    <main id="shell">
-      <canvas id="game" aria-label="妮妮源源历险记游戏画面"></canvas>
+    <main id="shell" tabindex="-1">
+      <canvas id="game" tabindex="-1" aria-label="妮妮源源历险记游戏画面"></canvas>
 
       <section id="menu" class="panel screen active">
         <div class="brand">
@@ -124,7 +124,7 @@
               <div><dt>星术</dt><dd>星露弹：循星轨飞行，射速快且轻微追踪</dd></div>
               <div><dt>食物强化</dt><dd>星莓变大、月糖无敌、晶核强化弹药</dd></div>
             </dl>
-            <button data-pick="nini">以妮妮的名义出发</button>
+            <button data-pick="nini">选择妮妮</button>
           </article>
           <article class="character-card" data-character="yuan">
             <div class="portrait yuan"></div>
@@ -135,7 +135,7 @@
               <div><dt>剑术</dt><dd>青岚弹：风刃较慢，可穿透一次</dd></div>
               <div><dt>食物强化</dt><dd>风铃果缩短冷却，月糖可撞击敌人</dd></div>
             </dl>
-            <button data-pick="yuan">以源源的名义出发</button>
+            <button data-pick="yuan">选择源源</button>
           </article>
         </div>
       </section>
@@ -170,7 +170,7 @@
           </label>
           <label data-rune="◐">
             <span>触控按键大小</span>
-            <input id="touchRange" type="range" min="82" max="124" value="98" />
+            <input id="touchRange" type="range" min="64" max="84" value="84" />
           </label>
           <label class="toggle-row" data-rune="✦">
             <span>高帧率视觉特效</span>
@@ -190,7 +190,7 @@
           </div>
           <div class="hud-corner hud-corner-right">
             <div class="hud-pill" aria-label="星露"><span class="hud-icon">✦</span><span id="hudCoins">0</span></div>
-            <div class="hud-pill" aria-label="星弹"><span class="hud-icon">◆</span><span id="hudAmmo">12</span></div>
+            <div class="hud-pill" aria-label="星弹"><span class="hud-icon">◆</span><span id="hudAmmo">14</span></div>
             <div class="hud-pill" aria-label="时间"><span class="hud-icon">⏱</span><span id="hudTime">00:00</span></div>
             <div class="hud-pill skill-state" id="hudSkill">技能 就绪</div>
             <button class="hud-button" data-action="pause" aria-label="暂停">||</button>
@@ -213,7 +213,7 @@
         <div id="toast" class="toast"></div>
       </section>
 
-      <section id="modal" class="modal">
+      <section id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalText">
         <div class="modal-card">
           <span class="eyebrow" id="modalEyebrow">暂停</span>
           <h2 id="modalTitle">暂停</h2>
@@ -234,24 +234,29 @@
         </div>
       </nav>
 
-      <aside id="rotatePrompt" class="rotate-prompt" role="status" aria-live="polite">
+      <aside id="rotatePrompt" class="rotate-prompt" role="region" aria-labelledby="rotatePromptTitle" aria-live="polite">
         <div class="rotate-instrument" aria-hidden="true">
           <span class="rotate-orbit"></span>
           <span class="rotate-device">✦</span>
         </div>
         <span class="eyebrow">星图校向</span>
-        <strong>横持设备，展开完整星路</strong>
+        <strong id="rotatePromptTitle">横持设备，展开完整星路</strong>
         <p>向左或向右旋转屏幕，星路随转向展开。</p>
+        <button class="rotate-prompt-action" data-action="exit-game">返回菜单</button>
       </aside>
     </main>
     <script src="./src/core/storage.js"></script>
     <script src="./src/core/audio.js"></script>
+    <script src="./src/core/input-state.js"></script>
+    <script src="./src/core/game-rules.js"></script>
+    <script src="./src/core/fixed-step.js"></script>
     <script src="./src/render/hud.js"></script>
     <script src="./src/render/character-motion.js"></script>
+    <script src="./src/render/playfield-material.js" defer></script>
     <script src="./src/render/game-feel.js" defer></script>
     <script src="./src/render/respawn-veil.js" defer></script>
     <script src="./src/render/cursor-trail.js" defer></script>
     <script src="./src/render/easter-eggs.js" defer></script>
-    <script src="./src/game.js"></script>
+    <script src="./src/game.js" defer></script>
   </body>
 </html>

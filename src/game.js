@@ -31,12 +31,15 @@
 
   const Storage = window.NiniYuanStorage;
   const Audio = window.NiniYuanAudio;
+  const InputState = window.NiniInputState;
+  const Rules = window.NiniRules;
+  const FixedStep = window.NiniFixedStep;
   const Hud = window.NiniYuanHud;
   const CharacterMotion = window.NiniYuanCharacterMotion;
+  const Playfield = window.NiniYuanPlayfieldMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
   const TILE = 48;
-  const FIXED_DT = 1 / 120;
   const PICKUP_REACH_X = 10;
   const PICKUP_REACH_TOP = 46;
   const PICKUP_REACH_BOTTOM = 16;
@@ -61,7 +64,10 @@
   const PHASE_DEFAULT_PERIOD = 3.2;
   const PHASE_WARNING_DEFAULT = 0.45;
   const ENEMY_HIT_FLASH_DURATION = 0.18;
+  const SUPER_GUARD_FEEDBACK_COOLDOWN = 0.18;
+  const SETTINGS_PERSIST_DELAY = 150;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
+  const CANVAS_MATERIAL = Playfield.MATERIAL;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const snap = (n) => Math.round(n);
@@ -93,18 +99,22 @@
   let accumulator = 0;
   let pageHidden = document.hidden;
   let toastTimer = 0;
+  let persistTimer = 0;
   let introTimer = 0;
   let projectiles = [];
   // v1.2.4 — track HUD state so we can fire one-shot pulses only on real transitions.
-  let hudState = { character: null, cooling: null };
+  let hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
+  const physicalKeys = new Set();
+  const suppressedKeys = new Set();
+  const touchPointers = InputState?.createActionPointerState?.(["left", "right", "jump", "skill", "shoot"]);
 
   const characters = {
     nini: {
       id: "nini",
       name: "妮妮",
       subtitle: "璇玑星旅",
-      accent: "#ff86bd",
-      accent2: "#ffe07a",
+      accent: CANVAS_MATERIAL.dustyRose,
+      accent2: CANVAS_MATERIAL.agedGold,
       speed: 445,
       accel: 3450,
       jump: 1040,
@@ -122,8 +132,8 @@
       id: "yuan",
       name: "源源",
       subtitle: "青衡剑心",
-      accent: "#66d8ff",
-      accent2: "#7ff1ba",
+      accent: CANVAS_MATERIAL.phaseBlue,
+      accent2: CANVAS_MATERIAL.carvedJade,
       speed: 485,
       accel: 3720,
       jump: 980,
@@ -191,6 +201,21 @@
 
   function persist() {
     return Storage.persist(save, storageOptions());
+  }
+
+  function schedulePersist() {
+    clearTimeout(persistTimer);
+    persistTimer = window.setTimeout(() => {
+      persistTimer = 0;
+      persist();
+    }, SETTINGS_PERSIST_DELAY);
+  }
+
+  function flushPersist() {
+    if (!persistTimer) return true;
+    clearTimeout(persistTimer);
+    persistTimer = 0;
+    return persist();
   }
 
   function buildLevels() {
@@ -766,36 +791,67 @@
     ctx.imageSmoothingQuality = "high";
   }
 
-  function showScreen(name) {
+  function showScreen(name, options = {}) {
+    const previousScreen = screen;
     screen = name;
     Object.entries(screens).forEach(([key, el]) => el.classList.toggle("active", key === name));
     hud.classList.toggle("active", mode === "play");
     touchControls.classList.toggle("playing", mode === "play");
     renderMenus();
+    if (options.focus !== false) focusScreen(name, previousScreen);
+  }
+
+  function focusScreen(name, previousScreen) {
+    const activeScreen = screens[name];
+    if (!activeScreen) return;
+    let target = null;
+    if (name === "menu" && screens[previousScreen]) {
+      target = activeScreen.querySelector(`[data-action="${previousScreen}"]`);
+    }
+    if (!target) target = activeScreen.querySelector("h1, h2");
+    if (!target) target = activeScreen.querySelector("button, input, [href]");
+    if (!target) return;
+    if (!target.matches("button, input, a, select, textarea")) target.setAttribute("tabindex", "-1");
+    target.focus({ preventScroll: true });
+  }
+
+  function focusGameplay() {
+    canvas.focus({ preventScroll: true });
+  }
+
+  function groundedStartForLevel(level, playerWidth, playerHeight) {
+    const start = { ...level.start };
+    const centerX = start.x + playerWidth / 2;
+    const support = level.platforms
+      .filter((platform) => !platform.phase && centerX >= platform.x && centerX <= platform.x + platform.w)
+      .sort((a, b) => a.y - b.y)[0];
+    if (support) start.y = Rules.groundedSpawnY(support.y, playerHeight);
+    return start;
   }
 
   function startLevel(index) {
     currentLevelIndex = index;
     activeLevel = cloneLevel(levels[index]);
     const ch = characters[save.selected];
+    const spawn = groundedStartForLevel(activeLevel, 34, 56);
     player = {
-      x: activeLevel.start.x,
-      y: activeLevel.start.y,
+      x: spawn.x,
+      y: spawn.y,
       w: 34,
       h: 56,
       baseW: 34,
       baseH: 56,
       vx: 0,
       vy: 0,
-      spawn: { ...activeLevel.start },
+      spawn,
       health: 3,
       maxHealth: 3,
-      ammo: 14,
+      ammo: Rules.BASE_AMMO_CAP,
       ammoRegen: 0,
       invuln: 0,
       superInvuln: 0,
-      onGround: false,
-      coyote: 0,
+      onGround: true,
+      coyote: 0.12,
       jumpBuffer: 0,
       airJumps: ch.airJumps,
       facing: 1,
@@ -818,6 +874,7 @@
       tidePhase: "",
       carrier: null,
       coins: 0,
+      collectedValue: 0,
       gems: 0,
       elapsed: 0,
       completed: false,
@@ -825,17 +882,20 @@
       prevVy: 0,
       dashFreeze: 0,
       gaitPhase: 0,
+      guardFeedbackCd: 0,
+      settledOutcome: null,
     };
     particles = [];
     floatTexts = [];
     projectiles = [];
     camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
-    keys = Object.create(null);
-    hudState = { character: null, cooling: null };
+    resetControlState();
+    hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
     GameFeel?.resetHitstop?.();
     mode = "play";
     modal.classList.remove("active");
-    showScreen("");
+    showScreen("", { focus: false });
+    focusGameplay();
     showChapterIntro();
     audioBus.playBgm();
   }
@@ -864,6 +924,7 @@
     const wasOnGround = player.onGround;
     player.prevVy = player.vy;
     updatePlayer(dt);
+    if (mode !== "play" || player.settledOutcome) return;
     if (player.onGround && !wasOnGround && player.prevVy > 380) {
       player.landingTimer = 0.18;
       GameFeel?.landingPuff?.(
@@ -880,7 +941,6 @@
     updateParticles(dt);
     updateCamera(dt);
     updateChapterIntro(dt);
-    updateHud();
   }
 
   function updateInputs() {
@@ -983,8 +1043,9 @@
     player.windTimer = Math.max(0, player.windTimer - dt);
     player.portalCd = Math.max(0, player.portalCd - dt);
     player.portalTimer = Math.max(0, player.portalTimer - dt);
+    player.guardFeedbackCd = Math.max(0, player.guardFeedbackCd - dt);
     player.ammoRegen += dt;
-    if (player.ammo < 14 && player.ammoRegen >= 1.6) {
+    if (player.ammo < Rules.BASE_AMMO_CAP && player.ammoRegen >= 1.6) {
       player.ammo += 1;
       player.ammoRegen = 0;
     }
@@ -1059,7 +1120,7 @@
       if (dashShouldStopAtEdge()) {
         player.skillTimer = 0;
         player.vx = moveToward(player.vx, 0, 5200 * dt);
-        burst(player.x + player.w / 2, player.y + player.h, "#7ff1ba", 8);
+        burst(player.x + player.w / 2, player.y + player.h, CANVAS_MATERIAL.carvedJade, 8);
       } else {
         const dashSpeed = YUAN_DASH_SPEED * (player.boostTimer > 0 ? 1.08 : 1);
         player.vx = player.dashDir * Math.max(Math.abs(player.vx), dashSpeed);
@@ -1102,7 +1163,13 @@
 
     for (const h of activeLevel.hazards) {
       if (!phaseIsActive(h)) continue;
-      if (rectsOverlap(bodyRect(player), h)) hurt(h.type === "lava" ? 2 : 1);
+      if (rectsOverlap(bodyRect(player), h)) {
+        hurt(h.type === "lava" ? 2 : 1);
+        if (mode !== "play") {
+          consumePressed();
+          return;
+        }
+      }
     }
     for (const e of activeLevel.enemies) {
       if (!e.alive || !rectsOverlap(bodyRect(player), e)) continue;
@@ -1112,21 +1179,25 @@
         player.vy = -620;
         player.coins += 2;
         GameFeel?.requestHitstop?.(50);
-        burst(e.x + e.w / 2, e.y + e.h / 2, "#ffd36d", 20);
-        floatText("+2", e.x, e.y, "#ffd36d");
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.agedGold, 20);
+        floatText("+2", e.x, e.y, CANVAS_MATERIAL.agedGold);
         cue("stomp");
       } else if (player.superInvuln > 0) {
         e.alive = false;
         player.coins += 2;
-        burst(e.x + e.w / 2, e.y + e.h / 2, "#fff2a6", 28);
-        floatText("无敌", e.x, e.y, "#fff2a6");
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.moonWhite, 28);
+        floatText("无敌", e.x, e.y, CANVAS_MATERIAL.moonWhite);
       } else if (player.skillTimer > 0 && save.selected === "yuan") {
         e.alive = false;
         player.coins += 3;
-        burst(e.x + e.w / 2, e.y + e.h / 2, "#7ff1ba", 24);
-        floatText("破击", e.x, e.y, "#7ff1ba");
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.carvedJade, 24);
+        floatText("破击", e.x, e.y, CANVAS_MATERIAL.carvedJade);
       } else {
         hurt(1);
+        if (mode !== "play") {
+          consumePressed();
+          return;
+        }
       }
     }
 
@@ -1138,15 +1209,24 @@
           player.skillTimer = Math.min(player.skillTimer, 0.06);
           GameFeel?.requestHitstop?.(35);
           shake(11);
-          burst(p.x + p.w / 2, p.y + p.h / 2, "#ffbe66", 30);
-          floatText("碎晶", p.x, p.y, "#ffbe66");
+          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 30);
+          floatText("碎晶", p.x, p.y, CANVAS_MATERIAL.agedGold);
           cue("break_crystal");
         }
       }
     }
 
     if (player.y > activeLevel.height + 260) hurt(3, true);
-    if (!player.completed && rectsOverlap(bodyRect(player), activeLevel.goal)) completeLevel();
+    if (mode !== "play") {
+      consumePressed();
+      return;
+    }
+    const outcome = Rules.resolveTerminalOutcome({
+      isDead: player.health <= 0,
+      reachedGoal: !player.completed && rectsOverlap(bodyRect(player), activeLevel.goal),
+      settledOutcome: player.settledOutcome,
+    });
+    if (outcome === Rules.OUTCOME_COMPLETE) completeLevel();
     consumePressed();
   }
 
@@ -1233,7 +1313,7 @@
       owner: save.selected,
       pierce,
       damage: ch.projectileDamage + (player.ammoTimer > 0 ? 1 : 0),
-      color: player.ammoTimer > 0 ? "#fff2a6" : ch.accent2,
+      color: player.ammoTimer > 0 ? CANVAS_MATERIAL.moonWhite : ch.accent2,
     });
     burst(player.x + player.w / 2 + player.facing * 18, player.y + player.h * 0.42, ch.accent2, 8);
     cue(save.selected === "nini" ? "shoot_nini" : "shoot_yuan");
@@ -1386,8 +1466,8 @@
           p.broken = true;
           pr.life = 0;
           GameFeel?.requestHitstop?.(35);
-          burst(p.x + p.w / 2, p.y + p.h / 2, "#ffbe66", 22);
-          floatText("碎晶", p.x, p.y, "#ffbe66");
+          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 22);
+          floatText("碎晶", p.x, p.y, CANVAS_MATERIAL.agedGold);
           cue("break_crystal");
         } else {
           pr.life = 0;
@@ -1403,7 +1483,7 @@
         if (e.hp <= 0) {
           e.alive = false;
           player.coins += 2 + pr.damage;
-          floatText(`+${2 + pr.damage}`, e.x, e.y, "#ffd36d");
+          floatText(`+${2 + pr.damage}`, e.x, e.y, CANVAS_MATERIAL.agedGold);
         }
         if (pr.pierce > 0) pr.pierce -= 1;
         else pr.life = 0;
@@ -1481,9 +1561,11 @@
       c.taken = true;
       const amount = c.kind === "gem" ? 5 : 1;
       player.coins += amount;
+      player.collectedValue += amount;
       if (c.kind === "gem") player.gems += 1;
-      floatText(`+${amount}`, c.x, c.y, c.kind === "gem" ? "#8cf6ff" : "#ffd36d");
-      burst(c.x + 10, c.y + 10, c.kind === "gem" ? "#8cf6ff" : "#ffd36d", c.kind === "gem" ? 18 : 9);
+      const pickupColor = c.kind === "gem" ? CANVAS_MATERIAL.carvedJade : CANVAS_MATERIAL.agedGold;
+      floatText(`+${amount}`, c.x, c.y, pickupColor);
+      burst(c.x + 10, c.y + 10, pickupColor, c.kind === "gem" ? 18 : 9);
       cue(c.kind === "gem" ? "pickup_gem" : "pickup_coin");
     }
     for (const p of activeLevel.powerups || []) {
@@ -1512,12 +1594,12 @@
     }
     if (kind === "core") {
       player.ammoTimer = 12;
-      player.ammo = Math.min(24, player.ammo + 8);
+      player.ammo = Rules.clampAmmo(player.ammo + 8, Rules.RESERVE_AMMO_CAP);
     }
     if (kind === "bell") {
       player.boostTimer = 15;
       player.skillCd = 0;
-      player.ammo = Math.min(24, player.ammo + 4);
+      player.ammo = Rules.clampAmmo(player.ammo + 4, Rules.RESERVE_AMMO_CAP);
     }
     if (kind === "heart") {
       player.health = Math.min(player.maxHealth, player.health + 1);
@@ -1529,8 +1611,10 @@
 
   function hurt(damage, forceRespawn = false) {
     if (player.superInvuln > 0 && !forceRespawn) {
+      if (player.guardFeedbackCd > 0) return;
+      player.guardFeedbackCd = SUPER_GUARD_FEEDBACK_COOLDOWN;
       shake(5);
-      burst(player.x + player.w / 2, player.y + player.h / 2, "#fff2a6", 12);
+      burst(player.x + player.w / 2, player.y + player.h / 2, CANVAS_MATERIAL.moonWhite, 12);
       cue("hit_super");
       return;
     }
@@ -1542,10 +1626,11 @@
     player.vx = -player.facing * 360;
     player.vy = -540;
     shake(13);
-    burst(player.x + player.w / 2, player.y + player.h / 2, "#ff5c7a", 24);
+    burst(player.x + player.w / 2, player.y + player.h / 2, CANVAS_MATERIAL.danger, 24);
     cue("hit_take");
     if (player.health <= 0 || forceRespawn) {
       if (player.health <= 0) {
+        player.settledOutcome = Rules.OUTCOME_DEATH;
         cue("fail");
         openModal("再试一次", "星光暂时黯淡，但路线已经记住了。", [
           ["重新挑战", () => startLevel(currentLevelIndex), "primary"],
@@ -1567,12 +1652,16 @@
     player.skillTimer = 0;
     player.glide = 0;
     player.dashDir = player.facing;
+    player.guardFeedbackCd = 0;
+    refreshGroundedState();
     GameFeel?.cameraLookaheadReset?.(camera);
     GameFeel?.resetHitstop?.();
     shake(9);
   }
 
   function completeLevel() {
+    if (player.settledOutcome === Rules.OUTCOME_DEATH || player.completed) return;
+    player.settledOutcome = Rules.OUTCOME_COMPLETE;
     player.completed = true;
     const id = activeLevel.id;
     const prev = save.bestTimes[id];
@@ -1581,11 +1670,11 @@
     save.totalCoins += player.coins;
     save.levelStars[id] = Math.max(save.levelStars[id] || 0, starCount());
     persist();
-    burst(activeLevel.goal.x + 35, activeLevel.goal.y + 50, "#ffe46b", 80);
+    burst(activeLevel.goal.x + 35, activeLevel.goal.y + 50, CANVAS_MATERIAL.agedGold, 80);
     cue("complete");
     openModal(
       "通关完成",
-      `${activeLevel.name} 已通关。获得星露 ${player.coins}，评级 ${"★".repeat(starCount())}${"☆".repeat(3 - starCount())}。`,
+      `${activeLevel.name} 已通关。获得星露 ${player.coins}，收藏评级 ${"★".repeat(starCount())}${"☆".repeat(3 - starCount())}。`,
       [
         currentLevelIndex < levels.length - 1 ? ["下一章", () => startLevel(currentLevelIndex + 1), "primary"] : ["回到菜单", backToMenu, "primary"],
         ["重玩本章", () => startLevel(currentLevelIndex)],
@@ -1596,8 +1685,8 @@
   }
 
   function starCount() {
-    const ratio = player.coins / activeLevel.coins.reduce((s, c) => s + (c.kind === "gem" ? 5 : 1), 0);
-    return ratio > 0.82 ? 3 : ratio > 0.52 ? 2 : 1;
+    const totalCollectibleValue = activeLevel.coins.reduce((sum, coin) => sum + (coin.kind === "gem" ? 5 : 1), 0);
+    return Rules.calculateStarRating(player.collectedValue, totalCollectibleValue);
   }
 
   function updateCamera(dt) {
@@ -1619,6 +1708,7 @@
     const shakeY = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
     const camX = snap(camera.x);
     const camY = snap(camera.y);
+    updateHud();
     renderBackground(activeLevel, camX, camY);
     ctx.save();
     ctx.translate(-camX + shakeX, -camY + shakeY);
@@ -1631,65 +1721,19 @@
   }
 
   function renderAttract() {
-    const t = performance.now() / 1000;
-    const grd = ctx.createLinearGradient(0, 0, view.w, view.h);
-    grd.addColorStop(0, "#16213d");
-    grd.addColorStop(0.56, "#25395f");
-    grd.addColorStop(1, "#101426");
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, view.w, view.h);
-    drawSkyMotifs(t, 0.3);
+    Playfield.drawBackground(ctx, { view, time: performance.now() / 1000, intensity: 0.3, attract: true });
     renderVignette();
   }
 
   function renderBackground(level, camX, camY) {
-    const p = level.palette;
-    const g = ctx.createLinearGradient(0, 0, 0, view.h);
-    g.addColorStop(0, p[0]);
-    g.addColorStop(0.52, p[1]);
-    g.addColorStop(1, "#101220");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, view.w, view.h);
-    drawSkyMotifs(performance.now() / 1000, save.settings.fx ? 1 : 0.4);
-
-    for (let layer = 0; layer < 3; layer++) {
-      const depth = [0.13, 0.25, 0.42][layer];
-      const baseY = view.h * (0.55 + layer * 0.12) - camY * depth;
-      ctx.beginPath();
-      ctx.moveTo(-80, view.h);
-      for (let x = -120; x < view.w + 160; x += 120) {
-        const wx = x + (camX * depth) % 120;
-        const peak = baseY + Math.sin((x + layer * 200) * 0.02) * 28;
-        ctx.lineTo(wx + 60, peak - 90 - layer * 20);
-        ctx.lineTo(wx + 130, baseY + 20);
-      }
-      ctx.lineTo(view.w + 100, view.h);
-      ctx.closePath();
-      ctx.fillStyle = `rgba(${layer === 0 ? "255,255,255" : "23,33,62"}, ${0.1 + layer * 0.12})`;
-      ctx.fill();
-    }
-  }
-
-  function drawSkyMotifs(t, intensity) {
-    ctx.save();
-    ctx.globalAlpha = 0.55 * intensity;
-    for (let i = 0; i < 26; i++) {
-      const x = (i * 173 + t * 16 * (i % 3 + 1)) % (view.w + 160) - 80;
-      const y = (i * 83) % Math.max(220, view.h * 0.6);
-      const r = 1.5 + (i % 5) * 0.7;
-      ctx.fillStyle = i % 4 === 0 ? "#ffd36d" : "#dff9ff";
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 0.16 * intensity;
-    for (let i = 0; i < 4; i++) {
-      const x = ((i * 420 - t * 36) % (view.w + 360)) - 120;
-      const y = 120 + i * 70;
-      ctx.fillStyle = i % 2 ? "#ff7fb1" : "#61e5ff";
-      ellipse(x, y, 170, 28, 0);
-    }
-    ctx.restore();
+    Playfield.drawBackground(ctx, {
+      view,
+      palette: level.palette,
+      camX,
+      camY,
+      time: performance.now() / 1000,
+      intensity: save.settings.fx ? 1 : 0.4,
+    });
   }
 
   function renderWorld(level) {
@@ -1716,7 +1760,7 @@
   }
 
   function phaseColor(phase) {
-    return phase === "b" ? "#b6f5d8" : "#9ee7ff";
+    return Playfield.phaseColor(phase);
   }
 
   function drawPhaseTide(level, tide) {
@@ -1742,34 +1786,7 @@
   }
 
   function drawPlatform(p) {
-    const colors = {
-      ground: ["#2d4a4f", "#17252d"],
-      grass: ["#6cdfa1", "#1f6c64"],
-      stone: ["#93d9ff", "#284b74"],
-      cloud: ["#f1fbff", "#8cc8e9"],
-      crystal: ["#8cf6d5", "#613e78"],
-      breakable: ["#ffbf68", "#6a3d44"],
-      aurora: ["#c2b1ff", "#30478c"],
-      jade: ["#78f0bd", "#21546a"],
-      phase: [phaseColor(p.phase), p.phase === "b" ? "#1d5268" : "#203c72"],
-    };
-    const c = colors[p.type] || colors.ground;
-    const g = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.h);
-    g.addColorStop(0, c[0]);
-    g.addColorStop(1, c[1]);
-    roundRect(p.x, p.y, p.w, p.h, 8, g);
-    ctx.strokeStyle = "rgba(255,255,255,.2)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(p.x + 1, p.y + 1, p.w - 2, Math.min(10, p.h - 2));
-    if (p.type === "breakable") {
-      ctx.strokeStyle = "rgba(90,50,45,.35)";
-      for (let x = p.x + 16; x < p.x + p.w; x += 38) {
-        ctx.beginPath();
-        ctx.moveTo(x, p.y + 8);
-        ctx.lineTo(x + 14, p.y + p.h - 10);
-        ctx.stroke();
-      }
-    }
+    Playfield.drawPlatform(ctx, p);
   }
 
   function drawPhaseGhostPlatform(p) {
@@ -1805,111 +1822,38 @@
   }
 
   function drawHazard(h) {
-    ctx.fillStyle = h.type === "lava" ? "#ff6a36" : "#dff7ff";
-    if (h.type === "lava") {
-      roundRect(h.x, h.y + h.h * 0.25, h.w, h.h * 0.75, 4, "#d43f31");
-      ctx.fillStyle = "#ffd36d";
-      for (let x = h.x; x < h.x + h.w; x += 24) {
-        ctx.beginPath();
-        ctx.arc(x + 12, h.y + 18 + Math.sin(performance.now() / 170 + x) * 3, 12, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      return;
-    }
-    for (let x = h.x; x < h.x + h.w; x += 24) {
-      ctx.beginPath();
-      ctx.moveTo(x, h.y + h.h);
-      ctx.lineTo(x + 12, h.y + 8);
-      ctx.lineTo(x + 24, h.y + h.h);
-      ctx.closePath();
-      ctx.fill();
-    }
+    Playfield.drawHazard(ctx, h, performance.now() / 1000);
   }
 
   function drawSpring(s) {
-    roundRect(s.x + 5, s.y + 8, s.w - 10, s.h, 6, "#ffe46b");
-    ctx.strokeStyle = "#f06f9f";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(s.x + 12, s.y + 20);
-    ctx.lineTo(s.x + 24, s.y + 8);
-    ctx.lineTo(s.x + 36, s.y + 20);
-    ctx.lineTo(s.x + 48, s.y + 8);
-    ctx.stroke();
+    Playfield.drawSpring(ctx, s);
   }
 
   function drawCoin(c) {
-    const t = performance.now() / 240;
-    const bob = Math.sin(t + c.x) * 5;
-    ctx.save();
-    ctx.translate(c.x + 11, c.y + 11 + bob);
-    ctx.scale(Math.abs(Math.cos(t)) * 0.55 + 0.45, 1);
-    const grd = ctx.createRadialGradient(-4, -5, 2, 0, 0, 16);
-    grd.addColorStop(0, "#fff9c5");
-    grd.addColorStop(1, c.kind === "gem" ? "#61e5ff" : "#ffb84d");
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    if (c.kind === "gem") {
-      ctx.moveTo(0, -14); ctx.lineTo(13, -2); ctx.lineTo(7, 14); ctx.lineTo(-7, 14); ctx.lineTo(-13, -2);
-    } else {
-      ctx.arc(0, 0, 12, 0, Math.PI * 2);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    Playfield.drawCoin(ctx, c, {
+      time: performance.now() / 1000,
+      reducedMotion: view.reducedMotion,
+      fx: save.settings.fx,
+    });
   }
 
   function powerupColor(kind) {
-    return {
-      berry: "#ff7fb1",
-      moon: "#fff2a6",
-      core: "#8cf6ff",
-      bell: "#7ff1ba",
-      heart: "#ff5c7a",
-    }[kind] || "#ffd36d";
+    return Playfield.powerupColor(kind);
   }
 
   function drawPowerup(p) {
-    const t = performance.now() / 280;
-    const color = powerupColor(p.kind);
-    const bob = Math.sin(t + p.x) * 5;
-    ctx.save();
-    ctx.translate(p.x + p.w / 2, p.y + p.h / 2 + bob);
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    if (p.kind === "berry") {
-      ctx.arc(0, 2, 13, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#7ff1ba";
-      ellipse(8, -10, 7, 4, -0.4);
-    } else if (p.kind === "moon") {
-      ctx.arc(1, 0, 14, 0.55, Math.PI * 1.65);
-      ctx.arc(-4, -2, 12, Math.PI * 1.67, 0.5, true);
-      ctx.fill();
-    } else if (p.kind === "core") {
-      ctx.moveTo(0, -16); ctx.lineTo(15, 0); ctx.lineTo(0, 16); ctx.lineTo(-15, 0);
-      ctx.closePath(); ctx.fill();
-    } else {
-      ctx.moveTo(-12, -8); ctx.lineTo(12, -8); ctx.lineTo(8, 12); ctx.lineTo(-8, 12);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "#fff7d1";
-      ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.moveTo(0, 12); ctx.lineTo(0, 19); ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = "rgba(255,255,255,.72)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.restore();
+    Playfield.drawPowerup(ctx, p, {
+      time: performance.now() / 1000,
+      reducedMotion: view.reducedMotion,
+      fx: save.settings.fx,
+    });
   }
 
   function drawProjectile(pr) {
     ctx.save();
     ctx.translate(pr.x + pr.w / 2, pr.y + pr.h / 2);
     ctx.shadowColor = pr.color;
-    ctx.shadowBlur = 14;
+    ctx.shadowBlur = save.settings.fx ? 7 : 0;
     ctx.fillStyle = pr.color;
     if (pr.owner === "nini") {
       ctx.rotate(performance.now() / 120);
@@ -1942,21 +1886,21 @@
   function enemyPalette(type) {
     if (type === "ember") {
       return {
-        body: "#ff855f",
-        bodyDark: "#b84c3f",
-        foot: "#7a2f33",
-        eye: "#2b1820",
-        intent: "#ffd36d",
-        core: "#fff2a6",
+        body: "#ad6859",
+        bodyDark: "#673b38",
+        foot: "#4c2f32",
+        eye: CANVAS_MATERIAL.lacquer,
+        intent: CANVAS_MATERIAL.agedGold,
+        core: "#d9b987",
       };
     }
     return {
-      body: "#a5f0a1",
-      bodyDark: "#5fae72",
-      foot: "#38744f",
-      eye: "#1b2433",
-      intent: "#82e3b8",
-      core: "#e9ffd8",
+      body: CANVAS_MATERIAL.carvedJade,
+      bodyDark: "#365b51",
+      foot: "#29463e",
+      eye: CANVAS_MATERIAL.lacquer,
+      intent: "#9bbcad",
+      core: "#b6cec4",
     };
   }
 
@@ -1965,7 +1909,7 @@
     const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
     ctx.save();
     if (e.type === "wisp") {
-      const color = "#8cf6ff";
+      const color = CANVAS_MATERIAL.phaseBlue;
       const centerX = e.x + e.w / 2;
       const centerY = e.y + e.h * 0.72;
       const tetherY = e.baseY + e.h + WISP_FLOAT_GAP + 2;
@@ -2031,6 +1975,9 @@
     const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
     ctx.save();
     ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
+    ctx.translate(0, e.h / 2);
+    ctx.scale(1.28, 1.28);
+    ctx.translate(0, -e.h / 2);
     const footY = e.h / 2;
     ctx.fillStyle = "rgba(0,0,0,.26)";
     ellipse(0, footY + 1, e.w * 0.46, 4, 0);
@@ -2044,7 +1991,7 @@
     ctx.fillStyle = body;
     ellipse(0, 2, e.w * 0.55, e.h * 0.45, 0);
     if (e.type === "ember") {
-      ctx.fillStyle = "#ffd36d";
+      ctx.fillStyle = CANVAS_MATERIAL.agedGold;
       ctx.beginPath();
       ctx.moveTo(-7, -11);
       ctx.quadraticCurveTo(-3, -23, 2, -11);
@@ -2052,19 +1999,29 @@
       ctx.quadraticCurveTo(2, -11, -7, -11);
       ctx.fill();
     } else {
-      ctx.strokeStyle = "rgba(233,255,216,.72)";
+      ctx.strokeStyle = "rgba(182,206,196,.72)";
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(-13, -9);
       ctx.quadraticCurveTo(0, -17, 13, -9);
       ctx.stroke();
     }
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    ellipse(-8, -4, 5, 6, 0);
-    ellipse(8, -4, 5, 6, 0);
+    ctx.fillStyle = "rgba(238,231,213,.86)";
+    ellipse(-7, -4, 3.4, 4.5, 0);
+    ellipse(7, -4, 3.4, 4.5, 0);
     ctx.fillStyle = palette.eye;
-    ellipse(-8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
-    ellipse(8 + Math.sign(e.vx) * 1.5, -3, 2, 3, 0);
+    ellipse(-7 + Math.sign(e.vx), -3, 1.3, 2.2, 0);
+    ellipse(7 + Math.sign(e.vx), -3, 1.3, 2.2, 0);
+    ctx.globalAlpha = 0.56;
+    ctx.strokeStyle = CANVAS_MATERIAL.agedGold;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -14);
+    ctx.lineTo(4, -10);
+    ctx.lineTo(0, -6);
+    ctx.lineTo(-4, -10);
+    ctx.closePath();
+    ctx.stroke();
     ctx.restore();
   }
 
@@ -2077,13 +2034,14 @@
     const wingLift = Math.sin(phase * 11) * 3;
     ctx.save();
     ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
+    ctx.scale(1.18, 1.18);
 
     ctx.globalAlpha = 0.24;
-    ctx.fillStyle = "#8cf6ff";
+    ctx.fillStyle = CANVAS_MATERIAL.phaseBlue;
     ellipse(0, footY + WISP_FLOAT_GAP - hoverOffset + 2, e.w * 0.34, 3.5, 0);
     ctx.globalAlpha = 1;
 
-    ctx.strokeStyle = "rgba(140,246,255,.46)";
+    ctx.strokeStyle = "rgba(120,147,164,.52)";
     ctx.lineWidth = 2;
     ctx.lineCap = "round";
     for (let i = 0; i < 3; i += 1) {
@@ -2096,7 +2054,7 @@
     }
 
     ctx.globalAlpha = 0.48;
-    ctx.fillStyle = "rgba(158,231,255,.72)";
+    ctx.fillStyle = "rgba(120,147,164,.72)";
     ellipse(-15, -2 - wingLift, 10, 17, -0.7);
     ellipse(15, -2 + wingLift, 10, 17, 0.7);
     ctx.globalAlpha = 0.28;
@@ -2105,12 +2063,12 @@
     ellipse(12, -7 + wingLift * 0.5, 3, 8, 0.7);
 
     ctx.globalAlpha = 1;
-    ctx.shadowColor = "#8cf6ff";
-    ctx.shadowBlur = 16 + hit * 10;
+    ctx.shadowColor = CANVAS_MATERIAL.phaseBlue;
+    ctx.shadowBlur = 8 + hit * 6;
     const core = ctx.createRadialGradient(-4, -6, 2, 0, 0, 20);
-    core.addColorStop(0, hit > 0 ? "#fff7d1" : "#f6feff");
-    core.addColorStop(0.45, "#8cf6ff");
-    core.addColorStop(1, "#2f9fd0");
+    core.addColorStop(0, hit > 0 ? CANVAS_MATERIAL.moonWhite : "#d7e0dc");
+    core.addColorStop(0.45, CANVAS_MATERIAL.phaseBlue);
+    core.addColorStop(1, "#355364");
     ctx.fillStyle = core;
     ellipse(0, 0, e.w * 0.38, e.h * 0.44, 0);
     ctx.shadowBlur = 0;
@@ -2134,146 +2092,49 @@
   }
 
   function drawGoal(g) {
-    const t = performance.now() / 1000;
-    ctx.save();
-    ctx.translate(g.x + g.w / 2, g.y + g.h / 2);
-    ctx.globalAlpha = 0.55;
-    for (let i = 0; i < 4; i++) {
-      ctx.strokeStyle = ["#61e5ff", "#ffd36d", "#ff7fb1", "#7ff1ba"][i];
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 28 + i * 9, 55 + Math.sin(t + i) * 4, t * 0.4 + i, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-    const grd = ctx.createRadialGradient(0, 0, 5, 0, 0, 68);
-    grd.addColorStop(0, "#fff5bd");
-    grd.addColorStop(0.45, "#61e5ff");
-    grd.addColorStop(1, "rgba(97,229,255,0)");
-    ctx.fillStyle = grd;
-    ctx.beginPath();
-    ctx.arc(0, 0, 68, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
+    Playfield.drawGoal(ctx, g, { time: performance.now() / 1000, reducedMotion: view.reducedMotion });
   }
 
   function drawWind(w) {
-    const t = performance.now() / 300;
-    const dir = Math.sign(w.force) || 1;
-    const arrowPhase = (t * WIND_ARROW_SPEED) % WIND_ARROW_SPACING;
-    ctx.save();
-    ctx.globalAlpha = 0.18;
-    ctx.fillStyle = "#d9fbff";
-    ctx.fillRect(w.x, w.y, w.w, w.h);
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = "#d9fbff";
-    ctx.lineWidth = 3;
-    for (let y = w.y + 80; y < w.y + w.h; y += 92) {
-      ctx.beginPath();
-      for (let x = w.x; x < w.x + w.w; x += 42) {
-        const yy = y + Math.sin((x + t * w.force) * 0.025) * 18;
-        if (x === w.x) ctx.moveTo(x, yy);
-        else ctx.lineTo(x, yy);
-      }
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 0.76;
-    ctx.fillStyle = "#f2fbff";
-    ctx.strokeStyle = "rgba(17,66,92,.34)";
-    ctx.lineWidth = 2;
-    for (let y = w.y + 72; y < w.y + w.h; y += 110) {
-      for (let i = -1; i <= Math.ceil(w.w / WIND_ARROW_SPACING) + 1; i += 1) {
-        const localX = i * WIND_ARROW_SPACING + (dir > 0 ? arrowPhase : -arrowPhase);
-        const px = w.x + localX;
-        if (px < w.x + 14 || px > w.x + w.w - 14) continue;
-        const bob = Math.sin(t * 2 + y * 0.04) * 7;
-        ctx.beginPath();
-        ctx.moveTo(px + dir * 17, y + bob);
-        ctx.lineTo(px - dir * 9, y - 12 + bob);
-        ctx.lineTo(px - dir * 4, y + bob);
-        ctx.lineTo(px - dir * 9, y + 12 + bob);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-    }
-    ctx.restore();
+    Playfield.drawWind(ctx, w, {
+      time: performance.now() / 1000,
+      arrowSpacing: WIND_ARROW_SPACING,
+      arrowSpeed: WIND_ARROW_SPEED,
+    });
   }
 
   function portalColor(portal) {
-    return {
-      cyan: "#61e5ff",
-      gold: "#ffd36d",
-      jade: "#7ff1ba",
-      rose: "#ff86bd",
-    }[portal.palette] || "#9ee7ff";
+    return Playfield.portalColor(portal);
   }
 
   function drawPortal(portal) {
-    const t = performance.now() / 1000;
-    const color = portalColor(portal);
-    const cx = portal.x + portal.w / 2;
-    const cy = portal.y + portal.h / 2;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.globalCompositeOperation = "source-over";
-    const pulse = 1 + Math.sin(t * 3 + portal.x * 0.01) * 0.035;
-    ctx.scale(pulse, 1);
-
-    const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, portal.h * 0.62);
-    glow.addColorStop(0, "rgba(255, 247, 213, 0.24)");
-    glow.addColorStop(0.45, `${color}66`);
-    glow.addColorStop(1, "rgba(97, 229, 255, 0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, portal.w * 0.72, portal.h * 0.62, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.9;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, portal.w * 0.42, portal.h * 0.48, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.globalAlpha = 0.42;
-    ctx.strokeStyle = "#fff7d1";
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 3; i += 1) {
-      ctx.beginPath();
-      ctx.ellipse(0, 0, portal.w * (0.24 + i * 0.08), portal.h * (0.24 + i * 0.06), t * 0.8 + i * 0.7, 0, Math.PI * 1.65);
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = color;
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 12;
-    ctx.beginPath();
-    for (let i = 0; i < 4; i += 1) {
-      const a = -Math.PI / 2 + i * Math.PI / 2;
-      const r = i % 2 ? 5 : 10;
-      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
+    Playfield.drawPortal(ctx, portal, { time: performance.now() / 1000, reducedMotion: view.reducedMotion });
   }
 
   function renderPlayer() {
     if (!player) return;
+    ctx.save();
+    ctx.globalAlpha = player.onGround ? 0.3 : 0.16;
+    ctx.fillStyle = CANVAS_MATERIAL.lacquer;
+    ellipse(player.x + player.w / 2, player.y + player.h + 3, player.w * 0.86, player.onGround ? 5 : 3.5, 0);
+    ctx.restore();
     if (player.invuln > 0 && Math.floor(player.invuln * 16) % 2 === 0) return;
     if (player.superInvuln > 0) {
       ctx.save();
       ctx.globalAlpha = 0.42 + Math.sin(performance.now() / 90) * 0.12;
-      ctx.strokeStyle = "#fff2a6";
+      ctx.strokeStyle = CANVAS_MATERIAL.moonWhite;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.ellipse(player.x + player.w / 2, player.y + player.h / 2, player.w * 0.92, player.h * 0.66, performance.now() / 500, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
-    drawCharacterArt(save.selected, snap(player.x + player.w / 2), snap(player.y + player.h), player.facing, 0.72 * (player.h / player.baseH), {
+    const authoredHeight = save.selected === "nini" ? 238 : 232;
+    const defaultScale = 0.64 * (player.h / player.baseH);
+    const maxViewportShare = player.bigTimer > 0 ? 0.4 : 0.34;
+    const responsiveScale = view.isMobileLandscape ? (view.h * maxViewportShare) / authoredHeight : defaultScale;
+    const artScale = Math.min(defaultScale, responsiveScale);
+    drawCharacterArt(save.selected, snap(player.x + player.w / 2), snap(player.y + player.h), player.facing, artScale, {
       vx: player.vx,
       vy: player.vy,
       onGround: player.onGround,
@@ -2296,8 +2157,8 @@
     ctx.scale(facing * scale, scale);
     const bob = Math.sin(performance.now() / 120) * 1.2;
     ctx.translate(0, bob);
-    ctx.shadowColor = ch.accent;
-    ctx.shadowBlur = 18;
+    ctx.shadowColor = "rgba(195,164,104,.26)";
+    ctx.shadowBlur = 6;
     ctx.fillStyle = "rgba(0,0,0,.22)";
     ellipse(0, 4, 28, 7, 0);
     ctx.shadowBlur = 0;
@@ -2347,11 +2208,11 @@
       ctx.beginPath();
       ctx.arc(0, -113, 18, Math.PI * 0.12, Math.PI * 0.88);
       ctx.stroke();
-      ctx.fillStyle = "#ff86bd";
+      ctx.fillStyle = CANVAS_MATERIAL.dustyRose;
       ellipse(-23, -97, 7, 4, -0.4);
       ellipse(23, -97, 7, 4, 0.4);
     } else {
-      ctx.strokeStyle = "#7ff1ba";
+      ctx.strokeStyle = CANVAS_MATERIAL.carvedJade;
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.moveTo(-22, -78); ctx.quadraticCurveTo(-42, -58, -25, -33);
@@ -2380,7 +2241,7 @@
       ellipse(23, -58, 13, 24, 0.35);
     } else {
       ctx.globalAlpha = 0.72;
-      ctx.strokeStyle = "#7ff1ba";
+      ctx.strokeStyle = CANVAS_MATERIAL.carvedJade;
       ctx.lineWidth = 5;
       ctx.beginPath();
       ctx.moveTo(22, -57); ctx.lineTo(40, -72);
@@ -2423,8 +2284,8 @@
     ctx.scale(orientation.frameScaleX, 1);
     ctx.rotate(lean * orientation.leanScale);
     ctx.scale(stretchX, stretchY);
-    ctx.shadowColor = characters[id].accent;
-    ctx.shadowBlur = 14 * scale;
+    ctx.shadowColor = "rgba(195,164,104,.32)";
+    ctx.shadowBlur = 6 * scale;
     drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale);
     ctx.drawImage(
       image,
@@ -2553,7 +2414,7 @@
       particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: 2 + Math.random() * 4, life: 0.35 + Math.random() * 0.55, max: 0.9, color });
     }
     // v1.2.4 — single composite-add glow ring on warm pickup bursts so coins feel collected.
-    if (save.settings.fx && (color === "#ffd36d" || color === "#61e5ff" || color === "#fff7d1")) {
+    if (save.settings.fx && [CANVAS_MATERIAL.agedGold, CANVAS_MATERIAL.carvedJade, CANVAS_MATERIAL.moonWhite].includes(color)) {
       particles.push({ x, y, vx: 0, vy: 0, r: 18, life: 0.28, max: 0.28, color, glow: true });
     }
   }
@@ -2564,7 +2425,7 @@
 
   function spawnWind(x, y, dir) {
     if (!save.settings.fx || Math.random() > 0.28) return;
-    particles.push({ x, y, vx: -dir * (70 + Math.random() * 70), vy: -20 + Math.random() * 40, r: 1.5, life: 0.35, max: 0.35, color: "#d9fbff" });
+    particles.push({ x, y, vx: -dir * (70 + Math.random() * 70), vy: -20 + Math.random() * 40, r: 1.5, life: 0.35, max: 0.35, color: CANVAS_MATERIAL.moonWhiteSoft });
   }
 
   function updateParticles(dt) {
@@ -2649,22 +2510,38 @@
     const characterName = characters[save.selected].name;
     if (hudState.character !== null && hudState.character !== characterName) Hud.pulseHudPill?.(hudEls.character.parentElement);
     hudState.character = characterName;
-    hudEls.character.textContent = characterName;
-    hudEls.health.textContent = heartLabel(player.health, player.maxHealth);
-    hudEls.coins.textContent = player.coins;
-    hudEls.ammo.textContent = player.ammo;
-    hudEls.time.textContent = formatTime(player.elapsed);
-    hudEls.status.textContent = statusLabel();
-    hudEls.skill.textContent = skillLabel();
+    setHudText("character", hudEls.character, characterName);
+    setHudText("health", hudEls.health, heartLabel(player.health, player.maxHealth));
+    setHudText("coins", hudEls.coins, player.coins);
+    setHudText("ammo", hudEls.ammo, player.ammo);
+    setHudText("time", hudEls.time, formatTime(player.elapsed));
+    setHudText("status", hudEls.status, statusLabel());
+    setHudText("skill", hudEls.skill, skillLabel());
+    const phaseCritical = phaseTideState().enabled;
+    if (hudState.phaseCritical !== phaseCritical) {
+      hudEls.status.classList.toggle("phase-critical", phaseCritical);
+      hudState.phaseCritical = phaseCritical;
+    }
     const cooling = player.skillCd > 0;
     if (hudState.cooling !== null && hudState.cooling !== cooling) {
       Hud.pulseHudPill?.(hudEls.skill);
       if (hudState.cooling && !cooling) cue("skill_ready");
     }
     hudState.cooling = cooling;
-    hudEls.skill.classList.toggle("cooling", cooling);
+    if (hudEls.skill.classList.contains("cooling") !== cooling) hudEls.skill.classList.toggle("cooling", cooling);
     const progress = clamp((player.x + player.w / 2) / activeLevel.width, 0, 1);
-    hudEls.bar.style.width = `${progress * 100}%`;
+    const progressPercent = Math.round(progress * 400) / 4;
+    if (hudState.values.progress !== progressPercent) {
+      hudEls.bar.style.width = `${progressPercent}%`;
+      hudState.values.progress = progressPercent;
+    }
+  }
+
+  function setHudText(key, element, value) {
+    const text = String(value);
+    if (hudState.values[key] === text) return;
+    element.textContent = text;
+    hudState.values[key] = text;
   }
 
   function heartLabel(health, maxHealth) {
@@ -2740,6 +2617,7 @@
   }
 
   function openModal(title, text, actions, eyebrow = "暂停") {
+    resetControlState();
     mode = "paused";
     document.getElementById("modalEyebrow").textContent = eyebrow;
     document.getElementById("modalTitle").textContent = title;
@@ -2759,19 +2637,50 @@
     hudEls.intro.classList.remove("active");
     touchControls.classList.remove("playing");
     audioBus.pauseBgm();
+    box.querySelector(".primary, button")?.focus({ preventScroll: true });
+  }
+
+  function resumeGame() {
+    if (!player || !activeLevel || player.settledOutcome) return;
+    resetControlState();
+    mode = "play";
+    modal.classList.remove("active");
+    hud.classList.add("active");
+    touchControls.classList.add("playing");
+    audioBus.playBgm();
+    focusGameplay();
   }
 
   function pauseGame() {
     if (mode !== "play") return;
     const ch = characters[save.selected];
     openModal("暂停", `${activeLevel.name} · ${ch.skillName} · ${ch.projectileName}。键盘：方向/WASD 移动，空格跳跃，J 技能，K 发射。`, [
-      ["继续", () => { mode = "play"; modal.classList.remove("active"); hud.classList.add("active"); touchControls.classList.add("playing"); audioBus.playBgm(); }, "primary"],
+      ["继续", resumeGame, "primary"],
       ["重新开始", () => startLevel(currentLevelIndex)],
       ["返回菜单", backToMenu],
     ]);
   }
 
+  function trapModalFocus(event) {
+    const actions = [...modal.querySelectorAll("button:not([disabled])")].filter((button) => button.getClientRects().length > 0);
+    if (!actions.length) {
+      event.preventDefault();
+      return;
+    }
+    const first = actions[0];
+    const last = actions[actions.length - 1];
+    const active = document.activeElement;
+    if (event.shiftKey && (active === first || !modal.contains(active))) {
+      event.preventDefault();
+      last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && (active === last || !modal.contains(active))) {
+      event.preventDefault();
+      first.focus({ preventScroll: true });
+    }
+  }
+
   function backToMenu() {
+    resetControlState();
     mode = "menu";
     activeLevel = null;
     player = null;
@@ -2802,9 +2711,14 @@
       if (action === "levels") showScreen("levels");
       if (action === "characters") showScreen("characters");
       if (action === "settings") showScreen("settings");
-      if (action === "back") showScreen("menu");
+      if (action === "back") {
+        flushPersist();
+        showScreen("menu");
+      }
       if (action === "pause") pauseGame();
+      if (action === "exit-game") backToMenu();
       if (action === "reset" && confirm("确定清除所有本地存档？")) {
+        flushPersist();
         save = Storage.cloneDefaultSave();
         const stored = persist();
         renderMenus();
@@ -2822,28 +2736,52 @@
     document.getElementById("volumeRange").addEventListener("input", (e) => {
       save.settings.volume = Number(e.target.value);
       audioBus.syncBgmVolume();
-      persist();
+      schedulePersist();
     });
     document.getElementById("bgmRange").addEventListener("input", (e) => {
       save.settings.bgmVolume = Number(e.target.value);
       audioBus.syncBgmVolume();
-      persist();
+      schedulePersist();
     });
     document.getElementById("touchRange").addEventListener("input", (e) => {
       save.settings.touch = Number(e.target.value);
       document.documentElement.style.setProperty("--touch-size", `${save.settings.touch}px`);
-      persist();
+      schedulePersist();
     });
     document.getElementById("fxToggle").addEventListener("change", (e) => {
       save.settings.fx = e.target.checked;
       persist();
     });
+    for (const range of document.querySelectorAll(".settings-list input[type='range']")) {
+      range.addEventListener("change", flushPersist);
+    }
   }
 
   function bindControls() {
     window.addEventListener("keydown", (e) => {
-      if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) e.preventDefault();
-      if (e.code === "Escape") pauseGame();
+      if (e.code === "Tab" && mode === "paused" && modal.classList.contains("active")) {
+        trapModalFocus(e);
+        return;
+      }
+      if (e.code === "Escape") {
+        if (e.repeat) {
+          e.preventDefault();
+          return;
+        }
+        if (mode === "play") {
+          e.preventDefault();
+          pauseGame();
+        }
+        return;
+      }
+      if (InputState.isGameplayKeyCode(e.code)) {
+        const wasPhysicallyHeld = physicalKeys.has(e.code);
+        physicalKeys.add(e.code);
+        if (e.repeat && !wasPhysicallyHeld) suppressedKeys.add(e.code);
+      }
+      if (!InputState.isGameplayKeyEvent(e, mode)) return;
+      e.preventDefault();
+      if (suppressedKeys.has(e.code)) return;
       if (!keys[e.code]) {
         if (["Space", "ArrowUp", "KeyW"].includes(e.code)) inputs.jumpPressed = true;
         if (["KeyJ", "ShiftLeft", "ShiftRight"].includes(e.code)) inputs.skillPressed = true;
@@ -2852,31 +2790,37 @@
       keys[e.code] = true;
     }, { passive: false });
     window.addEventListener("keyup", (e) => {
-      if (["Space", "ArrowUp", "KeyW"].includes(e.code)) inputs.jumpReleased = true;
+      const wasHeld = !!keys[e.code];
+      physicalKeys.delete(e.code);
+      suppressedKeys.delete(e.code);
+      if (!wasHeld && !InputState.isGameplayKeyEvent(e, mode)) return;
+      if (mode === "play") e.preventDefault();
+      if (wasHeld && ["Space", "ArrowUp", "KeyW"].includes(e.code)) inputs.jumpReleased = true;
       keys[e.code] = false;
-    });
+    }, { passive: false });
 
-    const touchState = new Map();
     const hapticTouches = new Set(["jump", "skill", "shoot"]);
     for (const btn of document.querySelectorAll("[data-touch]")) {
       const name = btn.dataset.touch;
       const down = (e) => {
         e.preventDefault();
+        if (mode !== "play") return;
         btn.setPointerCapture?.(e.pointerId);
-        touchState.set(e.pointerId, name);
-        if (!keys[name] && name === "jump") inputs.jumpPressed = true;
-        if (!keys[name] && name === "skill") inputs.skillPressed = true;
-        if (!keys[name] && name === "shoot") inputs.shootPressed = true;
+        const result = touchPointers.press(e.pointerId, name);
+        if (!result.accepted) return;
+        if (result.becameActive && name === "jump") inputs.jumpPressed = true;
+        if (result.becameActive && name === "skill") inputs.skillPressed = true;
+        if (result.becameActive && name === "shoot") inputs.shootPressed = true;
         keys[name] = true;
-        if (hapticTouches.has(name)) haptic();
+        if (result.becameActive && hapticTouches.has(name)) haptic();
         btn.classList.add("active");
       };
       const up = (e) => {
         e.preventDefault();
-        if (touchState.get(e.pointerId) === name) {
-          if (name === "jump") inputs.jumpReleased = true;
+        const result = touchPointers.release(e.pointerId, name);
+        if (result.released && result.becameInactive) {
+          if (result.action === "jump") inputs.jumpReleased = true;
           keys[name] = false;
-          touchState.delete(e.pointerId);
           btn.classList.remove("active");
         }
       };
@@ -2885,11 +2829,25 @@
       btn.addEventListener("pointercancel", up, { passive: false });
       btn.addEventListener("lostpointercapture", up, { passive: false });
     }
-    window.addEventListener("blur", () => {
-      keys = Object.create(null);
-      touchState.clear();
-      document.querySelectorAll("[data-touch].active").forEach((button) => button.classList.remove("active"));
+    document.addEventListener("focusin", (e) => {
+      if (mode !== "play" || e.target === canvas || e.target?.closest?.("[data-touch]")) return;
+      resetControlState();
     });
+    window.addEventListener("blur", resetPhysicalControlState);
+  }
+
+  function resetControlState() {
+    InputState.resetTransientState({ keys, inputs, pointerActions: touchPointers });
+    for (const key of Object.keys(inputs)) inputs[key] = false;
+    suppressedKeys.clear();
+    for (const code of physicalKeys) suppressedKeys.add(code);
+    document.querySelectorAll("[data-touch].active").forEach((button) => button.classList.remove("active"));
+  }
+
+  function resetPhysicalControlState() {
+    physicalKeys.clear();
+    suppressedKeys.clear();
+    resetControlState();
   }
 
   function haptic(duration = 8) {
@@ -2902,13 +2860,16 @@
 
   function handleVisibilityChange() {
     pageHidden = document.hidden === true;
-    keys = Object.create(null);
+    resetPhysicalControlState();
     accumulator = 0;
     last = performance.now();
     GameFeel?.resetHitstop?.();
     GameFeel?.cameraLookaheadReset?.(camera);
     RespawnVeil?.clear?.();
-    if (pageHidden) audioBus.suspend();
+    if (pageHidden) {
+      flushPersist();
+      audioBus.suspend();
+    }
     else audioBus.resume();
   }
 
@@ -2926,18 +2887,21 @@
       requestAnimationFrame(loop);
       return;
     }
-    const frameDt = clamp((now - last) / 1000, 0, 0.08);
+    const frameDt = clamp((now - last) / 1000, 0, FixedStep.MAX_FRAME_DT);
     last = now;
-    if (mode === "play" && GameFeel?.tickHitstop?.(frameDt)) {
+    const simulationDt = mode === "play" ? GameFeel?.consumeHitstop?.(frameDt) ?? frameDt : frameDt;
+    if (mode === "play" && simulationDt <= 0) {
       render();
       requestAnimationFrame(loop);
       return;
     }
-    accumulator = Math.min(accumulator + frameDt, FIXED_DT * 4);
-    while (accumulator >= FIXED_DT) {
-      update(FIXED_DT);
-      accumulator -= FIXED_DT;
-    }
+    const frame = FixedStep.runFrame(accumulator, simulationDt, (dt) => {
+      const hitstopBefore = GameFeel?.getHitstopRemaining?.() || 0;
+      update(dt);
+      const hitstopAfter = GameFeel?.getHitstopRemaining?.() || 0;
+      return hitstopAfter > hitstopBefore;
+    });
+    accumulator = frame.accumulator;
     render();
     requestAnimationFrame(loop);
   }
@@ -2948,6 +2912,8 @@
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", () => {
       pageHidden = true;
+      resetPhysicalControlState();
+      flushPersist();
       accumulator = 0;
       GameFeel?.resetHitstop?.();
       GameFeel?.cameraLookaheadReset?.(camera);
@@ -2959,7 +2925,7 @@
     bindControls();
     audioBus.armAutoplayRetry?.();
     registerServiceWorker();
-    showScreen("menu");
+    showScreen("menu", { focus: false });
     requestAnimationFrame(loop);
   }
 

@@ -53,6 +53,8 @@
   }
 
   function buildLetter() {
+    const returnFocus = document.activeElement;
+    let dismissed = false;
     const root = document.createElement("div");
     root.className = "love-letter";
     root.setAttribute("role", "dialog");
@@ -77,12 +79,27 @@
     root.appendChild(card);
     document.body.appendChild(root);
     const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
       root.classList.remove("show");
+      root.setAttribute("aria-hidden", "true");
       window.setTimeout(() => root.remove(), 320);
       document.removeEventListener("keydown", onKey);
+      if (returnFocus?.isConnected && typeof returnFocus.focus === "function") {
+        try { returnFocus.focus({ preventScroll: true }); } catch (_) {}
+      }
     };
     function onKey(event) {
-      if (event.key === "Escape") dismiss();
+      if (event.key === "Tab") {
+        event.preventDefault();
+        event.stopPropagation();
+        close.focus({ preventScroll: true });
+      }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        dismiss();
+      }
     }
     close.addEventListener("click", dismiss);
     root.addEventListener("click", (event) => {
