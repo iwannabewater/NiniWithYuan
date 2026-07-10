@@ -27,7 +27,7 @@ const WOFF2_KNOWN_TAGS = [
 assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version), "package.json should be v1.4.0 or later");
 assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
 assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.7.0-readability-polish"') ||
+  sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"') ||

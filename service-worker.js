@@ -1,12 +1,17 @@
-const CACHE = "nini-yuan-v1.7.0-readability-polish";
+const CACHE = "nini-yuan-v1.7.0-experience-integrity-r1";
+const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./src/core/storage.js",
   "./src/core/audio.js",
+  "./src/core/input-state.js",
+  "./src/core/game-rules.js",
+  "./src/core/fixed-step.js",
   "./src/render/hud.js",
   "./src/render/character-motion.js",
+  "./src/render/playfield-material.js",
   "./src/render/game-feel.js",
   "./src/render/respawn-veil.js",
   "./src/render/cursor-trail.js",
@@ -35,12 +40,17 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
-  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request)));
+  event.respondWith(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.match(event.request))
+      .then((cached) => cached || fetch(event.request))
+  );
 });

@@ -18,10 +18,10 @@ function withMatchMedia(matches, fn) {
 withMatchMedia(false, () => {
   GameFeel.resetHitstop();
   GameFeel.requestHitstop(50);
-  assert.equal(GameFeel.tickHitstop(0.02), true, "hit-stop should remain frozen after 20 ms");
+  assert.equal(GameFeel.consumeHitstop(0.02), 0, "the first 20 ms should be fully frozen");
   assert.ok(Math.abs(GameFeel.getHitstopRemaining() - 30) < 0.001, "hit-stop should have about 30 ms remaining");
-  assert.equal(GameFeel.tickHitstop(0.04), true, "hit-stop should freeze the frame that consumes the remaining duration");
-  assert.equal(GameFeel.tickHitstop(0), false, "hit-stop should be unfrozen on the next frame");
+  assert.ok(Math.abs(GameFeel.consumeHitstop(0.04) - 0.01) < 1e-12, "a crossing frame should return its 10 ms simulation remainder");
+  assert.equal(GameFeel.consumeHitstop(0.016), 0.016, "a cleared hit-stop should return the full frame");
 
   GameFeel.requestHitstop(200);
   assert.equal(GameFeel.getHitstopRemaining(), 120, "hit-stop should clamp to 120 ms");
@@ -34,7 +34,33 @@ withMatchMedia(false, () => {
   GameFeel.resetHitstop();
   GameFeel.requestHitstop(80);
   GameFeel.resetHitstop();
-  assert.equal(GameFeel.tickHitstop(0), false, "resetHitstop should clear an active freeze");
+  assert.equal(GameFeel.consumeHitstop(0.016), 0.016, "resetHitstop should restore the full frame");
+
+  for (const fps of [60, 30, 25, 20]) {
+    for (const requestedMs of [35, 70]) {
+      GameFeel.resetHitstop();
+      GameFeel.requestHitstop(requestedMs);
+      const frameDt = 1 / fps;
+      let frozenSeconds = 0;
+      let firstSimulationFrame = 0;
+      for (let frame = 1; frame <= 20; frame += 1) {
+        const available = GameFeel.consumeHitstop(frameDt);
+        frozenSeconds += frameDt - available;
+        if (available > 0) {
+          firstSimulationFrame = frame;
+          break;
+        }
+      }
+      assert.ok(
+        Math.abs(frozenSeconds - requestedMs / 1000) < 1e-9,
+        `${requestedMs}ms hit-stop must consume exactly its requested duration at ${fps}fps`
+      );
+      assert.ok(
+        firstSimulationFrame * frameDt <= requestedMs / 1000 + frameDt + 1e-9,
+        `${requestedMs}ms hit-stop must resume within the crossing frame at ${fps}fps`
+      );
+    }
+  }
 });
 
 withMatchMedia(true, () => {
@@ -126,11 +152,21 @@ try {
 }
 
 const game = fs.readFileSync("src/game.js", "utf8");
+const html = fs.readFileSync("index.html", "utf8");
 assert.ok(game.includes("vy < -160"), "variable jump cut threshold should stay pinned");
 assert.ok(game.includes("player.vy *= 0.56"), "variable jump cut multiplier should stay pinned");
 assert.ok(game.includes("player.coyote = 0.12"), "coyote time should stay pinned");
 assert.ok(game.includes("player.jumpBuffer = 0.14"), "jump buffer should stay pinned");
-assert.ok(game.includes("GameFeel?.tickHitstop"), "game loop should gate updates through hit-stop");
+assert.ok(game.includes("GameFeel?.consumeHitstop"), "game loop should consume hit-stop and retain crossing-frame time");
 assert.ok(game.includes("GameFeel?.cameraLookaheadOffset"), "camera should include lookahead offset");
+assert.match(html, /<script src="\.\/src\/game\.js" defer><\/script>/, "game runtime should join the deferred helper queue");
+assert.ok(
+  html.indexOf("./src/render/game-feel.js") < html.indexOf("./src/game.js"),
+  "game-feel must execute before the game captures its runtime reference"
+);
+assert.ok(
+  html.indexOf("./src/render/playfield-material.js") < html.indexOf("./src/game.js"),
+  "playfield materials must execute before the game captures its renderer reference"
+);
 
 console.log("gamefeel-v1.5.0: hit-stop, lookahead, shake, cue table, and physics pins passed");

@@ -72,7 +72,18 @@ Gameplay follows **四角仪轨**. Character seal and health anchor the upper le
 
 ### Touch controls
 
-Mobile uses **星盘双区**. Direction lives in a low-contrast left star-dial crescent; jump, skill, and shoot use three differentiated jade or lacquer seals on the right. Visible controls stay smaller than their non-overlapping hit areas. Gameplay is landscape-only; portrait menus remain fully usable.
+Mobile uses **星盘双区**. Direction lives in a low-contrast left star-dial crescent; jump, skill, and shoot use three differentiated jade or lacquer seals on the right. The saved size preference spans 64 to 84 CSS pixels; compact landscape viewports may cap it further to keep controls separated and fully on-screen. Gameplay is landscape-only; portrait menus remain fully usable and portrait gameplay always exposes an in-page return-to-menu action.
+
+### Canvas playfield
+
+The playfield uses the same material hierarchy as the DOM instead of a separate candy-fantasy palette:
+
+- Level colors tint the upper atmosphere, then a lacquer veil restrains saturation.
+- Parallax scenery is drawn as continuous ink-scroll bands with sparse aged-gold chart lines, not repeated triangle mountains or bright cloud ovals.
+- Platforms use indigo, carved-jade, stone, or muted artifact bodies with a thin gilt top incision and shallow engraved ticks.
+- Coins and gems read as small star seals; power-ups keep distinct silhouettes with restrained local glow.
+- Character atlases receive a low aged-gold rim and a grounded contact shadow. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while enemies render at roughly 11 percent or more without changing collision boxes.
+- Hazards retain the strongest warm-danger contrast. Goals and portals use gold, jade, rose, and phase blue as semantic rings rather than a rainbow bloom.
 
 ## 5. Layout Principles
 
@@ -118,9 +129,11 @@ Do not:
 - `>= 980px`: two-column menu with full paired composition and horizontal action rail.
 - `680px to 979px`: compact two-column or stacked menu according to available height.
 - `< 680px` portrait: paired art becomes a deliberate upper crop, title and actions follow, all menu surfaces remain scrollable inside safe areas.
-- Mobile character, chapter, and settings screens hide the decorative footer so it never overlays scrollable content; chapter-world headings use content-sized rows rather than inheriting chapter-card height.
+- Mobile character, chapter, and settings screens hide the decorative footer so it never overlays scrollable content; coarse-pointer landscape covers at 340px height or less hide it as well. Chapter-world headings use content-sized rows rather than inheriting chapter-card height.
 - Mobile landscape: compact menu and full gameplay HUD; touch targets remain at least 48px with non-overlapping hit regions.
-- Mobile portrait gameplay: show a crafted rotate-device prompt rather than compressing the level camera.
+- Mobile landscape World 3: the compact `phase-critical` status chip remains visible even when ordinary status pills are hidden.
+- Mobile portrait gameplay: show a crafted rotate-device prompt rather than compressing the level camera, with a 48px-minimum return-to-menu action.
+- Keyboard navigation: screen entry focuses the visible heading with the aged-gold focus treatment, returning restores focus to the originating menu action, gameplay focuses the canvas, and modal entry focuses its first action while Tab remains contained inside the dialog.
 
 ## 9. Agent Prompt Guide
 
@@ -129,4 +142,4 @@ Quick palette: lacquer `#0b1016`, raised lacquer `#111821`, indigo silk `#18212d
 - Hero prompt: “Build a 5/7 desktop split on lacquer `#0b1016`; title at 72px LXGW WenKai 700 in moon white, action controls at 17px with 6px radius and aged-gold trace, paired art fills the right seven columns without generic cards.”
 - Control prompt: “Create a 52px-high indigo-silk control with 6px radius, 16px LXGW WenKai 700, moon-white text, one inset `rgba(195,164,104,.20)` line, active `scale(.97)`, and a transform/opacity-only gilt trace.”
 - HUD prompt: “Create a corner-instrument HUD on transparent gameplay space; 40px minimum targets, lacquer `rgba(11,16,22,.88)`, 13px tabular figures, aged-gold structure, rose health, jade skill-ready, no continuous top bar.”
-- Mobile prompt: “At 844x390 landscape, preserve safe-area insets, keep gameplay center unobstructed, use a left star-dial control and three right seals with visible size 64 to 82px and larger non-overlapping hit areas.”
+- Mobile prompt: “At 844x390 landscape, preserve safe-area insets, keep gameplay center unobstructed, use a left star-dial control and three right seals at 64 to 84px, and keep the World 3 phase clock visible.”

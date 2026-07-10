@@ -14,7 +14,7 @@
     levelStars: {},
     settings: {
       volume: 70,
-      touch: 98,
+      touch: 84,
       fx: true,
       bgmVolume: 60,
     },
@@ -60,7 +60,7 @@
     const settings = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
     return {
       volume: sanitizeInteger(settings.volume, defaultSave.settings.volume, 0, 100),
-      touch: sanitizeInteger(settings.touch, defaultSave.settings.touch, 60, 140),
+      touch: sanitizeInteger(settings.touch, defaultSave.settings.touch, 64, 84),
       fx: settings.fx !== false,
       bgmVolume: sanitizeInteger(settings.bgmVolume, defaultSave.settings.bgmVolume, 0, 100),
     };

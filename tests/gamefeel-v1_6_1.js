@@ -76,13 +76,15 @@ assert.ok(game.includes("GameFeel?.horizontalVelocity"), "player movement should
 assert.ok(game.includes("player.gaitPhase"), "player rendering should carry a distance-driven gait phase");
 assert.ok(game.includes('btn.addEventListener("lostpointercapture", up'), "touch controls should release when pointer capture is lost");
 assert.ok(!game.includes('btn.addEventListener("pointerleave", up'), "captured touch controls must not release on pointer drift");
-assert.ok(game.includes("touchState.clear()"), "focus loss should clear captured touch state");
+assert.ok(game.includes('window.addEventListener("blur", resetPhysicalControlState)'), "focus loss should reset physical and captured controls");
+assert.ok(game.includes("suppressedKeys"), "held transition keys should stay suppressed until release");
+assert.ok(game.includes("InputState.resetTransientState"), "control reset should clear key edges and pointer refs together");
 assert.ok(game.includes("dismissChapterIntro"), "gameplay input should dismiss the chapter intro");
 assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version));
 assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version));
 assert.match(androidManifest, /versionCode="(14|15|16|17)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0)"/);
 assert.ok(
-  serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-readability-polish"') ||
+  serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"'),

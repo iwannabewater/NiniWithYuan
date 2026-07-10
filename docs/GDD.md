@@ -20,10 +20,12 @@ Playable characters:
 ### Physics
 
 - Fixed step: `FIXED_DT = 1 / 120`.
+- Frame scheduling clamps lifecycle gaps to 80 ms and executes at most eight fixed steps per rendered frame. Normal 60, 30, 25, and 20 fps delivery preserves real simulation time; overload drops only whole steps beyond the guard.
 - Approximate jump heights: Nini 240 px; Yuan 209 px.
 - Coyote time: 0.12 s.
 - Jump buffer: 0.14 s.
-- The main loop clamps accumulated time after background or foreground transitions.
+- Every chapter begins with the player bottom-aligned to the authored opening platform, grounded, and eligible for a buffered first jump on the next fixed step.
+- The main loop clears accumulated time and all transient input after background or foreground transitions.
 - v1.5.0 adds presentation-only hit-stop, camera lookahead, landing dust, shake clamping, and respawn veil polish. These do not change jump height, gravity, dash distance, coyote time, jump buffer, or level solvability.
 
 ### Wind Fields
@@ -48,7 +50,15 @@ Slimes and embers are ground enemies across all chapters. They spawn bottom-alig
 | Nini | 星露弹 | Fast projectile with mild homing and lower damage. |
 | Yuan | 青岚弹 | Slower projectile with one pierce and higher damage. |
 
-The ammunition cap is 14. The default regeneration rate is one unit per 1.6 s. During the core power-up, projectile speed, damage, and pierce increase.
+The regenerating ammunition cap is 14. Power-up pickups may create a temporary reserve up to 24; passive regeneration never fills above 14. The default regeneration rate is one unit per 1.6 s. During the core power-up, projectile speed, damage, and pierce increase.
+
+### Input and Outcome Integrity
+
+- Gameplay keys are captured only while `mode === "play"` and the event target is not a button, range, editable field, or contenteditable surface. Native menu activation and settings arrow-key behavior always win outside that boundary.
+- Menu, modal, blur, page visibility, restart, and return-to-menu transitions clear gameplay held keys, pressed/released edges, and active pointer references together. Any mapped physical key already down is suppressed across the boundary until its matching release, so browser repeat cannot create a new action after focus handoff.
+- Touch actions use per-action pointer reference counts. Releasing one finger does not release another finger still holding the same action.
+- Failure and completion are mutually exclusive terminal outcomes. If lethal contact and the goal overlap in one fixed step, failure takes precedence.
+- Moon Sugar blocks repeated damage continuously, but its shield sound, burst, and camera feedback are rate-limited to one event per 180 ms.
 
 ### Power-Ups
 
@@ -88,7 +98,7 @@ World 3 introduces phase-tide bridges. A level-local tide clock alternates betwe
 | 14 | Twin-Star Clocktower | Star gate clocktower | Hybrid phase bridges plus star gates. |
 | 15 | Phase Tide Court | Mirror-tide court | Final synthesis of phase bridges, portals, wind, moving platforms, crystals, and hazards. |
 
-Star ratings are determined by collection ratio:
+Star ratings are determined only by the value of level coins and gems collected. Combat rewards still contribute to earned star dew and persistent totals, but never raise the collection rating:
 
 - three stars above 82%;
 - two stars above 52%;
@@ -105,6 +115,7 @@ Main menu
 
 Gameplay
   ├─ Pause -> resume / restart / return to menu
+  ├─ Portrait guidance -> rotate device / return to menu
   └─ Completion -> next chapter / replay / chapter select
 ```
 
@@ -143,6 +154,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.6.2: directional complete-silhouette idle poses and paired-protagonist Web/PWA plus Android launcher identity, with unchanged physics and save compatibility.
 - v1.6.3: Nini's complete idle source frame is marked as left-facing so default and rightward idle read forward-right, while last-direction idle behavior remains unchanged.
 - v1.7.0: phase-tide countdown readability, enemy patrol/hover intent marks, projectile-hit flash feedback, and stable accessibility navigation checks ship without changing physics, chapters, save schema, abilities, or input bindings.
-- Current workspace: v1.7.0 readability polish with unchanged chapters, save schema, abilities, and input bindings.
+- Current workspace: post-v1.7.0 experience-integrity refinement with isolated input state, grounded starts, collection-only ratings, stable 20 fps scheduling, rate-limited guard feedback, responsive phase HUD, and unified playfield materials. Chapters, save schema, abilities, and base movement tuning remain unchanged.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

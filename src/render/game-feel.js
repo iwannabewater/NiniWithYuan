@@ -27,12 +27,12 @@
     hitstopRemaining = Math.min(HITSTOP_CAP_MS, Math.max(hitstopRemaining, amount));
   }
 
-  function tickHitstop(dt) {
-    if (hitstopRemaining <= 0) return false;
-    const wasFrozen = true;
-    const elapsedMs = Math.max(0, Number(dt) || 0) * 1000;
-    hitstopRemaining = Math.max(0, hitstopRemaining - elapsedMs);
-    return wasFrozen;
+  function consumeHitstop(dt) {
+    const frameDt = Math.max(0, Number(dt) || 0);
+    if (hitstopRemaining <= 0 || frameDt <= 0) return frameDt;
+    const frozenSeconds = Math.min(frameDt, hitstopRemaining / 1000);
+    hitstopRemaining = Math.max(0, hitstopRemaining - frozenSeconds * 1000);
+    return Math.max(0, frameDt - frozenSeconds);
   }
 
   function resetHitstop() {
@@ -91,7 +91,7 @@
 
   const api = {
     requestHitstop,
-    tickHitstop,
+    consumeHitstop,
     resetHitstop,
     horizontalVelocity,
     cameraLookaheadOffset,
