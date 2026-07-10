@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Isolated gameplay input behind play-mode and editable-control gates, reset held and edge state at every lifecycle boundary, suppressed physically held transition keys until release, and added per-action pointer reference counting so menu activation, settings arrows, focus transitions, key repeat, and multi-touch holds cannot leak into gameplay.
+- Grounded every chapter spawn on its opening platform, restored immediate first-jump response for both protagonists, separated collection progress from combat rewards for star ratings, and made failure take precedence over completion in same-step terminal collisions.
+- Defined a regenerating ammunition cap of 14 and a pickup reserve cap of 24, and rate-limited Moon Sugar guard feedback to one cue, burst, and shake per 180 ms during sustained hazard contact.
+- Replaced the four-step frame accumulator cap with a tested 120 Hz scheduler that supports eight catch-up steps, an 80 ms lifecycle clamp, stable 60/30/25/20 fps simulation time, and immediate batch termination when hit-stop begins.
+- Placed the main game script in the same ordered deferred queue as its render helpers so hit-stop, camera lookahead, respawn veil, cursor, and easter-egg modules are initialized before the runtime captures them.
+- Reduced runtime churn by updating HUD values once per rendered frame only when they change, quantizing chapter progress to quarter-percent writes, and trailing settings persistence by 150 ms with lifecycle flushes.
+- Added visible World 3 phase timing in compact landscape, a non-overflow 568 by 320 HUD, 48px-minimum coarse-pointer navigation targets, a truthful 64 to 84px touch-size preference, a portrait return-to-menu route, contained modal focus, visible focus handoff, corrected character-selection copy, and non-overlapping mobile modal and settings layouts.
+- Unified the Canvas playfield with the Song-atlas material system through lacquered ink-scroll depth, gilt platform incisions, seal-shaped collectibles, restrained power-up glow, grounded character shadows, balanced player/enemy scale, and carved jade, rose, and gold semantic effects.
+- Added focused pure-logic and Playwright regression coverage for input routing, grounded starts, collection ratings, terminal outcomes, frame pacing, mobile phase HUD, portrait escape, focus, persistence writes, HUD mutation budgets, and real multi-viewport interaction.
+- Updated the offline cache to `nini-yuan-v1.7.0-experience-integrity-r1`, limited cleanup to this app's `nini-yuan-` namespace, and included the new input, gameplay-rule, and fixed-step helpers without changing the public version, chapter set, save schema, dependencies, or base movement tuning.
+
 ## v1.7.0
 
 - Added one-decimal World 3 phase-tide countdowns to the HUD status pill, so phase routes communicate timing without adding a new control surface.

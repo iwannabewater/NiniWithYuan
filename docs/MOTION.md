@@ -52,6 +52,9 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 | 27 | Canvas camera lookahead | Direction reversal | Explicit movement intent retargets lookahead immediately, using a faster crossing response when the player reverses while preserving the existing 56 px bound and reduced-motion zero-output contract. |
 | 28 | Canvas enemy intent | Enemy render | Ground enemies draw a quiet patrol rail and direction notch tied to their current support platform; wisps draw a dashed hover tether instead of ground feet. |
 | 29 | Canvas enemy hit flash | Projectile impact | A 180 ms ivory halo and body-core flash confirms non-lethal projectile hits without moving the enemy or altering hit-stop, health, patrol, or collision rules. |
+| 30 | Canvas ink-scroll field | Camera travel | Three continuous lacquer and indigo ridge bands move at separate parallax depths; sparse chart points drift slowly, and all decorative drift stops under reduced motion. |
+| 31 | Canvas collection seal | Pickup idle and collect | Coins rotate as gilt star seals, gems as carved-jade diamonds, and power-ups bob within a three-pixel range. Local glow stays below eight pixels and disappears with high-frame-rate FX disabled. |
+| 32 | Moon Sugar guard | Hazard contact while invulnerable | Damage remains blocked continuously, while the shield burst, cue, and shake may fire at most once per 180 ms so sustained overlap never becomes an audio or particle storm. |
 
 ## Input Response
 
@@ -59,7 +62,9 @@ Animation is limited to `transform` and `opacity` on small surfaces. Full-screen
 - Ground reversals apply a short, bounded turn response and reach full speed in the opposite direction within 190 ms.
 - Neutral ground stopping remains below 120 ms.
 - The authored turn pose lasts 100 ms. Once movement becomes neutral, both characters keep the last explicit travel direction; a fresh level defaults to right-facing idle. Generic idle source cells must declare `sourceFacing` when their visual source direction is not right-facing.
-- Captured touch controls ignore pointer drift outside the visible circle and release only on pointer up, cancellation, or lost capture.
+- A chapter starts grounded on its first platform. A jump pressed 50 to 100 ms after entry uses the ground jump and does not consume Nini's air jump.
+- Gameplay keys are ignored in menus, settings controls, and modal buttons. Every mode, focus, blur, and visibility boundary clears gameplay held and edge-triggered input before the next play step; a mapped physical key held across that boundary remains suppressed until `keyup`.
+- Captured touch controls ignore pointer drift outside the visible circle and release only on pointer up, cancellation, or lost capture. Each action keeps a pointer reference set, so releasing one of two fingers cannot cancel the other.
 
 ## Continuous Motion
 
@@ -93,6 +98,13 @@ Under `prefers-reduced-motion: reduce`:
 - v1.5.0 hit-stop is disabled, dash anticipation inherits that no-op, camera lookahead contributes 0 px, shake is multiplied by 0.30, and the respawn veil uses a single 40 ms flash. Landing puff remains governed by the existing visual effects setting.
 - v1.6.1 movement-response timing remains active because it is gameplay control logic, while camera lookahead still contributes 0 px under reduced motion.
 - v1.7.0 enemy intent marks remain static geometry, and projectile hit flashes use the same short feedback window as existing combat hit-stop so they do not add decorative looping motion.
+- Ink-scroll parallax and star-chart drift become static; gameplay platforms, collectible silhouettes, hazards, phase state, and contact shadows remain visible.
+
+## Frame and DOM Budgets
+
+- Fixed-step simulation runs at 120 Hz with an eight-step rendered-frame ceiling and an 80 ms lifecycle clamp. A hit-stop request ends the current batch immediately, and the hit-stop consumer returns any time left after the freeze ends inside a rendered frame so 20 to 60 fps delivery does not add a second frozen frame.
+- HUD text and class writes occur once per animation frame at most and only when the rendered value changes. Chapter progress is quantized to quarter-percent increments before writing its width.
+- Settings sliders preview immediately but persist through a 150 ms trailing write, then flush on `change`, `visibilitychange`, or `pagehide`.
 
 ## BGM and Audio
 
