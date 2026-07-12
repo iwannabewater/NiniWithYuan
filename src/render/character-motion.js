@@ -5,10 +5,67 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
   function resolveMotionFacing(input = {}) {
     const facing = input.facing < 0 ? -1 : 1;
     if (input.id === "yuan" && Number(input.skillTimer) > 0) return input.dashDir < 0 ? -1 : 1;
     return facing;
+  }
+
+  function shouldHoldLandingPose(landingTimer = 0, stride = 0) {
+    const timer = Math.max(0, Number(landingTimer) || 0);
+    if (timer <= 0) return false;
+    return timer > 0.11 || Math.max(0, Number(stride) || 0) < 0.62;
+  }
+
+  function emptyMotionPose() {
+    return { bob: 0, lean: 0, scaleX: 1, scaleY: 1, lift: 0, stride: 0, forward: 0 };
+  }
+
+  function blendMotionPose(previous, next, alpha = 1, options = {}) {
+    const from = previous && typeof previous === "object" ? previous : emptyMotionPose();
+    const to = next && typeof next === "object" ? next : emptyMotionPose();
+    if (options.snap === true) {
+      return {
+        bob: Number(to.bob) || 0,
+        lean: Number(to.lean) || 0,
+        scaleX: Number.isFinite(Number(to.scaleX)) ? Number(to.scaleX) : 1,
+        scaleY: Number.isFinite(Number(to.scaleY)) ? Number(to.scaleY) : 1,
+        lift: Number(to.lift) || 0,
+        stride: Number(to.stride) || 0,
+        forward: Number(to.forward) || 0,
+        animation: to.animation,
+        artifact: to.artifact,
+        direction: to.direction,
+        gaitWave: Number(to.gaitWave) || 0,
+      };
+    }
+    const t = clamp(Number(alpha) || 0, 0, 1);
+    const ease = t * t * (3 - 2 * t);
+    return {
+      bob: lerp(Number(from.bob) || 0, Number(to.bob) || 0, ease),
+      lean: lerp(Number(from.lean) || 0, Number(to.lean) || 0, ease),
+      scaleX: lerp(
+        Number.isFinite(Number(from.scaleX)) ? Number(from.scaleX) : 1,
+        Number.isFinite(Number(to.scaleX)) ? Number(to.scaleX) : 1,
+        ease,
+      ),
+      scaleY: lerp(
+        Number.isFinite(Number(from.scaleY)) ? Number(from.scaleY) : 1,
+        Number.isFinite(Number(to.scaleY)) ? Number(to.scaleY) : 1,
+        ease,
+      ),
+      lift: lerp(Number(from.lift) || 0, Number(to.lift) || 0, ease),
+      stride: lerp(Number(from.stride) || 0, Number(to.stride) || 0, ease),
+      forward: lerp(Number(from.forward) || 0, Number(to.forward) || 0, ease),
+      animation: to.animation,
+      artifact: to.artifact,
+      direction: to.direction,
+      gaitWave: Number(to.gaitWave) || 0,
+    };
   }
 
   function advanceAnimationState(previous, animation, simulationTime = 0) {
@@ -76,7 +133,7 @@
     } else if (!onGround) {
       animation = vy > 120 ? "fall" : `jump_${direction}`;
       artifact = id === "nini" ? "star-dial-follow" : "gui-sword-follow";
-    } else if (landingTimer > 0 && (landingTimer > 0.11 || stride < 0.62)) {
+    } else if (shouldHoldLandingPose(landingTimer, stride)) {
       animation = `land_${direction}`;
       artifact = "settle";
     } else if (turnTimer > 0) {
@@ -88,24 +145,24 @@
 
     let bob = onGround
       ? stride > 0.18
-        ? -Math.abs(gaitWave) * (1.2 + stride * 2.4)
-        : Math.sin(clock * 2.4) * 0.9
+        ? -Math.abs(gaitWave) * (1.35 + stride * 2.6)
+        : Math.sin(clock * 2.2) * 0.7
       : 0;
-    let lean = forward * (id === "nini" ? 0.055 : 0.07) + gaitWave * stride * 0.012;
-    let scaleX = 1 + stride * 0.025 + gaitPulse * stride * 0.012;
-    let scaleY = 1 - stride * 0.012 - gaitPulse * stride * 0.008;
+    let lean = forward * (id === "nini" ? 0.068 : 0.082) + gaitWave * stride * 0.014;
+    let scaleX = 1 + stride * 0.028 + gaitPulse * stride * 0.014;
+    let scaleY = 1 - stride * 0.014 - gaitPulse * stride * 0.01;
     let lift = id === "nini" ? -2 : 0;
 
     if (turning > 0) {
-      lean += Math.sin(turning * Math.PI) * 0.09;
-      scaleX += Math.sin(turning * Math.PI) * 0.045;
-      scaleY -= Math.sin(turning * Math.PI) * 0.035;
+      lean += Math.sin(turning * Math.PI) * 0.11;
+      scaleX += Math.sin(turning * Math.PI) * 0.05;
+      scaleY -= Math.sin(turning * Math.PI) * 0.04;
     }
     if (landing > 0) {
       const settle = Math.sin(landing * Math.PI);
-      bob += settle * 5;
-      scaleX += settle * 0.08;
-      scaleY -= settle * 0.09;
+      bob += settle * 5.5;
+      scaleX += settle * 0.09;
+      scaleY -= settle * 0.1;
     }
     if (!onGround && vy < -120) {
       scaleX -= 0.035;
@@ -163,6 +220,9 @@
     resolveCharacterMotion,
     resolveSpriteOrientation,
     resolveMotionFacing,
+    shouldHoldLandingPose,
+    blendMotionPose,
+    emptyMotionPose,
     advanceAnimationState,
     animationElapsed,
     sampleAnimationFrame,

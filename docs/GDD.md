@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-v1.8.0 keeps the fifteen-chapter structure and core physics while extending **宋式星图器物幻想 / Song-atlas Night Observatory** across the menu, journey context, character motion, gameplay instruments, touch controls, and modal behavior. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
+v1.9.0 keeps the fifteen-chapter structure and core physics while refining **宋式星图器物幻想 / Song-atlas Night Observatory** into a quieter instrument: calmer ornament, clearer control feedback, and presentation pose blending without changing routes or abilities. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
 
 ## Fiction
 
@@ -181,5 +181,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.6.3: Nini's complete idle source frame is marked as left-facing so default and rightward idle read forward-right, while last-direction idle behavior remains unchanged.
 - v1.7.0: phase-tide countdown readability, enemy patrol/hover intent marks, projectile-hit flash feedback, and stable accessibility navigation checks ship without changing physics, chapters, save schema, abilities, or input bindings.
 - v1.8.0: unified multi-source input, 120 ms glide intent, simulation-time character motion, fixed-step presentation interpolation, responsive journey and selection layouts, grouped HUD instruments, adjustable touch and display settings, and a choice-based portrait orientation dialog. Chapters, abilities, and base movement tuning remain unchanged; the save schema advances to 3 for the new preferences.
+- v1.9.0: Quiet Observatory polish with presentation pose blending, pure input edge helpers, quieter ambient and brand ornament, calmer structural motion, and clearer touch press seals. Physics, chapters, and save schema remain unchanged.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

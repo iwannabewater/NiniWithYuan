@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.8.0 brings the Song-atlas Night Observatory direction into one responsive interface, joins keyboard, touch, pointer, and assistive activation behind the same action model, and gives both characters simulation-timed motion with fixed-step presentation smoothing. The game remains offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 keeps the Song-atlas Night Observatory direction and tightens it into a Quiet Observatory instrument: calmer ornament, clearer control feedback, multi-source input fairness, and simulation-timed motion with presentation pose blending. The game remains offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
 
 ## Gameplay
 
@@ -49,7 +49,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.8.0 adds focused checks for multi-source input fallback, short Nini glide intent, hit-stop interpolation recovery, modal isolation, five viewport and input-modality layouts, deterministic store capture, and local font provenance.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.9.0 adds focused checks for pure input edge math, presentation pose blending, Quiet Observatory CSS markers, and release metadata while retaining the v1.8.0 multi-source, layout, and capture guards.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 

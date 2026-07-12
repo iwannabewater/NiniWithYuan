@@ -175,4 +175,10 @@ assert.equal(directionAliases.direction(), -1, "the newest alias should temporar
 directionAliases.release("key:ArrowLeft");
 assert.equal(directionAliases.direction(), 1, "releasing a newer alias should reveal the newest surviving source");
 
+assert.deepEqual(InputState.edgeFromActiveTransition(false, true), { pressed: true, released: false, active: true });
+assert.deepEqual(InputState.edgeFromActiveTransition(true, false), { pressed: false, released: true, active: false });
+const edgeMap = InputState.edgesFromActionCounts({ jump: 0 }, { jump: 1 }, ["jump"]);
+assert.equal(edgeMap.jump.pressed, true);
+assert.equal(edgeMap.jump.active, true);
+
 console.log("input-state: gating, unified action refs, direction arbitration, and pointer refs passed");

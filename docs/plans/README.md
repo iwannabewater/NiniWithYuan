@@ -20,6 +20,8 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.6.3 forward idle source-facing patch](OPTIMIZATION_PLAN_v1.6.3.md)
 - [v1.7.0 readability and interaction polish](OPTIMIZATION_PLAN_v1.7.0.md)
 - [v1.8.0 Song-atlas experience overhaul](OPTIMIZATION_PLAN_v1.8.0.md)
+- [v1.9.0 Quiet Observatory polish](OPTIMIZATION_PLAN_v1.9.0.md)
+- [v1.9.0 multi-perspective review](REVIEW_v1.9.0.md)
 
 ## Design Specs
 

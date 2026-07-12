@@ -108,17 +108,18 @@ assert.ok(game.includes('window.addEventListener("blur", resetPhysicalControlSta
 assert.ok(game.includes("suppressedKeys"), "held transition keys should stay suppressed until release");
 assert.ok(game.includes("InputState.resetTransientState"), "control reset should clear key edges and pointer refs together");
 assert.ok(game.includes("dismissChapterIntro"), "gameplay input should dismiss the chapter intro");
-assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(pkg.version));
-assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(lock.version));
-assert.match(androidManifest, /versionCode="(14|15|16|17|18)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0|1\.8\.0)"/);
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(pkg.version));
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(lock.version));
+assert.match(androidManifest, /versionCode="(14|15|16|17|18|19)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/);
 assert.ok(
+  serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"'),
 );
-assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3") || html.includes("星图 · v1.7.0") || html.includes("星图 · v1.8.0"));
+assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3") || html.includes("星图 · v1.7.0") || html.includes("星图 · v1.8.0") || html.includes("星图 · v1.9.0"));
 for (const assetMarker of ["04-rotate-prompt", "06-gameplay-landscape", "07-pause-landscape", "08-gameplay-desktop"]) {
   assert.ok(capture.includes(assetMarker), `store capture should produce ${assetMarker}`);
 }

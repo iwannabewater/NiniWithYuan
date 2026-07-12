@@ -46,6 +46,12 @@ Atlas frames use time elapsed since the current state began. Looping states wrap
 
 Ground gait follows accumulated horizontal travel rather than wall time. Starts, stops, wall contacts, and reversals therefore keep the pose attached to actual movement.
 
+## Presentation Pose Sampling
+
+Rendering may blend bob, lean, stretch, and lift between consecutive resolved poses so gait and turn edges read more sensitively at variable display rates. Blend math lives in `blendMotionPose` and uses a smoothstep alpha. Discrete entries for hurt, skill, and land snap immediately. Animation name, artifact identity, gait wave, stride, and direction always come from the latest resolved pose. Display pose fields live only on the presentation object.
+
+Landing readability is pure: a land pose holds while `landingTimer > 0.11` or stride remains under `0.62`. Faster landings hand back to run after the impact beat.
+
 ## Character State Selection
 
 The resolver in `src/render/character-motion.js` selects presentation in this order:
