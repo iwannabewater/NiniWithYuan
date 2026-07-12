@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 keeps the Song-atlas Night Observatory direction and calms the interface around it: quieter ornament, clearer control feedback, multi-source input fairness, and simulation-timed character motion with presentation pose blending. The game stays offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 continues the Song-atlas Night Observatory direction with quieter ornament, clearer control feedback, multi-source input fairness, and simulation-timed character motion with presentation pose blending. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
 
 ## Gameplay
 
@@ -49,7 +49,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.9.0 adds pure input edge math, presentation pose blending, Quiet Observatory CSS markers, and release metadata checks on top of the existing multi-source, layout, and capture guards.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.9.0 adds checks for pure input edge math, presentation pose blending, the v1.9 composition CSS markers, and release metadata, in addition to the existing multi-source, layout, and capture guards.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 

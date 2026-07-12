@@ -2,11 +2,11 @@
 
 ## v1.9.0
 
-- Lowered ambient ornament weight, replaced the multi-color brand undertrace with a single aged-gold line, calmed screen and modal entry, and tightened corner instruments so hierarchy reads before decoration. Song-atlas lacquer, silk, gold, jade, and rose materials stay the identity.
-- Blended presentation bob, lean, stretch, and lift between fixed-step poses so movement reads more cleanly at variable frame rates. Hurt, skill, and land still snap; display state never writes into player entities, saves, or terminal outcomes.
-- Extracted pure input edge helpers and landing-readability rules so multi-source arbitration, latest-direction fallback, coyote time, jump buffer, and glide intent stay testable without changing those contracts.
-- Gave touch seals clearer pressed edges by action: gilt on the direction rail, jade on skill, rose on shoot, with the existing press scale retained.
-- Bumped the web package to `1.9.0`, Android to `versionCode=19` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-quiet-observatory-r1`. Added focused coverage for edge math, pose blend, quiet CSS markers, and release metadata.
+- Reduced ambient ornament weight, replaced the multi-color brand undertrace with a single aged-gold line, shortened screen and modal entry motion, and tightened corner instruments so hierarchy remains readable before decoration. Song-atlas lacquer, silk, gold, jade, and rose materials are unchanged.
+- Blended presentation bob, lean, stretch, and lift between fixed-step poses for cleaner movement at variable frame rates. Hurt, skill, and land entries still snap. Display state does not write into player entities, saves, or terminal outcomes.
+- Extracted pure input edge helpers and landing-readability rules. Multi-source arbitration, latest-direction fallback, coyote time, jump buffer, and glide intent remain under the same contracts and stay unit-tested.
+- Added clearer pressed edges on touch seals by action: gilt on the direction rail, jade on skill, rose on shoot. Existing press scale is retained.
+- Bumped the web package to `1.9.0`, Android to `versionCode=19` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-quiet-observatory-r1`. Added focused coverage for edge math, pose blend, composition CSS markers, and release metadata.
 
 ## v1.8.0
 

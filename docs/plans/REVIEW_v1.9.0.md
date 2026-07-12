@@ -1,51 +1,51 @@
-# Multi-perspective review: v1.9.0 Quiet Observatory
+# Release review notes: v1.9.0
 
-Date: 2026-07-12  
-Merged PR: [#15](https://github.com/iwannabewater/NiniWithYuan/pull/15)  
-Scope: presentation pose blending, pure input edge helpers, Quiet Observatory UI restraint, docs, tests, tag, and release
+Date: 2026-07-12
 
-## Rubric and scores
+PR: [#15](https://github.com/iwannabewater/NiniWithYuan/pull/15)
 
-| Dimension | Weight | Score | Notes |
-| --- | ---: | ---: | --- |
-| Interaction fluidity and fairness | 20 | 99.95 | Source-counted actions, latest-direction arbitration, pure edge helpers, and lifecycle clears preserved; no physics retune |
-| UI layout and material coherence | 25 | 99.92 | Quieter ambient, single gold brand undertrace, calmer panels and modals, clearer touch press seals; no glassmorphism or `transition: all` |
-| Character presentation sensitivity | 20 | 99.94 | Pose blend with discrete snap for hurt, skill, and land; pure landing readability; distance-driven gait; no presentation leak into player entities |
-| Accessibility and orientation safety | 15 | 99.93 | Modal isolation, portrait dialog, HUD scale, and reduced-motion path retained; structural motion eased without hiding status |
-| Engineering hygiene and docs fidelity | 20 | 99.96 | Web 1.9.0, Android 19, SW cache key aligned; CHANGELOG, DESIGN, MOTION, GDD, and plans updated; focused tests drive shipped helpers |
+Tag: `v1.9.0`
 
-**Overall (weighted):** 99.94
+## Scope
 
-## Critical / Structural findings
+Interface density and ornament weight, character presentation sampling, pure input edge helpers, release metadata, and documentation for the v1.9.0 polish.
 
-None open.
+Out of scope for this review: chapter content, physics constants, save schema changes, and store listing marketing.
 
-## Perspective notes
+## Checklist
 
-### Player and feel
+| Area | Result | Notes |
+| --- | --- | --- |
+| Input fairness | Pass | Source-counted actions, latest-direction arbitration, and lifecycle clears preserved; pure edge helpers covered by unit tests |
+| Layout and materials | Pass | Ambient weight reduced; single aged-gold brand undertrace; calmer panels and modals; clearer touch press seals; no `transition: all` or glassmorphism |
+| Character presentation | Pass | Pose blend for bob/lean/stretch/lift; discrete snap on hurt, skill, and land; presentation state stays outside player entities |
+| Accessibility and orientation | Pass | Modal isolation, portrait dialog, HUD scale, and reduced-motion behavior retained |
+| Documentation and packaging | Pass | Web `1.9.0`, Android `19` / `1.9.0`, service-worker cache key aligned; CHANGELOG, DESIGN, MOTION, and GDD updated |
 
-- Coyote time, jump buffer, glide intent, and reversal windows stay at documented values and remain pinned by tests.
-- Character poses read more continuously at variable frame rates. Discrete combat poses still snap.
+## Open findings
 
-### Visual and KAMI transfer
+None.
 
-- Ambient runes, sparks, and constellation weight are reduced so content hierarchy leads.
-- Brand undertrace uses one aged-gold accent instead of a multi-color aurora brush.
-- Touch and button press feedback stay tactile (`scale(0.97)`, semantic edge color) without spring bounce on structural surfaces.
+## Verification commands
 
-### Engineering
+| Command | Result |
+| --- | --- |
+| `npm test` | Pass |
+| `node tests/browser-smoke.js` | Pass |
+| `node tests/quiet-observatory-v1_9_0.js` | Pass |
+| `node tests/character-motion.js` | Pass |
+| `node tests/input-state.js` | Pass |
 
-- Pure helpers `edgeFromActiveTransition`, `edgesFromActionCounts`, `blendMotionPose`, and `shouldHoldLandingPose` are exercised by real unit tests.
-- ADR-0003 is respected: UI and CSS may restructure; mechanics and save schema 3 stay put.
+## Packaging
 
-## Verification evidence
+| Item | Value |
+| --- | --- |
+| Web package | `1.9.0` |
+| Android | `versionCode=19`, `versionName=1.9.0` |
+| Service-worker cache | `nini-yuan-v1.9.0-quiet-observatory-r1` |
+| APK SHA-256 | `7370144e970966fc6983fc6e8008e3bdadf7bc3ae680df98f7fe3a22579dc02e` |
+| Signatures | v1, v2, v3 verified |
 
-- Two consecutive `npm test` runs exited 0.
-- Two consecutive `node tests/browser-smoke.js` runs exited 0.
-- Focused pins: `tests/quiet-observatory-v1_9_0.js`, `tests/character-motion.js`, `tests/input-state.js`.
-- Menu and gameplay screenshots show filled surfaces (canvas 1280 by 720, non-blank).
-- PR #15 merged to `main`; feature branch deleted on remote.
+## Residual risk
 
-## Decision
-
-Ship v1.9.0. Overall score is at or above 99.9 with zero Critical or Structural defects.
+`src/game.js` and `styles.css` remain large-file hotspots. Changes in this release stay localized to presentation sampling, pure helpers, and a composition boundary in CSS. Focused regression tests cover the new helpers and release metadata.

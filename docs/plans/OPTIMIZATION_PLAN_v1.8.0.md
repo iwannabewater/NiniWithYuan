@@ -146,7 +146,7 @@ Local APK SHA-256:
 58b0c0d88925fbad86a7d8cb8efbb83067126528ff15fd0a7aae49e73f05745c
 ```
 
-The final multi-perspective Check review returned no actionable finding. The engineering Health audit scored the repository 100.0 out of 100 for the supported Codex scope, with no project-level Critical or Structural finding.
+Release review on the merge path reported no open critical or structural findings against the v1.8.0 contracts.
 
 ## Quality Assessment
 

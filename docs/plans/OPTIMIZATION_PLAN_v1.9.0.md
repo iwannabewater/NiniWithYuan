@@ -1,4 +1,4 @@
-# Quiet Observatory polish: v1.9.0
+# Interface and presentation polish: v1.9.0
 
 Version scope: `v1.8.0` to `v1.9.0`
 
@@ -6,96 +6,88 @@ Date: 2026-07-12
 
 Repository: `iwannabewater/NiniWithYuan`
 
-## Objective
+## Goal
 
-Raise the already-playable Song-atlas build from “usable” to a quieter, more decisive instrument. The release does not rewrite chapters or physics. It restructures friction that still sits between the player and intent: competing decoration, laggy pose transitions, uneven control feedback, and layout density that forces re-reading.
+Polish the existing Song-atlas interface and character presentation so hierarchy, control feedback, and pose readability improve without changing chapters, physics, or save compatibility.
 
-## First principles (resolve “颠覆” inside contracts)
+## Design constraints
 
-1. **One material field.** Decoration must never compete with hierarchy. If an ornament does not orient, confirm, or protect, lower it until the content is readable at a glance.
-2. **One action model remains law.** Keyboard, touch, and assistive sources stay source-counted. Latest direction wins. Lifecycle boundaries clear everything together.
-3. **Simulation owns truth; presentation samples it.** Pose blending, lean, bob, and shadow may smooth, never write back into the player entity, saves, or terminal outcomes.
-4. **Smallest supported viewport budgets the control surface.** Larger screens may breathe; they may not invent essential information.
-5. **KAMI transfer is restraint, not a second skin.** Quiet fields, sparse ornament, tactile edges, calm transitions. Song-atlas lacquer, silk, aged gold, rose, and jade remain the identity.
-6. **Proof over taste.** Green tests, store-contract preservation, and a multi-perspective rubric score gate the claim of completion.
+1. Decoration stay subordinate to hierarchy. Ornament that does not orient, confirm, or protect is reduced until content is readable at a glance.
+2. Keyboard, touch, and assistive sources remain source-counted. Latest direction wins. Lifecycle boundaries clear held actions, edges, and pointer refs together.
+3. Simulation owns gameplay truth. Presentation may blend bob, lean, stretch, and lift, and must not write into player entities, saves, or terminal outcomes.
+4. The smallest supported viewport sets the control and density budget. Larger screens may add space, not essential information.
+5. Song-atlas materials remain the product identity: lacquer, indigo silk, aged gold, carved jade, and dusty rose. Restraint is layered on that system rather than replacing it.
 
-## SOTA + KAMI transfer notes
+## External references
 
-| Source | Transfer (not clone) |
+| Source | Transfer into this release |
 | --- | --- |
-| KAMI / paper quietness | Lower ambient weight; one dominant accent edge; calm ease-out motion; no spring bounce on structural surfaces |
-| Celeste forgiveness | Preserve coyote, jump buffer, and glide-intent windows; never loosen them without tests |
-| Dead Cells control primacy | Keep latest-direction arbitration and held multi-source actions as the feel authority |
-| Ori polish coordination | Couple pose blend, HUD pulse, and touch press feedback so one event reads once |
-| Apple / Android / Xbox input HIG | Semantic buttons, reachable dual-zone touch, focus isolation, visible pressed state |
-| Song-atlas ADRs | UI restructure free under ADR-0003; mechanics, offline, a11y outcomes preserved |
+| Paper-and-ink product restraint (sparse field, one structural accent, calm ease-out motion) | Lower ambient weight; single aged-gold brand undertrace; ease-out on structural surfaces |
+| Celeste forgiveness notes | Keep coyote time, jump buffer, and glide-intent windows pinned |
+| Dead Cells control primacy | Keep latest-direction arbitration and multi-source holds |
+| Ori polish coordination | Keep pose sampling, HUD, and touch press feedback aligned to one event clock |
+| Apple / Android / Xbox input guidance | Semantic buttons, dual-zone touch reach, focus isolation, visible pressed state |
+| ADR-0003 | UI and CSS may restructure; mechanics, offline, and accessibility outcomes stay fixed |
 
-## Implemented scope
+## Implementation
 
-### Input and response fluidity
+### Input
 
-- Keep source-counted actions and latest-direction arbitration unchanged in contract.
-- Export pure edge helpers for pressed/released transitions so lifecycle tests drive the same math as the runtime.
-- Preserve coyote 120 ms, jump buffer 140 ms, glide intent 120 ms, ground launch ≤140 ms, reversal ≤190 ms.
+- Export pure edge helpers for pressed and released transitions so tests drive the same math as runtime arbitration.
+- Leave coyote time (120 ms), jump buffer (140 ms), glide intent (120 ms), ground launch (≤140 ms), and reverse (≤190 ms) contracts unchanged.
 
-### Presentation sensitivity
+### Presentation
 
-- Add pure `blendMotionPose` and landing-readability helpers in `src/render/character-motion.js`.
-- Sample previous and current motion pose in presentation state; blend bob/lean/stretch/lift across frames with discontinuity snaps.
-- Keep pose priority order; keep airborne turns as jump/fall; keep fast land handoff to run.
+- Add pure `blendMotionPose` and `shouldHoldLandingPose` helpers in `src/render/character-motion.js`.
+- Blend bob, lean, stretch, and lift between consecutive resolved poses; snap on hurt, skill, and land entries and on camera or player discontinuities.
+- Keep pose priority, airborne jump/fall on direction change, and fast land handoff to run.
 
-### UI layout and instrument quietness
+### Interface
 
-- Add a v1.9 Quiet Observatory composition boundary in `styles.css`.
-- Introduce spacing tokens, quiet ambient weight, single-accent brand undertrace, calmer panel materials, clearer primary action hierarchy, stronger touch press seals, and denser but non-overlapping corner instruments.
-- Ban-preserving rules: no `transition: all`, no glassmorphism/`backdrop-filter`, no neon cyan-on-dark dominance.
+- Add a v1.9 composition boundary in `styles.css` with spacing tokens, quieter ambient weight, single-accent brand undertrace, calmer panel materials, clearer primary action hierarchy, stronger touch press seals, and denser non-overlapping corner instruments.
+- Keep bans: no `transition: all`, no `backdrop-filter` glass, no neon-dominant hierarchy.
 
-### Engineering close-out
+### Release packaging
 
-- Bump package, ambient footer, service-worker cache, Android `versionCode`/`versionName`.
-- Add `tests/quiet-observatory-v1_9_0.js` plus wiring in `tests/run-all.js`.
-- Update `CHANGELOG.md`, `docs/DESIGN.md`, `docs/MOTION.md`, plans index, and multi-perspective review.
+- Bump package version, ambient footer, service-worker cache key, and Android `versionCode` / `versionName`.
+- Add `tests/quiet-observatory-v1_9_0.js` and wire it in `tests/run-all.js`.
+- Update `CHANGELOG.md`, `docs/DESIGN.md`, `docs/MOTION.md`, `docs/GDD.md`, and the plans index.
 
-## Behavior contracts (must hold)
+## Behavioral contract
 
-- Physics constants, chapter geometry, win/lose, stomp/projectile patterns, ammo caps, portals, phase-tide period unchanged.
-- Save schema remains 3; settings keys compatible.
+- Physics constants, chapter geometry, win/lose rules, stomp and projectile patterns, ammo caps, portals, and phase-tide period are unchanged.
+- Save schema remains 3; settings keys remain compatible.
 - Presentation state stays outside player entities and saves.
-- Reduced motion still disables hit-stop and camera lead and quiet decorative loops.
-- Offline PWA and Chinese-primary copy preserved.
-
-## Multi-perspective rubric (completion gate)
-
-| Dimension | Weight | Target |
-| --- | --- | --- |
-| Interaction fluidity & fairness | 20 | ≥99.9 |
-| UI layout & material coherence | 25 | ≥99.9 |
-| Character presentation sensitivity | 20 | ≥99.9 |
-| Accessibility & orientation safety | 15 | ≥99.9 |
-| Engineering hygiene & docs fidelity | 20 | ≥99.9 |
-
-Overall target: ≥99.9 with zero open Critical/Structural findings. Scored in `docs/plans/REVIEW_v1.9.0.md` after verification.
-
-## Verification plan
-
-1. `npm test` twice → exit 0; logs under implementer scratch.
-2. `node tests/browser-smoke.js` twice → exit 0 when Playwright works.
-3. Focused pure tests drive real `input-state` and `character-motion` helpers (blend, edge, land readability).
-4. Screenshots of menu and gameplay under scratch `screens/` when browser path works.
-5. Review artifact overall ≥99.9; version metadata consistent.
-6. Named branch/PR merged; remote feature branch deleted.
-
-## Verification recorded
-
-- Two consecutive `npm test` runs exited 0 on the release commit path.
-- Two consecutive `node tests/browser-smoke.js` runs exited 0 (11 scenarios each).
-- Focused pure checks: `tests/quiet-observatory-v1_9_0.js`, extended `tests/character-motion.js`, `tests/input-state.js`.
-- PR #15 merged as `049b095`; remote feature branch deleted; default branch clean.
-- Multi-perspective review: overall 99.94, zero Critical/Structural findings (`docs/plans/REVIEW_v1.9.0.md`).
+- Reduced motion still disables hit-stop and camera lead, and quiets decorative loops.
+- Offline PWA operation and Chinese-primary product copy remain required.
 
 ## Non-goals
 
-- New worlds, enemies, story rewrite, balance redesign.
-- Replacing Song-atlas with a KAMI paper-puzzle clone.
-- Store marketing campaign or non-Chinese localization.
-- Treating subjective “feels perfect” without tests and review as done.
+- New worlds, enemy types, story rewrite, or combat economy redesign.
+- Replacing Song-atlas identity with an unrelated art system.
+- Store marketing campaign or additional localization languages.
+
+## Verification
+
+- `node tests/input-state.js`
+- `node tests/character-motion.js`
+- `node tests/quiet-observatory-v1_9_0.js`
+- `node tests/experience-overhaul-v1_8_0.js`
+- `node tests/e2e/ui-layout-integrity.js`
+- `node tests/browser-smoke.js`
+- `npm test`
+- Package metadata: web `1.9.0`, Android `versionCode=19` / `versionName=1.9.0`, service-worker cache `nini-yuan-v1.9.0-quiet-observatory-r1`
+
+## Completion notes
+
+- `npm test` and `node tests/browser-smoke.js` passed on 2026-07-12.
+- PR #15 merged to `main`; feature branch removed on remote.
+- Annotated tag `v1.9.0` and GitHub release publish `dist/NiniYuan.apk`.
+- APK badging reports package `com.iwannabewater.niniyuan`, `versionCode=19`, `versionName=1.9.0`, `minSdkVersion=23`, and `targetSdkVersion=36`. Signature schemes v1, v2, and v3 verify.
+- APK SHA-256: `7370144e970966fc6983fc6e8008e3bdadf7bc3ae680df98f7fe3a22579dc02e`.
+
+## Release boundaries
+
+- Minor polish release.
+- No new runtime dependency, save key, network service, analytics, or chapter content.
+- Build outputs under `build/`, `dist/`, and `android/app/src/main/assets/` remain ignored.
