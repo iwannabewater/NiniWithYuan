@@ -2,9 +2,9 @@
 
 ## Product Definition
 
-`Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. The core design value is route differentiation between two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
+`Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-The current workspace build keeps the fifteen-chapter v1.4.0 structure and the v1.5.0 game-feel and sound-design polish pass, then re-anchors the presentation around **宋式星图器物幻想 / Song-atlas Night Observatory**. The original five chapters are grouped as World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal rather than a hard postgame difficulty spike.
+v1.8.0 keeps the fifteen-chapter structure and core physics while extending **宋式星图器物幻想 / Song-atlas Night Observatory** across the menu, journey context, character motion, gameplay instruments, touch controls, and modal behavior. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
 
 ## Fiction
 
@@ -26,7 +26,9 @@ Playable characters:
 - Jump buffer: 0.14 s.
 - Every chapter begins with the player bottom-aligned to the authored opening platform, grounded, and eligible for a buffered first jump on the next fixed step.
 - The main loop clears accumulated time and all transient input after background or foreground transitions.
-- v1.5.0 adds presentation-only hit-stop, camera lookahead, landing dust, shake clamping, and respawn veil polish. These do not change jump height, gravity, dash distance, coyote time, jump buffer, or level solvability.
+- Rendering interpolates the previous and current fixed-step samples for the player and camera, then quantizes the result to the device-pixel grid. Portals, respawns, lifecycle resets, and hit-stop recovery synchronize those samples so presentation never rewinds across a discontinuity.
+- Character poses and atlas frames use simulation time. Animation state belongs to the presentation layer and does not alter player entities, collision, or fixed-step rules.
+- Presentation-only hit-stop, camera lookahead, landing dust, shake clamping, and respawn veil polish do not change jump height, gravity, dash distance, coyote time, jump buffer, or level solvability.
 
 ### Wind Fields
 
@@ -43,6 +45,8 @@ Slimes and embers are ground enemies across all chapters. They spawn bottom-alig
 | Nini | 璇玑星渡 | Slows descent, corrects landing position, and supports elevated routes. |
 | Yuan | 青衡破风 | Provides fast horizontal movement, breaks crystals, and defeats enemies on contact. |
 
+An eligible Nini skill press preserves 120 ms of glide intent. A short tap during takeoff or airborne play therefore starts a readable glide instead of disappearing between fixed steps. The skill cooldown begins only when the glide starts.
+
 ### Projectiles
 
 | Character | Projectile | Properties |
@@ -55,8 +59,9 @@ The regenerating ammunition cap is 14. Power-up pickups may create a temporary r
 ### Input and Outcome Integrity
 
 - Gameplay keys are captured only while `mode === "play"` and the event target is not a button, range, editable field, or contenteditable surface. Native menu activation and settings arrow-key behavior always win outside that boundary.
-- Menu, modal, blur, page visibility, restart, and return-to-menu transitions clear gameplay held keys, pressed/released edges, and active pointer references together. Any mapped physical key already down is suppressed across the boundary until its matching release, so browser repeat cannot create a new action after focus handoff.
-- Touch actions use per-action pointer reference counts. Releasing one finger does not release another finger still holding the same action.
+- Keyboard keys, touch or pointer contacts, and assistive click activations share one per-action source registry. Each source owns one action, and an action remains active until its final source releases.
+- When left and right are both active, the most recently pressed active source sets the direction. Releasing that source restores an older direction that is still held. Sliding a finger across the left touch rail transfers the same source between left and right.
+- Menu, modal, blur, page visibility, restart, and return-to-menu transitions clear gameplay held keys, pressed or released edges, and active action sources together. Any mapped physical key already down is suppressed across the boundary until its matching release, so browser repeat cannot create a new action after focus handoff.
 - Failure and completion are mutually exclusive terminal outcomes. If lethal contact and the goal overlap in one fixed step, failure takes precedence.
 - Moon Sugar blocks repeated damage continuously, but its shield sound, burst, and camera feedback are rate-limited to one event per 180 ms.
 
@@ -115,13 +120,21 @@ Main menu
 
 Gameplay
   ├─ Pause -> resume / restart / return to menu
-  ├─ Portrait guidance -> rotate device / return to menu
+  ├─ Portrait guidance -> continue in portrait / return to menu
   └─ Completion -> next chapter / replay / chapter select
 ```
 
+The desktop menu gives roughly 40 percent of its width to the brand, actions, and journey summary, with the paired hero composition occupying the remaining 60 percent. The primary action follows the current save, while the journey strip reports the current chapter, unlocked progress, selected companion, and collected star dew. Narrow fine-pointer screens stack the composition; coarse-pointer landscape uses a shorter two-column arrangement; portrait keeps the menu scrollable and crops the hero art deliberately.
+
+Character selection uses horizontal artifact sheets with portrait, ability copy, and an explicit selected state. On narrow portrait screens, the sheets become a swipeable row. Chapter selection groups five chapters into each named world track, marks the current step, and states why locked chapters are unavailable. Settings use separate Audio, Display, Touch, and Local Data groups with live values for every range.
+
+The HUD separates character, health, and status on the left from resources, time, skill, and pause on the right. A narrow route line shows chapter progress. Responsive rules remove secondary readings before essential controls, while the World 3 phase status remains visible. Touch play uses a sliding direction rail on the left and separate jump, skill, and projectile seals on the right; saved size and opacity settings apply without reducing the minimum touch target.
+
+On a coarse-pointer portrait viewport, gameplay pauses behind an orientation dialog. The player may continue in portrait or return to the menu, and rotating the device resumes the normal layout. Pause, outcome, orientation, and easter-egg dialogs isolate the inactive surfaces, contain keyboard focus, clear gameplay input, and freeze simulation where required.
+
 ## Save Data
 
-Save data is stored in localStorage under `nini-yuan-save-v1`. The current schema version is 2.
+Save data is stored in localStorage under `nini-yuan-save-v1`. The current schema version is 3.
 
 Fields:
 
@@ -133,10 +146,23 @@ Fields:
 - `levelStars`
 - `settings.volume`
 - `settings.touch`
+- `settings.touchOpacity`
+- `settings.hudScale`
+- `settings.shake`
 - `settings.fx`
 - `settings.bgmVolume`
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. The schema version remains 2 in v1.7.0; existing saves clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
+| Setting | Default | Accepted values |
+| --- | --- | --- |
+| Master volume | 70 | 0 to 100 |
+| BGM volume | 60 | 0 to 100 |
+| Touch size | 76 px | 64 to 84 px |
+| Touch opacity | 68% | 45 to 100% |
+| HUD scale | 100% | 90 to 140% |
+| Camera shake | On | On or off |
+| High-frame-rate effects | On | On or off |
+
+Loading applies schema validation, type clamping, and chapter ID allow-listing. Schema 3 adds touch opacity, HUD scale, and camera shake preferences while retaining the existing storage key. Older saves receive safe defaults for the new fields and clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Planned Scope
 
@@ -154,6 +180,6 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 - v1.6.2: directional complete-silhouette idle poses and paired-protagonist Web/PWA plus Android launcher identity, with unchanged physics and save compatibility.
 - v1.6.3: Nini's complete idle source frame is marked as left-facing so default and rightward idle read forward-right, while last-direction idle behavior remains unchanged.
 - v1.7.0: phase-tide countdown readability, enemy patrol/hover intent marks, projectile-hit flash feedback, and stable accessibility navigation checks ship without changing physics, chapters, save schema, abilities, or input bindings.
-- Current workspace: post-v1.7.0 experience-integrity refinement with isolated input state, grounded starts, collection-only ratings, stable 20 fps scheduling, rate-limited guard feedback, responsive phase HUD, and unified playfield materials. Chapters, save schema, abilities, and base movement tuning remain unchanged.
+- v1.8.0: unified multi-source input, 120 ms glide intent, simulation-time character motion, fixed-step presentation interpolation, responsive journey and selection layouts, grouped HUD instruments, adjustable touch and display settings, and a choice-based portrait orientation dialog. Chapters, abilities, and base movement tuning remain unchanged; the save schema advances to 3 for the new preferences.
 - Future release: expanded enemy variants or optional challenge routes, subject to a separate scope review.
 - v2.0.0: achievements, local replay, or cloud save, subject to a separate scope review.

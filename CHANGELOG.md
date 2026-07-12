@@ -1,17 +1,15 @@
 # Changelog
 
-## Unreleased
+## v1.8.0
 
-- Isolated gameplay input behind play-mode and editable-control gates, reset held and edge state at every lifecycle boundary, suppressed physically held transition keys until release, and added per-action pointer reference counting so menu activation, settings arrows, focus transitions, key repeat, and multi-touch holds cannot leak into gameplay.
-- Grounded every chapter spawn on its opening platform, restored immediate first-jump response for both protagonists, separated collection progress from combat rewards for star ratings, and made failure take precedence over completion in same-step terminal collisions.
-- Defined a regenerating ammunition cap of 14 and a pickup reserve cap of 24, and rate-limited Moon Sugar guard feedback to one cue, burst, and shake per 180 ms during sustained hazard contact.
-- Replaced the four-step frame accumulator cap with a tested 120 Hz scheduler that supports eight catch-up steps, an 80 ms lifecycle clamp, stable 60/30/25/20 fps simulation time, and immediate batch termination when hit-stop begins.
-- Placed the main game script in the same ordered deferred queue as its render helpers so hit-stop, camera lookahead, respawn veil, cursor, and easter-egg modules are initialized before the runtime captures them.
-- Reduced runtime churn by updating HUD values once per rendered frame only when they change, quantizing chapter progress to quarter-percent writes, and trailing settings persistence by 150 ms with lifecycle flushes.
-- Added visible World 3 phase timing in compact landscape, a non-overflow 568 by 320 HUD, 48px-minimum coarse-pointer navigation targets, a truthful 64 to 84px touch-size preference, a portrait return-to-menu route, contained modal focus, visible focus handoff, corrected character-selection copy, and non-overlapping mobile modal and settings layouts.
-- Unified the Canvas playfield with the Song-atlas material system through lacquered ink-scroll depth, gilt platform incisions, seal-shaped collectibles, restrained power-up glow, grounded character shadows, balanced player/enemy scale, and carved jade, rose, and gold semantic effects.
-- Added focused pure-logic and Playwright regression coverage for input routing, grounded starts, collection ratings, terminal outcomes, frame pacing, mobile phase HUD, portrait escape, focus, persistence writes, HUD mutation budgets, and real multi-viewport interaction.
-- Updated the offline cache to `nini-yuan-v1.7.0-experience-integrity-r1`, limited cleanup to this app's `nini-yuan-` namespace, and included the new input, gameplay-rule, and fixed-step helpers without changing the public version, chapter set, save schema, dependencies, or base movement tuning.
+- Unified keyboard, touch, pointer, and assistive activation behind source-counted actions. The latest held direction wins, older held directions resume on release, the touch rail supports drag-to-switch movement, and every menu, modal, focus, visibility, and orientation boundary clears gameplay state together.
+- Grounded every chapter start, restored the first jump, separated collection ratings from combat rewards, fixed ammunition and terminal-outcome precedence, rate-limited Moon Sugar feedback, and kept 20 to 60 fps delivery on the tested 120 Hz fixed-step schedule.
+- Moved animation timing into presentation state, added a 120 ms short-tap glide window for Nini, kept airborne turns in jump or fall, tied Yuan's dash pose to `dashDir`, and interpolated player and camera samples without rewinding after hit-stop, portals, or respawns.
+- Rebuilt the menu, journey summary, character comparison, three world tracks, settings, HUD instruments, touch controls, and portrait orientation dialog as one responsive Song-atlas interface. Save schema 3 now persists HUD scale, touch opacity, and screen shake.
+- Added a global live status region and full modal isolation for pause, outcome, orientation, and hidden-letter dialogs. Zoom remains available, targets stay usable on compact phones, and automated Axe scans report no violations across the tested flows.
+- Extended the lacquer, indigo-silk, aged-gold, carved-jade, and rose material system into the Canvas playfield. HUD text and ARIA labels now update only when values change, and settings persistence uses a bounded trailing write.
+- Made all nine store images deterministic and self-validating, rebuilt the local WenKai subsets from the official v1.522 Regular and Medium fonts, bundled their OFL and provenance notice, and removed the unused Fontsource dependency.
+- Bumped the web package to `1.8.0`, Android to `versionCode=18` and `versionName=1.8.0`, and the service-worker cache to `nini-yuan-v1.8.0-song-atlas-overhaul-r1`. Added focused unit and browser coverage for action arbitration, motion state, interpolation, accessibility, five viewport layouts, runtime budgets, store capture, and font packaging.
 
 ## v1.7.0
 
@@ -110,10 +108,10 @@
 - Added one-shot HUD ink-bloom pulses on the character pill and the skill-state pill, fired only when the character name or the cooling state actually flips, via a new `pulseHudPill` helper in `src/render/hud.js` and a 420 ms `hud-pulse` keyframe.
 - Replaced the bossbar's flat 3-stop fill with a slow auroral wash (`bossbar-shimmer`) and added a leading-edge gleam pseudo so chapter progress feels gilded rather than mechanical.
 - Added a chapter-intro orchestration layer: when `.chapter-intro.active` is on, the bossbar and control tips arrive in a coordinated 0 ms / 60 ms / 160 ms stagger via `body:has(.chapter-intro.active) …` rules.
-- Added refined inline-SVG glyph marks above the `跳 / 技 / 弹` touch labels — a star-arrow for jump, an aurora swirl for skill, and a diamond burst for shoot — using mask-image data URLs so no new asset files are introduced; the existing accessibility labels and aria are unchanged.
+- Added refined inline-SVG glyph marks above the `跳 / 技 / 弹` touch labels: a star-arrow for jump, an aurora swirl for skill, and a diamond burst for shoot, using mask-image data URLs so no new asset files are introduced; the existing accessibility labels and aria are unchanged.
 - Added a paper grain (SVG-data-URL `feTurbulence` overlay, ~5 % opacity) and a small gold atlas seal in the lower-right corner of the pause/completion modal, breathing gently via a 9 s `seal-breathe` keyframe.
 - Added gold rune chips and a hairline ribbon notch to the four settings rows via `data-rune` attributes (♪ / ♬ / ◐ / ✦) so the settings panel reads as inked stationery rather than a generic form.
-- Added a sixth hidden Yuan-to-Nini surprise — the **constellation hunt**: clicking all six ambient sparks across both rails within fifteen seconds opens a fourth letter modal and flashes a heart. The hunt is fine-pointer only so the existing five surprises remain the public surface on phones.
+- Added a sixth hidden Yuan-to-Nini surprise, the **constellation hunt**: clicking all six ambient sparks across both rails within fifteen seconds opens a fourth letter modal and flashes a heart. The hunt is fine-pointer only so the existing five surprises remain the public surface on phones.
 - Added a single composite-add gold halo particle on coin and gem pickup bursts and gilded the float-text with a low-alpha italic gold underprint; both are gated by the existing `settings.fx` toggle so the FX off path is preserved.
 - Bumped the web package to `1.2.4`, Android `versionCode` to 7 / `versionName` to `1.2.4`, and the service worker cache to `nini-yuan-v1.2.4-aurora-cartography`. The PWA manifest description is unchanged because the v1.2.3 copy still applies.
 - Reduced-motion contract: every new keyframe is paused under `prefers-reduced-motion: reduce` (compass rotation, aurora sweep, HUD pulse, bossbar shimmer, hero breath, modal seal breathe, spark lit, chapter-intro stagger). Glyph masks remain visible because they carry no animation.

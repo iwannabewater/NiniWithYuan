@@ -4,7 +4,7 @@
 
 The canonical direction is **宋式星图器物幻想**: a quiet night observatory expressed through Song-informed garment construction, astronomical charts, black-indigo lacquer, deep indigo silk, carved jade, aged gilt incision, and shallow relief. The interface should feel made, handled, and inherited rather than rendered from generic fantasy UI parts.
 
-The first screen follows **双璧入卷**. Nini and Yuan appear together as equal leads inside one authored composition; the Xuanji Star Dial supplies the circular axis and the Jade Gui Sword supplies the vertical axis. Ornament is concentrated at the hero frame, signature artifacts, brand seal, and decisive states. Ordinary controls remain quiet.
+The first screen follows **双璧入卷**. Nini and Yuan appear together as equal leads inside one authored composition; the Xuanji Star Dial supplies the circular axis and the Jade Gui Sword supplies the vertical axis. On desktop, brand, actions, and journey context occupy roughly 40 percent of the frame while the paired hero art occupies 60 percent. Ornament is concentrated at the hero frame, signature artifacts, brand seal, and decisive states. Ordinary controls remain quiet.
 
 Three implementation theses govern the work:
 
@@ -60,7 +60,15 @@ Panels use black-indigo lacquer outside and deep indigo silk inside. Depth comes
 
 ### Character presentation
 
-The menu uses one paired composition. Character selection derives two deliberate crops from the same approved direction until production individual portraits are available. Nini keeps purple hair, rose identity, and the Xuanji Star Dial; Yuan keeps deep-blue hair, jade-cyan identity, and the Jade Gui Sword. Both read as fictional adults aged 20 to 24.
+The menu uses one paired composition. Character selection derives two deliberate crops from the same approved direction until production individual portraits are available. Desktop cards are horizontal artifact sheets, with a tall portrait rail beside the name, route description, ability list, and selection action. Narrow portrait layouts turn the sheets into a swipeable row and keep the selected state visible. Nini keeps purple hair, rose identity, and the Xuanji Star Dial; Yuan keeps deep-blue hair, jade-cyan identity, and the Jade Gui Sword. Both read as fictional adults aged 20 to 24.
+
+### Journey and chapter selection
+
+The menu journey strip names the current chapter and shows unlocked progress, selected companion, and collected star dew. Its route line exposes progressbar semantics and the current unlocked count. Chapter selection places each named world beside a five-chapter track. The current chapter receives a distinct material edge and `aria-current="step"`; locked chapters state that the previous chapter must be completed.
+
+### Settings
+
+Settings are grouped into Audio, Display, Touch, and Local Data fieldsets. Range controls show live values for sound effects, music, HUD scale, touch size, and touch opacity. Display toggles control high-frame-rate effects and camera shake. The layout uses two columns on wide screens, three compact groups in coarse-pointer landscape, and one column in portrait.
 
 ### Application icon
 
@@ -68,11 +76,15 @@ Web/PWA and Android launchers use the same close paired portrait of Nini and Yua
 
 ### HUD
 
-Gameplay follows **四角仪轨**. Character seal and health anchor the upper left; resource, ammunition, skill, and pause anchor the upper right; the chapter progress line stays narrow along the top meridian. Information does not form one continuous pill row.
+Gameplay follows **四角仪轨**. Character, health, and status share a grouped instrument at the upper left. Star dew, ammunition, time, skill, and pause share a second instrument at the upper right. Each reading exposes a concise accessible group label, and updates only when its value changes. The chapter progress line stays narrow along the top meridian. Responsive layouts remove secondary readings before skill, pause, health, resources, or the World 3 phase status.
 
 ### Touch controls
 
-Mobile uses **星盘双区**. Direction lives in a low-contrast left star-dial crescent; jump, skill, and shoot use three differentiated jade or lacquer seals on the right. The saved size preference spans 64 to 84 CSS pixels; compact landscape viewports may cap it further to keep controls separated and fully on-screen. Gameplay is landscape-only; portrait menus remain fully usable and portrait gameplay always exposes an in-page return-to-menu action.
+Mobile uses **星盘双区**. Direction lives in a low-contrast left rail that lets one finger slide between left and right. Jump, skill, and shoot use three differentiated jade or lacquer seals on the right. Keyboard, pointer, touch, and assistive activation share the same action state, so aliases can overlap without releasing one another. When opposite directions overlap, the latest active source wins and the earlier held direction resumes after release. The saved size preference spans 64 to 84 CSS pixels, and opacity spans 45 to 100 percent. Compact landscape viewports cap control size while preserving 64px action targets and a clear play band.
+
+### Orientation and modal surfaces
+
+Coarse-pointer portrait gameplay opens an orientation dialog and freezes the simulation. The dialog offers two explicit actions: continue in portrait or return to the menu. Rotating to landscape closes the gate and restores gameplay focus. Pause, completion, failure, orientation, and easter-egg dialogs keep focus inside the active surface, mark other surfaces inert, clear transient gameplay input, and restore focus to the correct destination.
 
 ### Canvas playfield
 
@@ -83,11 +95,12 @@ The playfield uses the same material hierarchy as the DOM instead of a separate 
 - Platforms use indigo, carved-jade, stone, or muted artifact bodies with a thin gilt top incision and shallow engraved ticks.
 - Coins and gems read as small star seals; power-ups keep distinct silhouettes with restrained local glow.
 - Character atlases receive a low aged-gold rim and a grounded contact shadow. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while enemies render at roughly 11 percent or more without changing collision boxes.
+- Character poses and atlas frames use simulation time. The renderer interpolates player and camera samples between 120 Hz updates, then synchronizes those samples after portals, respawns, lifecycle resets, and hit-stop recovery.
 - Hazards retain the strongest warm-danger contrast. Goals and portals use gold, jade, rose, and phase blue as semantic rings rather than a rainbow bloom.
 
 ## 5. Layout Principles
 
-The spacing scale is `4, 8, 12, 16, 24, 32, 48, 64`. Main panels use a 12-column mental grid without shipping grid utilities. Desktop menu allocation is approximately 5 columns for title and actions, 7 for the paired art. Secondary screens favor vertical inscriptions and content-specific layouts rather than interchangeable cards.
+The spacing scale is `4, 8, 12, 16, 24, 32, 48, 64`. Main panels use a 12-column mental grid without shipping grid utilities. Desktop menu allocation is approximately 40 percent for title, actions, and journey state, and 60 percent for the paired art. Secondary screens favor vertical inscriptions and content-specific layouts rather than interchangeable cards.
 
 Radius tokens are:
 
@@ -126,20 +139,22 @@ Do not:
 
 ## 8. Responsive Behavior
 
-- `>= 980px`: two-column menu with full paired composition and horizontal action rail.
-- `680px to 979px`: compact two-column or stacked menu according to available height.
-- `< 680px` portrait: paired art becomes a deliberate upper crop, title and actions follow, all menu surfaces remain scrollable inside safe areas.
+- `> 900px`: two-column menu with the full paired composition, a 40/60 content split, and a primary action above three secondary actions.
+- `<= 900px` with a fine pointer: stacked menu, hidden touch controls, and horizontally scrollable chapter tracks where needed.
+- Coarse-pointer landscape: compact two-column menu, height-bound character sheets, one world track per horizontal snap page, and 64px minimum action controls.
+- `<= 680px` portrait: paired art becomes a deliberate upper crop, title and actions follow, character sheets and chapter tracks scroll horizontally, settings stack, and all menu surfaces remain usable inside safe areas.
 - Mobile character, chapter, and settings screens hide the decorative footer so it never overlays scrollable content; coarse-pointer landscape covers at 340px height or less hide it as well. Chapter-world headings use content-sized rows rather than inheriting chapter-card height.
 - Mobile landscape: compact menu and full gameplay HUD; touch targets remain at least 48px with non-overlapping hit regions.
 - Mobile landscape World 3: the compact `phase-critical` status chip remains visible even when ordinary status pills are hidden.
-- Mobile portrait gameplay: show a crafted rotate-device prompt rather than compressing the level camera, with a 48px-minimum return-to-menu action.
-- Keyboard navigation: screen entry focuses the visible heading with the aged-gold focus treatment, returning restores focus to the originating menu action, gameplay focuses the canvas, and modal entry focuses its first action while Tab remains contained inside the dialog.
+- Mobile portrait gameplay: freeze behind a crafted orientation dialog, then let the player continue in portrait or return to the menu. Both actions remain at least 48px high.
+- Keyboard navigation: screen entry focuses the visible heading with the aged-gold focus treatment, returning restores focus to the originating menu action, gameplay focuses the canvas, and dialog entry focuses its first action while Tab remains contained inside the active surface.
+- Modal isolation: inactive application surfaces become inert until the active dialog closes. Every modal, visibility, focus, and orientation transition clears held actions and pressed edges together.
 
 ## 9. Agent Prompt Guide
 
 Quick palette: lacquer `#0b1016`, raised lacquer `#111821`, indigo silk `#18212d`, raised silk `#202c3a`, moon white `#eee7d5`, aged gold `#c3a468`, carved jade `#6da895`, dusty rose `#b87b86`.
 
-- Hero prompt: “Build a 5/7 desktop split on lacquer `#0b1016`; title at 72px LXGW WenKai 700 in moon white, action controls at 17px with 6px radius and aged-gold trace, paired art fills the right seven columns without generic cards.”
+- Hero prompt: “Build a 40/60 desktop split on lacquer `#0b1016`; title at 72px LXGW WenKai 700 in moon white, action controls at 17px with 6px radius and aged-gold trace, and paired art filling the larger right side without generic cards.”
 - Control prompt: “Create a 52px-high indigo-silk control with 6px radius, 16px LXGW WenKai 700, moon-white text, one inset `rgba(195,164,104,.20)` line, active `scale(.97)`, and a transform/opacity-only gilt trace.”
 - HUD prompt: “Create a corner-instrument HUD on transparent gameplay space; 40px minimum targets, lacquer `rgba(11,16,22,.88)`, 13px tabular figures, aged-gold structure, rose health, jade skill-ready, no continuous top bar.”
-- Mobile prompt: “At 844x390 landscape, preserve safe-area insets, keep gameplay center unobstructed, use a left star-dial control and three right seals at 64 to 84px, and keep the World 3 phase clock visible.”
+- Mobile prompt: “At 844x390 landscape, preserve safe-area insets, keep gameplay center unobstructed, use a sliding left direction rail and three right seals at 64 to 84px, and keep the World 3 phase clock visible.”
