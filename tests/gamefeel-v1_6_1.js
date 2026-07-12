@@ -110,8 +110,9 @@ assert.ok(game.includes("InputState.resetTransientState"), "control reset should
 assert.ok(game.includes("dismissChapterIntro"), "gameplay input should dismiss the chapter intro");
 assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(pkg.version));
 assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(lock.version));
-assert.match(androidManifest, /versionCode="(14|15|16|17|18|19)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/);
+assert.match(androidManifest, /versionCode="(14|15|16|17|18|19|20)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/);
 assert.ok(
+  serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-ui-clarity-r2"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||

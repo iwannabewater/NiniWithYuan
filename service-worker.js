@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1";
+const CACHE = "nini-yuan-v1.9.0-ui-clarity-r2";
 const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",

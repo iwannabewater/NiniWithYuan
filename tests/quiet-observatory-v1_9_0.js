@@ -13,10 +13,10 @@ const manifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "ut
 
 assert.equal(pkg.version, "1.9.0");
 assert.equal(lock.version, "1.9.0");
-assert.match(sw, /nini-yuan-v1\.9\.0-quiet-observatory-r1/);
-assert.match(manifest, /android:versionCode="19"/);
+assert.match(sw, /nini-yuan-v1\.9\.0-ui-clarity-r2/);
+assert.match(manifest, /android:versionCode="20"/);
 assert.match(manifest, /android:versionName="1\.9\.0"/);
-assert.match(html, /星图 · v1\.9\.0 · 多世界章节 · 离线游玩/);
+assert.match(html, /星图 · v1\.9\.0/);
 
 assert.equal(typeof InputState.edgeFromActiveTransition, "function");
 assert.equal(typeof InputState.edgesFromActionCounts, "function");
@@ -105,16 +105,22 @@ assert.ok(!game.includes("player.motionState"), "animation state must stay prese
 
 for (const marker of [
   "v1.9 Quiet Observatory composition boundary",
+  "v1.9 UI clarity milestone",
   "--s-1:",
   "--quiet-veil",
   "--d-screen",
   ".touch-btn.skill.active",
   ".touch-btn.shoot.active",
+  ".portrait-art",
 ]) {
   assert.ok(css.includes(marker), `quiet observatory CSS should include ${marker}`);
 }
 assert.doesNotMatch(css, /transition:\s*all\b/);
 assert.doesNotMatch(css, /backdrop-filter\s*:/);
 assert.match(css, /font-size: calc\(10px \* var\(--hud-scale\)\)|font-size: calc\(12\.5px \* var\(--hud-scale\)\)/);
+assert.ok(game.includes('shadowColor = "transparent"'), "character sprites must not soft-blur through canvas shadow");
+assert.ok(game.includes("never apply canvas shadowBlur to the sprite bitmap"), "sprite draw path should keep the crisp-bitmap rule");
+assert.ok(!/ctx\.shadowBlur = 6 \* scale/.test(game), "sprite draw must not reintroduce soft shadow blur on the bitmap");
+assert.ok(html.includes('class="portrait-art"'), "character select portraits should use crisp img elements");
 
 console.log("quiet-observatory-v1.9.0: input edges, pose blend, version metadata, and quiet UI contracts passed");

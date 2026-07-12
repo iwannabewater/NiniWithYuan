@@ -48,8 +48,8 @@ assert.ok(!adaptive.includes("monochrome"), "Android themed icon must not fall b
 assert.ok(!fs.existsSync("android/app/src/main/res/drawable/ic_launcher_monochrome.xml"), "retired emblem-only launcher resource should be removed");
 assert.equal(pkg.version, "1.9.0");
 assert.equal(lock.version, "1.9.0");
-assert.match(androidManifest, /versionCode="19"[\s\S]*versionName="1\.9\.0"/);
-assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1"'));
+assert.match(androidManifest, /versionCode="20"[\s\S]*versionName="1\.9\.0"/);
+assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-ui-clarity-r2"'));
 assert.ok(html.includes("星图 · v1.9.0"));
 
 console.log("app-icon-v1.9.0: paired-protagonist Web and Android launcher assets passed");

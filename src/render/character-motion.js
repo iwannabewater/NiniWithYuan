@@ -145,24 +145,24 @@
 
     let bob = onGround
       ? stride > 0.18
-        ? -Math.abs(gaitWave) * (1.35 + stride * 2.6)
-        : Math.sin(clock * 2.2) * 0.7
+        ? -Math.abs(gaitWave) * (1.05 + stride * 1.9)
+        : Math.sin(clock * 2.1) * 0.45
       : 0;
-    let lean = forward * (id === "nini" ? 0.068 : 0.082) + gaitWave * stride * 0.014;
-    let scaleX = 1 + stride * 0.028 + gaitPulse * stride * 0.014;
-    let scaleY = 1 - stride * 0.014 - gaitPulse * stride * 0.01;
-    let lift = id === "nini" ? -2 : 0;
+    let lean = forward * (id === "nini" ? 0.05 : 0.062) + gaitWave * stride * 0.01;
+    let scaleX = 1 + stride * 0.018 + gaitPulse * stride * 0.008;
+    let scaleY = 1 - stride * 0.01 - gaitPulse * stride * 0.006;
+    let lift = id === "nini" ? -1 : 0;
 
     if (turning > 0) {
-      lean += Math.sin(turning * Math.PI) * 0.11;
-      scaleX += Math.sin(turning * Math.PI) * 0.05;
-      scaleY -= Math.sin(turning * Math.PI) * 0.04;
+      lean += Math.sin(turning * Math.PI) * 0.08;
+      scaleX += Math.sin(turning * Math.PI) * 0.03;
+      scaleY -= Math.sin(turning * Math.PI) * 0.025;
     }
     if (landing > 0) {
       const settle = Math.sin(landing * Math.PI);
-      bob += settle * 5.5;
-      scaleX += settle * 0.09;
-      scaleY -= settle * 0.1;
+      bob += settle * 3.8;
+      scaleX += settle * 0.055;
+      scaleY -= settle * 0.065;
     }
     if (!onGround && vy < -120) {
       scaleX -= 0.035;

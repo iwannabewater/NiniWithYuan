@@ -91,6 +91,7 @@ async function verifyCacheIsolation() {
         "nini-yuan-v1.7.0-experience-integrity-r1",
         "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
         "nini-yuan-v1.9.0-quiet-observatory-r1",
+        "nini-yuan-v1.9.0-ui-clarity-r2",
         "other-game-offline-v8",
         "shared-font-cache-v2",
       ],
@@ -124,13 +125,14 @@ async function verifyCacheIsolation() {
     "nini-yuan-v1.6.3-forward-idle",
     "nini-yuan-v1.7.0-experience-integrity-r1",
     "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
+    "nini-yuan-v1.9.0-quiet-observatory-r1",
   ]);
 
   let response;
   const request = { method: "GET", url: "https://example.test/styles.css" };
   listeners.fetch({ request, respondWith(promise) { response = promise; } });
   assert.deepEqual(await response, { source: "current-app-cache" });
-  assert.deepEqual(opened, ["nini-yuan-v1.9.0-quiet-observatory-r1"]);
+  assert.deepEqual(opened, ["nini-yuan-v1.9.0-ui-clarity-r2"]);
   assert.deepEqual(matched, [request.url]);
 }
 

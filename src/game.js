@@ -2274,9 +2274,9 @@
     const renderX = Number(renderPosition?.x) || 0;
     const renderY = Number(renderPosition?.y) || 0;
     ctx.save();
-    ctx.globalAlpha = player.onGround ? 0.3 : 0.16;
-    ctx.fillStyle = CANVAS_MATERIAL.lacquer;
-    ellipse(renderX + player.w / 2, renderY + player.h + 3, player.w * 0.86, player.onGround ? 5 : 3.5, 0);
+    ctx.globalAlpha = player.onGround ? 0.38 : 0.18;
+    ctx.fillStyle = "rgba(4, 8, 14, 0.72)";
+    ellipse(renderX + player.w / 2, renderY + player.h + 2, player.w * 0.92, player.onGround ? 6 : 3.8, 0);
     ctx.restore();
     if (player.invuln > 0 && Math.floor(player.invuln * 16) % 2 === 0) return;
     if (player.superInvuln > 0) {
@@ -2289,8 +2289,8 @@
       ctx.stroke();
       ctx.restore();
     }
-    const authoredHeight = save.selected === "nini" ? 238 : 232;
-    const defaultScale = 0.78 * (player.h / player.baseH);
+    const authoredHeight = save.selected === "nini" ? 248 : 242;
+    const defaultScale = 0.9 * (player.h / player.baseH);
     const maxViewportShare = player.bigTimer > 0 ? 0.4 : 0.34;
     const responsiveScale = view.isMobileLandscape ? (view.h * maxViewportShare) / authoredHeight : defaultScale;
     const artScale = Math.min(defaultScale, responsiveScale);
@@ -2370,11 +2370,10 @@
     ctx.scale(facing * scale, scale);
     const bob = Math.sin(sceneTime() * 8.3) * 1.2;
     ctx.translate(0, bob);
-    ctx.shadowColor = "rgba(195,164,104,.26)";
-    ctx.shadowBlur = 6;
-    ctx.fillStyle = "rgba(0,0,0,.22)";
-    ellipse(0, 4, 28, 7, 0);
+    ctx.shadowColor = "transparent";
     ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(0,0,0,.28)";
+    ellipse(0, 4, 28, 7, 0);
 
     ctx.strokeStyle = id === "nini" ? "#4b2d62" : "#203963";
     ctx.lineWidth = 8;
@@ -2487,32 +2486,40 @@
       leanScale: 1,
       artifactScale: facing,
     };
-    const targetH = (id === "nini" ? 238 : 232) * scale;
-    const targetW = targetH * (image.naturalWidth / image.naturalHeight);
+    const frameAspect = Math.max(0.25, (sourceFrame.sw || 1) / Math.max(1, sourceFrame.sh || 1));
+    const targetH = (id === "nini" ? 248 : 242) * scale;
+    const targetW = targetH * frameAspect;
     const bob = (motion?.bob || 0) * scale;
     const lean = motion?.lean || 0;
     const stretchX = motion?.scaleX || 1;
     const stretchY = motion?.scaleY || 1;
-    const lift = targetH * (id === "nini" ? 0.045 : 0.03) + (motion?.lift || 0) * scale;
+    const lift = targetH * (id === "nini" ? 0.03 : 0.02) + (motion?.lift || 0) * scale;
+    const quantum = 1 / Math.max(1, view.dpr || 1);
+    const align = (value) => Math.round(Number(value) / quantum) * quantum;
     ctx.save();
-    ctx.translate(x, y + lift + bob);
+    ctx.translate(align(x), align(y + lift + bob));
     ctx.scale(orientation.frameScaleX, 1);
     ctx.rotate(lean * orientation.leanScale);
     ctx.scale(stretchX, stretchY);
-    ctx.shadowColor = "rgba(195,164,104,.32)";
-    ctx.shadowBlur = 6 * scale;
+    // Keep the silhouette crisp: never apply canvas shadowBlur to the sprite bitmap.
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
     drawMovementTrace(id, motion, targetW, targetH, scale);
     drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale, simulationTime, motionElapsed);
+    const destW = align(targetW);
+    const destH = align(targetH);
     ctx.drawImage(
       image,
       sourceFrame.sx,
       sourceFrame.sy,
       sourceFrame.sw,
       sourceFrame.sh,
-      -targetW / 2,
-      -targetH,
-      targetW,
-      targetH
+      -destW / 2,
+      -destH,
+      destW,
+      destH
     );
     ctx.restore();
     return true;
