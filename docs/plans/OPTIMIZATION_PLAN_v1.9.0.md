@@ -80,11 +80,9 @@ Polish the existing Song-atlas interface and character presentation so hierarchy
 
 ## Completion notes
 
-- `npm test` and `node tests/browser-smoke.js` passed on 2026-07-12.
-- PR #15 merged to `main`; feature branch removed on remote.
-- Annotated tag `v1.9.0` and GitHub release publish `dist/NiniYuan.apk`.
-- APK badging reports package `com.iwannabewater.niniyuan`, `versionCode=19`, `versionName=1.9.0`, `minSdkVersion=23`, and `targetSdkVersion=36`. Signature schemes v1, v2, and v3 verify.
-- APK SHA-256: `7370144e970966fc6983fc6e8008e3bdadf7bc3ae680df98f7fe3a22579dc02e`.
+- UI clarity follow-up (same product version): crisp character bitmaps without sprite `shadowBlur`, separate ground contact shadow, sharper character-select portraits, higher-contrast HUD instruments.
+- Service-worker cache `nini-yuan-v1.9.0-ui-clarity-r2`; Android `versionCode=20` with `versionName=1.9.0`.
+- Verification commands and packaging notes are refreshed with each v1.9.0 re-release.
 
 ## Release boundaries
 

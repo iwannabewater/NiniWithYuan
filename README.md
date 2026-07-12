@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 continues the Song-atlas Night Observatory direction with quieter ornament, clearer control feedback, multi-source input fairness, and simulation-timed character motion with presentation pose blending. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 continues the Song-atlas Night Observatory direction with sharper in-game character rendering, clearer character-select portraits, quieter ornament, multi-source input fairness, and simulation-timed motion with presentation pose blending. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
 
 ## Gameplay
 

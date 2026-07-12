@@ -94,7 +94,7 @@ The playfield uses the same material hierarchy as the DOM instead of a separate 
 - Parallax scenery is drawn as continuous ink-scroll bands with sparse aged-gold chart lines, not repeated triangle mountains or bright cloud ovals.
 - Platforms use indigo, carved-jade, stone, or muted artifact bodies with a thin gilt top incision and shallow engraved ticks.
 - Coins and gems read as small star seals; power-ups keep distinct silhouettes with restrained local glow.
-- Character atlases receive a low aged-gold rim and a grounded contact shadow. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while enemies render at roughly 11 percent or more without changing collision boxes.
+- Character atlases render as crisp bitmaps without canvas `shadowBlur` on the sprite itself. Contact shadow is a separate ground ellipse under the feet. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while enemies render at roughly 11 percent or more without changing collision boxes.
 - Character poses and atlas frames use simulation time. The renderer interpolates player and camera samples between 120 Hz updates, then synchronizes those samples after portals, respawns, lifecycle resets, and hit-stop recovery.
 - Hazards retain the strongest warm-danger contrast. Goals and portals use gold, jade, rose, and phase blue as semantic rings rather than a rainbow bloom.
 

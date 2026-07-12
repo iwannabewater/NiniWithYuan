@@ -2,11 +2,13 @@
 
 ## v1.9.0
 
-- Reduced ambient ornament weight, replaced the multi-color brand undertrace with a single aged-gold line, shortened screen and modal entry motion, and tightened corner instruments so hierarchy remains readable before decoration. Song-atlas lacquer, silk, gold, jade, and rose materials are unchanged.
-- Blended presentation bob, lean, stretch, and lift between fixed-step poses for cleaner movement at variable frame rates. Hurt, skill, and land entries still snap. Display state does not write into player entities, saves, or terminal outcomes.
+- Restored character silhouette clarity by removing canvas `shadowBlur` from sprite bitmaps, drawing a separate ground contact shadow, aligning destination rects to the device-pixel quantum, and raising desktop presentation scale within the existing 34% mobile height budget.
+- Rebuilt character-select portraits as crisp `img` crops with controlled object-position instead of soft CSS background scaling.
+- Reduced ambient ornament weight, replaced the multi-color brand undertrace with a single aged-gold line, shortened screen and modal entry motion, and raised HUD instrument contrast so hierarchy remains readable before decoration.
+- Blended presentation bob, lean, stretch, and lift between fixed-step poses with restrained squash so movement stays clean at variable frame rates. Hurt, skill, and land entries still snap. Display state does not write into player entities, saves, or terminal outcomes.
 - Extracted pure input edge helpers and landing-readability rules. Multi-source arbitration, latest-direction fallback, coyote time, jump buffer, and glide intent remain under the same contracts and stay unit-tested.
-- Added clearer pressed edges on touch seals by action: gilt on the direction rail, jade on skill, rose on shoot. Existing press scale is retained.
-- Bumped the web package to `1.9.0`, Android to `versionCode=19` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-quiet-observatory-r1`. Added focused coverage for edge math, pose blend, composition CSS markers, and release metadata.
+- Added clearer pressed edges on touch seals by action: gilt on the direction rail, jade on skill, rose on shoot.
+- Bumped the web package to `1.9.0`, Android to `versionCode=20` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-ui-clarity-r2`.
 
 ## v1.8.0
 

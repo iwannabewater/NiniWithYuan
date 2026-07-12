@@ -1200,7 +1200,8 @@
     height: 100%;
     object-fit: cover;
     object-position: 50% 0%;
-    transform: translate3d(calc(var(--mx, 0) * -4px), calc(var(--my, 0) * -3px), 0) scale(1.025);
+    image-rendering: auto;
+    transform: translate3d(calc(var(--mx, 0) * -4px), calc(var(--my, 0) * -3px), 0) scale(1.02);
     transition: transform var(--d-slow) var(--ease-out);
     outline: 1px solid rgba(238, 231, 213, 0.10);
     outline-offset: -1px;
@@ -1446,8 +1447,7 @@
     height: 240px;
     margin-bottom: 18px;
     border-radius: var(--r-m);
-    background-size: 100% 100%;
-    background-position: center;
+    background: var(--c-indigo-silk);
     box-shadow:
       inset 0 0 0 1px rgba(245, 242, 234, 0.14),
       inset 0 1px rgba(255, 255, 255, 0.10),
@@ -1455,26 +1455,42 @@
     overflow: hidden;
   }
 
+  .portrait-art {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: auto;
+    -webkit-user-drag: none;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .portrait.nini .portrait-art {
+    object-position: 16% 12%;
+    transform: scale(1.08);
+    transform-origin: 30% 18%;
+  }
+
+  .portrait.yuan .portrait-art {
+    object-position: 84% 6%;
+    transform: scale(1.08);
+    transform-origin: 72% 12%;
+  }
+
   .portrait::after {
     content: "";
     position: absolute;
     inset: 0;
+    z-index: 1;
     border-radius: inherit;
     pointer-events: none;
     background:
-      linear-gradient(180deg, transparent 60%, rgba(7, 11, 24, 0.55) 100%);
-  }
-
-  .portrait.nini {
-    background:
-      url("./assets/characters/concepts/nini-yuan-song-atlas-v1.png") 18% 18% / 205% auto no-repeat,
-      var(--c-indigo-silk);
-  }
-
-  .portrait.yuan {
-    background:
-      url("./assets/characters/concepts/nini-yuan-song-atlas-v1.png") 82% 4% / 205% auto no-repeat,
-      var(--c-indigo-silk);
+      linear-gradient(180deg, transparent 52%, rgba(7, 11, 24, 0.42) 100%),
+      linear-gradient(90deg, rgba(11, 16, 22, 0.18), transparent 18%, transparent 82%, rgba(11, 16, 22, 0.18));
+    box-shadow: inset 0 0 0 1px rgba(195, 164, 104, 0.16);
   }
 
   .ability-list {
@@ -5236,6 +5252,209 @@
     .screen.active,
     .modal-card {
       animation: none !important;
+    }
+  }
+}
+
+/* ============================================================================
+   v1.9 UI clarity milestone
+   Sharp character presentation, higher-contrast instruments, calmer overlays.
+   Does not change collision geometry or input contracts.
+   ============================================================================ */
+
+@layer component {
+  .menu-heroes {
+    box-shadow:
+      inset 0 0 0 1px rgba(195, 164, 104, 0.28),
+      inset 0 0 0 10px rgba(11, 16, 22, 0.22),
+      0 28px 64px rgba(0, 0, 0, 0.34);
+  }
+
+  .menu-heroes::before {
+    background:
+      linear-gradient(180deg, rgba(11, 16, 22, 0.02), rgba(11, 16, 22, 0.48)),
+      radial-gradient(ellipse 46% 28% at 28% 52%, rgba(184, 123, 134, 0.10), transparent 74%),
+      radial-gradient(ellipse 46% 28% at 74% 54%, rgba(109, 168, 149, 0.10), transparent 74%);
+  }
+
+  .brand h1 {
+    letter-spacing: 0.008em;
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.28),
+      0 14px 36px rgba(0, 0, 0, 0.24);
+  }
+
+  .brand p {
+    max-width: 28ch;
+    color: var(--ink-soft);
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .menu-actions .primary {
+    height: 58px;
+    letter-spacing: 0.05em;
+    box-shadow:
+      inset 0 1px rgba(246, 240, 223, 0.5),
+      inset 0 -1px rgba(94, 75, 45, 0.4),
+      0 14px 30px rgba(195, 164, 104, 0.18);
+  }
+
+  .save-strip {
+    background: rgba(11, 16, 22, 0.68);
+    box-shadow:
+      inset 3px 0 var(--c-aged-gold),
+      inset 0 0 0 1px rgba(238, 231, 213, 0.14);
+  }
+
+  .journey-title {
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+
+  .hud-corner {
+    background: rgba(8, 12, 18, 0.9);
+    box-shadow:
+      inset 0 0 0 1px rgba(238, 231, 213, 0.16),
+      0 10px 22px rgba(0, 0, 0, 0.28);
+  }
+
+  .hud-pill,
+  .hud-button {
+    color: var(--ink);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .hud-pill.character {
+    color: var(--c-lacquer);
+    background: linear-gradient(180deg, #d4b57a, var(--c-aged-gold));
+    box-shadow:
+      inset 0 1px rgba(255, 250, 220, 0.55),
+      inset 3px 0 rgba(94, 75, 45, 0.35),
+      inset -1px -1px rgba(238, 231, 213, 0.08);
+  }
+
+  .hud-pill.hearts {
+    color: #f0c4cb;
+  }
+
+  .hud-pill.status {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  .hud-pill.skill-state {
+    color: #b7d8cb;
+    box-shadow: inset 0 -2px var(--c-carved-jade);
+  }
+
+  .hud-icon {
+    color: var(--c-gold-200);
+    text-shadow: none;
+    border-color: rgba(195, 164, 104, 0.36);
+  }
+
+  .bossbar {
+    height: 3px;
+    background: rgba(238, 231, 213, 0.12);
+    box-shadow: inset 0 0 0 1px rgba(195, 164, 104, 0.16);
+  }
+
+  .chapter-intro {
+    padding: 16px 18px 14px;
+    border-radius: var(--r-control);
+    background: rgba(11, 16, 22, 0.88);
+    box-shadow:
+      inset 3px 0 var(--c-aged-gold),
+      inset 0 0 0 1px rgba(238, 231, 213, 0.14),
+      0 18px 42px rgba(0, 0, 0, 0.32);
+  }
+
+  .chapter-intro strong {
+    letter-spacing: 0.02em;
+  }
+
+  .control-tips {
+    background: rgba(8, 12, 18, 0.72);
+    box-shadow: inset 0 0 0 1px rgba(238, 231, 213, 0.12);
+  }
+
+  .control-tips span {
+    color: var(--ink-soft);
+    font-weight: 500;
+  }
+
+  .character-card .portrait {
+    background: var(--c-lacquer-raised);
+  }
+
+  .character-card .portrait-art {
+    filter: none;
+  }
+
+  .character-card h3 {
+    letter-spacing: 0.03em;
+  }
+
+  .level-item {
+    transition-property: transform, box-shadow, background-color, opacity;
+    transition-duration: var(--d-fast);
+    transition-timing-function: var(--ease-out);
+  }
+
+  .level-item.featured {
+    box-shadow:
+      inset 0 -2px var(--c-aged-gold),
+      inset 0 0 0 1px rgba(195, 164, 104, 0.42),
+      0 12px 28px rgba(0, 0, 0, 0.22);
+  }
+
+  .touch-left {
+    background: linear-gradient(180deg, rgba(11, 16, 22, 0.08) 40%, rgba(11, 16, 22, 0.62));
+    box-shadow: inset 0 0 0 1px rgba(195, 164, 104, 0.22), inset 0 -1px rgba(195, 164, 104, 0.34);
+  }
+
+  .touch-right .touch-btn {
+    box-shadow:
+      inset 0 0 0 1px rgba(238, 231, 213, 0.36),
+      0 8px 18px rgba(0, 0, 0, 0.24);
+  }
+
+  .touch-btn.jump {
+    background:
+      linear-gradient(180deg, rgba(238, 231, 213, 0.12), transparent 55%),
+      rgba(24, 33, 45, 0.88);
+  }
+
+  .touch-btn.skill {
+    background:
+      linear-gradient(180deg, rgba(109, 168, 149, 0.22), transparent 55%),
+      rgba(17, 28, 26, 0.9);
+  }
+
+  .touch-btn.shoot {
+    background:
+      linear-gradient(180deg, rgba(184, 123, 134, 0.22), transparent 55%),
+      rgba(28, 18, 22, 0.9);
+  }
+
+  .modal-card {
+    box-shadow:
+      inset 0 0 0 1px rgba(238, 231, 213, 0.14),
+      0 32px 72px rgba(0, 0, 0, 0.5);
+  }
+
+  #game {
+    image-rendering: auto;
+  }
+}
+
+@layer a11y {
+  @media (prefers-reduced-motion: reduce) {
+    .portrait.nini .portrait-art,
+    .portrait.yuan .portrait-art {
+      transform: none;
     }
   }
 }
