@@ -1,6 +1,6 @@
 # Android Testing
 
-The Android app is a landscape WebView wrapper around the same local assets used by the browser build. A v1.8.0 release is ready only after the repository checks, APK inspection, and device review below have passed on the release commit.
+The Android app is a landscape WebView wrapper around the same local assets used by the browser build. A v1.9.0 release is ready only after the repository checks, APK inspection, and device review below have passed on the release commit.
 
 ## Build Prerequisites
 
@@ -60,7 +60,7 @@ Set the build-tools path once:
 BUILD_TOOLS="${ANDROID_HOME:-$HOME/Android}/build-tools/36.0.0"
 ```
 
-Badging for v1.8.0 must report package `com.iwannabewater.niniyuan`, `versionCode=18`, `versionName=1.8.0`, `minSdkVersion=23`, and `targetSdkVersion=36`:
+Badging for v1.9.0 must report package `com.iwannabewater.niniyuan`, `versionCode=19`, `versionName=1.9.0`, `minSdkVersion=23`, and `targetSdkVersion=36`:
 
 ```bash
 "$BUILD_TOOLS/aapt" dump badging dist/NiniYuan.apk

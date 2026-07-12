@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.0
+
+- Quiet Observatory polish: lower ambient ornament weight, single aged-gold brand undertrace, calmer screen and modal entry, and denser but non-overlapping corner instruments while preserving Song-atlas materials.
+- Presentation pose blending for bob, lean, stretch, and lift samples simulation state without writing display data into player entities, saves, or terminal outcomes. Discrete hurt, skill, and land entries still snap.
+- Pure input edge helpers and landing-readability rules keep multi-source arbitration, latest-direction fallback, coyote, jump buffer, and glide-intent contracts testable and unchanged.
+- Touch seals gain clearer active edges by action (direction rail gilt, skill jade, shoot rose) with press scale retained.
+- Bumped the web package to `1.9.0`, Android to `versionCode=19` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-quiet-observatory-r1`. Added focused coverage for edge math, pose blend, quiet CSS markers, and release metadata.
+
 ## v1.8.0
 
 - Unified keyboard, touch, pointer, and assistive activation behind source-counted actions. The latest held direction wins, older held directions resume on release, the touch rail supports drag-to-switch movement, and every menu, modal, focus, visibility, and orientation boundary clears gameplay state together.

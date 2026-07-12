@@ -98,4 +98,15 @@ const strideA = resolve("nini", { vx: 320, gaitPhase: 0 });
 const strideB = resolve("nini", { vx: 320, gaitPhase: Math.PI / 2 });
 assert.notEqual(strideA.bob, strideB.bob, "run motion should follow the distance-driven gait phase");
 
+assert.equal(Motion.shouldHoldLandingPose(0.12, 1), true);
+assert.equal(Motion.shouldHoldLandingPose(0.05, 0.8), false);
+const blended = Motion.blendMotionPose(
+  { bob: 0, lean: 0, scaleX: 1, scaleY: 1, lift: 0, stride: 0, forward: 0, animation: "idle" },
+  { bob: 4, lean: 0.2, scaleX: 1.1, scaleY: 0.9, lift: -4, stride: 1, forward: 1, animation: "run" },
+  0.5,
+);
+assert.ok(blended.bob > 0 && blended.bob < 4);
+assert.equal(blended.animation, "run");
+assert.equal(Motion.blendMotionPose(null, { bob: 3, lean: 0.1, scaleX: 1.02, scaleY: 0.98, lift: 0 }, 0, { snap: true }).bob, 3);
+
 console.log("character-motion: directional states and expressive pose profiles passed");

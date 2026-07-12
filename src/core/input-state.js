@@ -55,6 +55,27 @@
     return ACTION_BY_KEY_CODE[code] || null;
   }
 
+  function edgeFromActiveTransition(wasActive, isActive) {
+    const previous = !!wasActive;
+    const next = !!isActive;
+    return {
+      pressed: !previous && next,
+      released: previous && !next,
+      active: next,
+    };
+  }
+
+  function edgesFromActionCounts(previousCounts = {}, nextCounts = {}, actions = DEFAULT_POINTER_ACTIONS) {
+    const list = Array.isArray(actions) ? actions : DEFAULT_POINTER_ACTIONS;
+    const edges = Object.create(null);
+    for (const action of list) {
+      const was = Math.max(0, Number(previousCounts?.[action]) || 0) > 0;
+      const is = Math.max(0, Number(nextCounts?.[action]) || 0) > 0;
+      edges[action] = edgeFromActiveTransition(was, is);
+    }
+    return edges;
+  }
+
   function createTransientState() {
     return {
       keys: Object.create(null),
@@ -225,6 +246,8 @@
     isGameplayKeyCode,
     actionForGameplayCode,
     isGameplayKeyEvent,
+    edgeFromActiveTransition,
+    edgesFromActionCounts,
     createTransientState,
     resetTransientState,
     createActionPointerState,

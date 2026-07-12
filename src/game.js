@@ -94,6 +94,9 @@
     snapPlayer: false,
     snapCamera: false,
     motionState: { name: "idle", enteredAt: 0 },
+    resolvedMotionPose: null,
+    displayMotionPose: null,
+    snapMotionPose: true,
   };
   let renderAlpha = 1;
   let particles = [];
@@ -1837,6 +1840,9 @@
     presentation.snapPlayer = false;
     presentation.snapCamera = false;
     presentation.motionState = { name: "idle", enteredAt: player?.elapsed || 0 };
+    presentation.resolvedMotionPose = null;
+    presentation.displayMotionPose = null;
+    presentation.snapMotionPose = true;
     renderAlpha = 1;
   }
 
@@ -1860,6 +1866,7 @@
 
   function requestPresentationSnap(includeCamera = false) {
     presentation.snapPlayer = true;
+    presentation.snapMotionPose = true;
     if (includeCamera) presentation.snapCamera = true;
   }
 
@@ -2308,20 +2315,45 @@
       gaitPhase: player.gaitPhase,
       simulationTime,
     };
-    const motion = CharacterMotion?.resolveCharacterMotion?.({
+    const resolvedMotion = CharacterMotion?.resolveCharacterMotion?.({
       id: save.selected,
       facing: motionFacing,
       speed: characters[save.selected].speed,
       now: simulationTime * 1000,
       ...pose,
     });
-    const animationName = motion?.animation || characterAnimName(save.selected, pose);
+    const animationName = resolvedMotion?.animation || characterAnimName(save.selected, pose);
+    const previousAnimation = presentation.motionState?.name;
     presentation.motionState = CharacterMotion?.advanceAnimationState?.(
       presentation.motionState,
       animationName,
       simulationTime,
     ) || presentation.motionState;
     const motionElapsed = CharacterMotion?.animationElapsed?.(presentation.motionState, simulationTime) || 0;
+    const discretePoseJump =
+      previousAnimation !== animationName &&
+      (/^hurt_|^skill_|^land_/.test(animationName) || /^hurt_|^skill_/.test(previousAnimation || ""));
+    if (presentation.snapMotionPose || discretePoseJump || !presentation.resolvedMotionPose) {
+      presentation.displayMotionPose = resolvedMotion || CharacterMotion?.emptyMotionPose?.() || null;
+      presentation.snapMotionPose = false;
+    } else {
+      presentation.displayMotionPose = CharacterMotion?.blendMotionPose?.(
+        presentation.resolvedMotionPose,
+        resolvedMotion,
+        0.72,
+      ) || resolvedMotion;
+    }
+    presentation.resolvedMotionPose = resolvedMotion || null;
+    const motion = {
+      ...(resolvedMotion || {}),
+      ...(presentation.displayMotionPose || {}),
+      animation: animationName,
+      artifact: resolvedMotion?.artifact,
+      direction: resolvedMotion?.direction,
+      gaitWave: resolvedMotion?.gaitWave,
+      stride: resolvedMotion?.stride,
+      forward: resolvedMotion?.forward,
+    };
     drawCharacterArt(save.selected, renderX + player.w / 2, renderY + player.h, motionFacing, artScale, {
       ...pose,
       motion,

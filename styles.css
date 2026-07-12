@@ -4894,3 +4894,348 @@
     }
   }
 }
+
+/* ============================================================================
+   v1.9 Quiet Observatory composition boundary
+   Layers KAMI-informed restraint on the Song-atlas instrument system:
+   quieter ambient weight, single-accent brand undertrace, calmer structural
+   motion, clearer primary action and touch press seals. Gameplay geometry and
+   input contracts remain outside this block.
+   ============================================================================ */
+
+@layer tokens {
+  :root {
+    --s-1: 4px;
+    --s-2: 8px;
+    --s-3: 12px;
+    --s-4: 16px;
+    --s-5: 24px;
+    --s-6: 32px;
+    --s-7: 48px;
+    --s-8: 64px;
+    --d-screen: 360ms;
+    --quiet-veil: rgba(11, 16, 22, 0.58);
+    --quiet-line: rgba(195, 164, 104, 0.20);
+    --quiet-line-strong: rgba(195, 164, 104, 0.38);
+  }
+}
+
+@layer surface {
+  .panel {
+    background:
+      linear-gradient(180deg, rgba(238, 231, 213, 0.05) 0 1px, transparent 1px 100%),
+      radial-gradient(ellipse 88% 52% at 50% -18%, rgba(195, 164, 104, 0.10), transparent 62%),
+      linear-gradient(160deg, rgba(17, 24, 33, 0.96), rgba(11, 16, 22, 0.99) 62%, rgba(11, 16, 22, 1)),
+      var(--c-lacquer-raised);
+    box-shadow:
+      inset 0 0 0 1px var(--quiet-line),
+      inset 0 1px rgba(238, 231, 213, 0.10),
+      0 36px 88px rgba(0, 0, 0, 0.48);
+  }
+
+  .panel::before {
+    inset: 14px;
+    background:
+      linear-gradient(90deg, transparent, rgba(195, 164, 104, 0.28), transparent) top left / 100% 1px no-repeat,
+      linear-gradient(90deg, transparent, rgba(195, 164, 104, 0.16), transparent) bottom left / 100% 1px no-repeat,
+      linear-gradient(0deg, transparent, rgba(195, 164, 104, 0.14), transparent) top left / 1px 100% no-repeat,
+      linear-gradient(0deg, transparent, rgba(195, 164, 104, 0.14), transparent) top right / 1px 100% no-repeat;
+    opacity: 0.82;
+  }
+
+  .screen.active {
+    animation: screen-enter var(--d-screen) var(--ease-out) both;
+  }
+}
+
+@layer type {
+  .brand::after {
+    height: 3px;
+    bottom: -6px;
+    background: linear-gradient(90deg, transparent, rgba(195, 164, 104, 0.55) 18%, rgba(195, 164, 104, 0.72) 50%, rgba(195, 164, 104, 0.42) 78%, transparent);
+    filter: none;
+    opacity: 0;
+    animation: aurora-sweep 900ms var(--ease-out) 160ms forwards;
+  }
+
+  .brand h1 {
+    text-shadow:
+      0 1px 0 rgba(0, 0, 0, 0.22),
+      0 18px 48px rgba(0, 0, 0, 0.28);
+  }
+}
+
+@layer component {
+  body::before {
+    opacity: 0.16;
+  }
+
+  body::after {
+    opacity: 0.42;
+  }
+
+  .ambient-rune {
+    opacity: 0.42;
+    text-shadow: none;
+  }
+
+  .ambient-spark {
+    box-shadow: 0 0 6px rgba(195, 164, 104, 0.35);
+  }
+
+  .ambient-spark-2,
+  .ambient-spark-3 {
+    box-shadow: 0 0 6px rgba(195, 164, 104, 0.28);
+  }
+
+  .ambient-constellation {
+    opacity: 0.42;
+    animation: none;
+  }
+
+  .ambient-strip {
+    letter-spacing: 0.12em;
+    background: linear-gradient(180deg, transparent 0%, rgba(11, 16, 22, 0.38) 72%, rgba(11, 16, 22, 0.62) 100%);
+  }
+
+  .ambient-strip-mark {
+    text-shadow: none;
+    animation: none;
+  }
+
+  .cursor-spark {
+    mix-blend-mode: normal;
+    box-shadow:
+      0 0 1px rgba(238, 231, 213, 0.7),
+      0 0 10px rgba(195, 164, 104, 0.28);
+  }
+
+  button {
+    box-shadow:
+      inset 0 1px rgba(238, 231, 213, 0.07),
+      inset 0 0 0 1px var(--quiet-line),
+      0 10px 22px rgba(0, 0, 0, 0.20);
+  }
+
+  button:active {
+    transform: translateY(1px) scale(0.97);
+  }
+
+  button.primary {
+    box-shadow:
+      inset 0 1px rgba(246, 240, 223, 0.42),
+      inset 0 -1px rgba(94, 75, 45, 0.42),
+      0 12px 28px rgba(195, 164, 104, 0.16);
+  }
+
+  .skip-link {
+    transition: transform var(--d-fast) var(--ease-out);
+  }
+
+  .menu-actions {
+    gap: var(--s-2);
+  }
+
+  .menu-actions .primary {
+    height: 56px;
+    letter-spacing: 0.04em;
+  }
+
+  .menu-actions button:not(.primary) {
+    height: 46px;
+    color: var(--ink-soft);
+  }
+
+  .save-strip {
+    gap: var(--s-2) var(--s-4);
+    padding: var(--s-3) var(--s-4) 10px 18px;
+    background: var(--quiet-veil);
+  }
+
+  .journey-route {
+    height: 4px;
+  }
+
+  .journey-route > span {
+    background: linear-gradient(90deg, var(--c-aged-gold-deep), var(--c-aged-gold));
+  }
+
+  .character-card {
+    background:
+      linear-gradient(115deg, rgba(195, 164, 104, 0.05), transparent 46%),
+      rgba(11, 16, 22, 0.68);
+    box-shadow:
+      inset 0 0 0 1px rgba(238, 231, 213, 0.10),
+      0 16px 36px rgba(0, 0, 0, 0.22);
+  }
+
+  .character-card.selected,
+  .character-card:focus-within {
+    box-shadow:
+      inset 3px 0 var(--c-aged-gold),
+      inset 0 0 0 1px var(--quiet-line-strong),
+      0 18px 40px rgba(0, 0, 0, 0.26);
+  }
+
+  .character-card[data-character="nini"].selected {
+    box-shadow: inset 3px 0 var(--c-dusty-rose), inset 0 0 0 1px var(--quiet-line-strong), 0 18px 40px rgba(0, 0, 0, 0.26);
+  }
+
+  .character-card[data-character="yuan"].selected {
+    box-shadow: inset 3px 0 var(--c-carved-jade), inset 0 0 0 1px var(--quiet-line-strong), 0 18px 40px rgba(0, 0, 0, 0.26);
+  }
+
+  .character-card.selected::before {
+    border-radius: var(--r-control);
+    background: var(--c-aged-gold);
+    box-shadow: none;
+  }
+
+  .level-item.featured {
+    box-shadow: inset 0 -2px var(--c-aged-gold), inset 0 0 0 1px var(--quiet-line-strong);
+  }
+
+  .hud-corner {
+    background: rgba(11, 16, 22, 0.86);
+    box-shadow:
+      inset 0 0 0 1px rgba(238, 231, 213, 0.12),
+      0 8px 18px rgba(0, 0, 0, 0.22);
+  }
+
+  .hud-pill,
+  .hud-button {
+    min-height: calc(32px * var(--hud-scale));
+    padding: calc(5px * var(--hud-scale)) calc(9px * var(--hud-scale));
+    font-size: calc(12.5px * var(--hud-scale));
+  }
+
+  .hud-pill.character {
+    background: rgba(195, 164, 104, 0.08);
+  }
+
+  .hud-pill.skill-state {
+    box-shadow: inset 0 -2px var(--c-carved-jade);
+  }
+
+  .hud-pill.skill-state.cooling {
+    box-shadow: inset 0 -2px var(--c-aged-gold-deep);
+  }
+
+  .bossbar {
+    height: 3px;
+    width: min(280px, 30vw);
+  }
+
+  .bossbar span {
+    background: linear-gradient(90deg, var(--c-aged-gold-deep), var(--c-aged-gold));
+  }
+
+  .control-tips {
+    padding: 5px 8px;
+    background: rgba(11, 16, 22, 0.62);
+  }
+
+  .control-tips span {
+    font-size: 10.5px;
+    letter-spacing: 0.02em;
+  }
+
+  .modal-card {
+    background:
+      linear-gradient(118deg, rgba(195, 164, 104, 0.06), transparent 44%),
+      rgba(17, 24, 33, 0.985);
+    animation: modal-pop var(--d-base) var(--ease-out) both;
+  }
+
+  .modal-card,
+  .love-letter-card,
+  .love-toast {
+    transition-timing-function: var(--ease-out);
+  }
+
+  .touch-left {
+    background: linear-gradient(180deg, transparent 68%, rgba(11, 16, 22, 0.52));
+    box-shadow: inset 0 -1px var(--quiet-line-strong);
+  }
+
+  .touch-left .touch-btn.active,
+  .touch-left .touch-btn:active {
+    color: var(--c-moon-white);
+    background: rgba(195, 164, 104, 0.14);
+    box-shadow: inset 0 0 0 1px var(--quiet-line-strong);
+  }
+
+  .touch-btn.jump.active,
+  .touch-btn.jump:active {
+    box-shadow: inset 0 0 0 2px rgba(238, 231, 213, 0.78), 0 6px 14px rgba(0, 0, 0, 0.26);
+  }
+
+  .touch-btn.skill.active,
+  .touch-btn.skill:active {
+    box-shadow: inset 0 0 0 2px rgba(109, 168, 149, 0.82), 0 6px 14px rgba(0, 0, 0, 0.26);
+  }
+
+  .touch-btn.shoot.active,
+  .touch-btn.shoot:active {
+    box-shadow: inset 0 0 0 2px rgba(184, 123, 134, 0.82), 0 6px 14px rgba(0, 0, 0, 0.26);
+  }
+
+  .rotate-card {
+    box-shadow:
+      inset 3px 0 var(--c-aged-gold),
+      inset 0 0 0 1px rgba(238, 231, 213, 0.12),
+      0 28px 68px rgba(0, 0, 0, 0.46);
+  }
+
+  .settings-group {
+    background: rgba(11, 16, 22, 0.62);
+  }
+
+  .settings-list input[type="range"]::-webkit-slider-runnable-track {
+    background: linear-gradient(90deg, rgba(195, 164, 104, 0.58), rgba(195, 164, 104, 0.18));
+  }
+}
+
+@layer motion {
+  @keyframes screen-enter {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes modal-pop {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes hud-pulse {
+    0% { background-color: rgba(195, 164, 104, 0.18); }
+    100% { background-color: transparent; }
+  }
+}
+
+@layer a11y {
+  @media (prefers-reduced-motion: reduce) {
+    .brand::after,
+    .ambient-constellation,
+    .ambient-strip-mark {
+      animation: none !important;
+    }
+
+    .screen.active,
+    .modal-card {
+      animation: none !important;
+    }
+  }
+}

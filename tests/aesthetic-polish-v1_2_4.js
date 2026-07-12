@@ -14,10 +14,11 @@ const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xm
 
 // --- version metadata --------------------------------------------------------
 
-assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(pkg.version), "package.json should be at least v1.2.4");
-assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(pkg.version), "package.json should be at least v1.2.4");
+assert.ok(["1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(lock.version), "package-lock.json root version should be at least v1.2.4");
 assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
+  sw.includes('CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1"') ||
+    sw.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
     sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
@@ -26,8 +27,8 @@ assert.ok(
     /CACHE = "nini-yuan-v(1\.2\.4-aurora-cartography|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/.test(sw),
   "service worker cache should be v1.2.4 or later"
 );
-assert.ok(/versionCode="(7|8|9|10|11|12|13|14|15|16|17|18)"/.test(androidManifest), "Android versionCode should be 7 through 18");
-assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1)|1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0|1\.8\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 through 1.8.0");
+assert.ok(/versionCode="(7|8|9|10|11|12|13|14|15|16|17|18|19)"/.test(androidManifest), "Android versionCode should be 7 through 19");
+assert.ok(/versionName="(1\.2\.4|1\.3\.(0|1)|1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/.test(androidManifest), "Android versionName should be 1.2.4 through 1.9.0");
 
 // --- new keyframes -----------------------------------------------------------
 

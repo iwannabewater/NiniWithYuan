@@ -10,7 +10,7 @@ Three implementation theses govern the work:
 
 - **Visual thesis**: 夜观天象, museum-lit lacquer and silk with restrained rose and jade inlay.
 - **Content thesis**: orient through the paired protagonists, expose the current journey state, then provide one clear action rail.
-- **Interaction thesis**: **刻金显纹** traces an aged-gold edge on focus or confirmation, then settles a rose or jade inlay; motion never turns an entire surface into glow.
+- **Interaction thesis**: **刻金显纹** traces an aged-gold edge on focus or confirmation, then settles a rose or jade inlay; motion never turns an entire surface into glow. Quiet Observatory (v1.9.0) further limits structural motion to ease-out transforms and opacity so the field stays calm while controls remain tactile.
 
 ## 2. Color Palette and Roles
 
@@ -100,7 +100,7 @@ The playfield uses the same material hierarchy as the DOM instead of a separate 
 
 ## 5. Layout Principles
 
-The spacing scale is `4, 8, 12, 16, 24, 32, 48, 64`. Main panels use a 12-column mental grid without shipping grid utilities. Desktop menu allocation is approximately 40 percent for title, actions, and journey state, and 60 percent for the paired art. Secondary screens favor vertical inscriptions and content-specific layouts rather than interchangeable cards.
+The spacing scale is `4, 8, 12, 16, 24, 32, 48, 64`, also exposed as `--s-1` through `--s-8`. Quiet Observatory surfaces prefer the lower end of ornament weight: one aged-gold structure edge, lacquer and silk planes, and no multi-color aurora wash competing with hierarchy. Main panels use a 12-column mental grid without shipping grid utilities. Desktop menu allocation is approximately 40 percent for title, actions, and journey state, and 60 percent for the paired art. Secondary screens favor vertical inscriptions and content-specific layouts rather than interchangeable cards.
 
 Radius tokens are:
 

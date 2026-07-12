@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1";
+const CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1";
 const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",
