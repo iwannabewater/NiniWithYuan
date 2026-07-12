@@ -289,7 +289,7 @@ async function runPortraitChecks() {
         }))
       );
       check(
-        settingRows.length === 4 && settingRows.every((row) => row.paddingLeft >= 44 && row.width > 0),
+        settingRows.length === 7 && settingRows.every((row) => row.paddingLeft >= 44 && row.width > 0),
         "Every settings rune row must reserve at least 44 pixels on the left",
         settingRows
       );

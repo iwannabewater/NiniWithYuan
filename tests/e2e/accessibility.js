@@ -6,14 +6,9 @@ const axeSource = fs.readFileSync(require.resolve("axe-core/axe.min.js"), "utf8"
 async function scan(page, label) {
   await page.addScriptTag({ content: axeSource });
   const result = await page.evaluate(async () => {
-    return axe.run(document, {
-      runOnly: {
-        type: "tag",
-        values: ["wcag2a", "wcag2aa"],
-      },
-    });
+    return axe.run(document);
   });
-  const blocking = result.violations.filter((violation) => ["serious", "critical"].includes(violation.impact));
+  const blocking = result.violations;
   if (blocking.length) {
     throw new Error(
       `${label} accessibility violations: ${blocking
@@ -39,6 +34,10 @@ async function run() {
     await scan(page, "menu");
     await page.getByRole("button", { name: "选择角色" }).click();
     await scan(page, "characters");
+    await page.getByRole("button", { name: "选择源源" }).click();
+    const status = page.getByRole("status");
+    await status.waitFor({ state: "visible" });
+    if (!await status.textContent()) throw new Error("Character selection did not expose visible status feedback");
     await clickActiveBack(page);
     await page.getByRole("button", { name: "选择关卡" }).click();
     await scan(page, "levels");
@@ -53,6 +52,14 @@ async function run() {
     const dialog = page.getByRole("dialog", { name: "暂停" });
     await dialog.waitFor({ state: "visible" });
     await scan(page, "pause dialog");
+    const pauseIsolation = await page.evaluate(() => ({
+      skipLink: document.querySelector(".skip-link").inert,
+      shell: document.querySelector("#shell").inert,
+      alternateDialog: document.querySelector("#rotatePrompt").inert,
+    }));
+    if (!pauseIsolation.skipLink || !pauseIsolation.shell || !pauseIsolation.alternateDialog) {
+      throw new Error(`Pause dialog did not isolate its background: ${JSON.stringify(pauseIsolation)}`);
+    }
 
     const actions = dialog.getByRole("button");
     const actionCount = await actions.count();
@@ -68,6 +75,9 @@ async function run() {
     }
     await dialog.getByRole("button", { name: "返回菜单" }).click();
     await page.locator("#menu.active").waitFor();
+    if (await page.locator(".skip-link").evaluate((link) => link.inert)) {
+      throw new Error("Closing the pause dialog left the page background inert");
+    }
 
     const letterTrigger = page.getByRole("button", { name: "设置", exact: true });
     await letterTrigger.focus();
@@ -84,6 +94,14 @@ async function run() {
     if (!(await letterClose.evaluate((button) => document.activeElement === button))) {
       throw new Error("Hidden letter did not focus its close action");
     }
+    if (!await page.locator(".skip-link").evaluate((link) => link.inert)) {
+      throw new Error("Hidden letter did not isolate the page background");
+    }
+    await scan(page, "hidden letter");
+    await page.setViewportSize({ width: 1200, height: 700 });
+    if (!await page.locator(".skip-link").evaluate((link) => link.inert)) {
+      throw new Error("Viewport resize broke hidden-letter background isolation");
+    }
     await page.keyboard.press("Tab");
     await page.keyboard.press("Shift+Tab");
     if (!(await letterClose.evaluate((button) => document.activeElement === button))) {
@@ -94,9 +112,40 @@ async function run() {
     if (!(await letterTrigger.evaluate((button) => document.activeElement === button))) {
       throw new Error("Hidden letter did not restore focus to its trigger");
     }
+    if (await page.locator(".skip-link").evaluate((link) => link.inert)) {
+      throw new Error("Hidden letter left the page background inert after dismissal");
+    }
   });
 
-  console.log("accessibility-e2e: no serious or critical WCAG violations");
+  await withPage(
+    "portrait accessibility",
+    async (page) => {
+      await scan(page, "portrait menu");
+      await page.getByText("继续冒险").tap();
+      await page.locator("#rotatePrompt").waitFor({ state: "visible" });
+      await scan(page, "orientation dialog");
+      const orientationIsolation = await page.evaluate(() => ({
+        element: document.querySelector("#rotatePrompt").tagName,
+        skipLink: document.querySelector(".skip-link").inert,
+        shell: document.querySelector("#shell").inert,
+        alternateDialog: document.querySelector("#modal").inert,
+      }));
+      if (
+        orientationIsolation.element !== "DIV" ||
+        !orientationIsolation.skipLink ||
+        !orientationIsolation.shell ||
+        !orientationIsolation.alternateDialog
+      ) {
+        throw new Error(`Orientation dialog isolation failed: ${JSON.stringify(orientationIsolation)}`);
+      }
+      await page.locator('[data-action="continue-portrait"]').tap();
+      await page.waitForTimeout(120);
+      await scan(page, "portrait game hud");
+    },
+    { port: 43186, page: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
+  );
+
+  console.log("accessibility-e2e: no Axe violations; live feedback and modal isolation passed");
 }
 
 run().catch((error) => {

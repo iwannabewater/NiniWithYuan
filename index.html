@@ -2,7 +2,7 @@
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#111821" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#111821" />
     <meta name="color-scheme" content="dark" />
@@ -72,7 +72,7 @@
     </div>
     <footer class="ambient-strip" aria-hidden="true">
       <span class="ambient-strip-mark">✦</span>
-      <span class="ambient-strip-text">星图 · v1.7.0 · 多世界章节 · 离线游玩</span>
+      <span class="ambient-strip-text">星图 · v1.8.0 · 多世界章节 · 离线游玩</span>
       <span class="ambient-strip-divider"></span>
       <span class="ambient-strip-quote" id="ambientQuote">愿每一次跳跃，都落在你想去的星上。</span>
       <span class="ambient-strip-divider"></span>
@@ -98,7 +98,7 @@
           <figcaption>星盘为圆，圭剑为衡</figcaption>
         </figure>
         <div class="menu-actions">
-          <button class="primary" data-action="play">继续冒险</button>
+          <button id="continueAction" class="primary" data-action="play" aria-describedby="saveStrip">继续冒险</button>
           <button data-action="levels">选择关卡</button>
           <button data-action="characters">选择角色</button>
           <button data-action="settings">设置</button>
@@ -160,39 +160,69 @@
           </div>
         </div>
         <div class="settings-list">
-          <label data-rune="♪">
-            <span>音效强度</span>
-            <input id="volumeRange" type="range" min="0" max="100" value="70" />
-          </label>
-          <label data-rune="♬">
-            <span>背景音乐</span>
-            <input id="bgmRange" type="range" min="0" max="100" value="60" />
-          </label>
-          <label data-rune="◐">
-            <span>触控按键大小</span>
-            <input id="touchRange" type="range" min="64" max="84" value="84" />
-          </label>
-          <label class="toggle-row" data-rune="✦">
-            <span>高帧率视觉特效</span>
-            <input id="fxToggle" type="checkbox" checked />
-          </label>
-          <div class="copyright">Copyright © iwannabewater</div>
-          <button class="danger" data-action="reset">清除存档</button>
+          <fieldset class="settings-group settings-audio">
+            <legend>音律</legend>
+            <label data-rune="♪">
+              <span>音效强度</span>
+              <input id="volumeRange" type="range" min="0" max="100" value="70" />
+              <output id="volumeValue" for="volumeRange">70%</output>
+            </label>
+            <label data-rune="♬">
+              <span>背景音乐</span>
+              <input id="bgmRange" type="range" min="0" max="100" value="60" />
+              <output id="bgmValue" for="bgmRange">60%</output>
+            </label>
+          </fieldset>
+          <fieldset class="settings-group settings-display">
+            <legend>显示</legend>
+            <label data-rune="字">
+              <span>仪轨文字大小</span>
+              <input id="hudScaleRange" type="range" min="90" max="140" value="100" />
+              <output id="hudScaleValue" for="hudScaleRange">100%</output>
+            </label>
+            <label class="toggle-row" data-rune="✦">
+              <span>高帧率视觉特效</span>
+              <input id="fxToggle" type="checkbox" checked />
+            </label>
+            <label class="toggle-row" data-rune="震">
+              <span>画面震动</span>
+              <input id="shakeToggle" type="checkbox" checked />
+            </label>
+          </fieldset>
+          <fieldset class="settings-group settings-touch">
+            <legend>触控</legend>
+            <label data-rune="◐">
+              <span>按键大小</span>
+              <input id="touchRange" type="range" min="64" max="84" value="76" />
+              <output id="touchValue" for="touchRange">76 px</output>
+            </label>
+            <label data-rune="◌">
+              <span>按键显影</span>
+              <input id="touchOpacityRange" type="range" min="45" max="100" value="68" />
+              <output id="touchOpacityValue" for="touchOpacityRange">68%</output>
+            </label>
+          </fieldset>
+          <fieldset class="settings-group settings-data">
+            <legend>本机数据</legend>
+            <p>进度只保存在当前设备。清除后无法恢复。</p>
+            <div class="copyright">Copyright © iwannabewater</div>
+            <button class="danger" data-action="reset">清除此设备的存档</button>
+          </fieldset>
         </div>
       </section>
 
       <section id="overlay" class="hud">
         <div class="top-hud">
           <div class="hud-corner hud-corner-left">
-            <div class="hud-pill character"><span id="hudCharacter">妮妮</span></div>
-            <div class="hud-pill hearts" aria-label="生命"><span class="hud-icon">❤</span><span id="hudHealth">❤❤❤</span></div>
-            <div class="hud-pill status" id="hudStatus">普通</div>
+            <div class="hud-pill character" role="group" aria-label="同行 妮妮"><span id="hudCharacter">妮妮</span></div>
+            <div class="hud-pill hearts" role="group" aria-label="生命 3 / 3"><span class="hud-icon">命</span><span id="hudHealth">❤❤❤</span></div>
+            <div class="hud-pill status" id="hudStatus" role="group" aria-label="状态 普通">普通</div>
           </div>
           <div class="hud-corner hud-corner-right">
-            <div class="hud-pill" aria-label="星露"><span class="hud-icon">✦</span><span id="hudCoins">0</span></div>
-            <div class="hud-pill" aria-label="星弹"><span class="hud-icon">◆</span><span id="hudAmmo">14</span></div>
-            <div class="hud-pill" aria-label="时间"><span class="hud-icon">⏱</span><span id="hudTime">00:00</span></div>
-            <div class="hud-pill skill-state" id="hudSkill">技能 就绪</div>
+            <div class="hud-pill" role="group" aria-label="星露 0"><span class="hud-icon">露</span><span id="hudCoins">0</span></div>
+            <div class="hud-pill" role="group" aria-label="星弹 14"><span class="hud-icon">弹</span><span id="hudAmmo">14</span></div>
+            <div class="hud-pill" role="group" aria-label="时间 00:00"><span class="hud-icon">时</span><span id="hudTime">00:00</span></div>
+            <div class="hud-pill skill-state" id="hudSkill" role="group" aria-label="技能 就绪">技能 就绪</div>
             <button class="hud-button" data-action="pause" aria-label="暂停">||</button>
           </div>
         </div>
@@ -210,20 +240,12 @@
           <span>发射 K / 弹</span>
           <span>暂停 Esc / Ⅱ</span>
         </div>
-        <div id="toast" class="toast"></div>
       </section>
 
-      <section id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalText">
-        <div class="modal-card">
-          <span class="eyebrow" id="modalEyebrow">暂停</span>
-          <h2 id="modalTitle">暂停</h2>
-          <p id="modalText"></p>
-          <div class="modal-actions" id="modalActions"></div>
-        </div>
-      </section>
+      <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
       <nav id="touchControls" aria-label="触屏控制">
-        <div class="touch-left">
+        <div class="touch-left" aria-label="移动星盘">
           <button class="touch-btn" data-touch="left" aria-label="左移">‹</button>
           <button class="touch-btn" data-touch="right" aria-label="右移">›</button>
         </div>
@@ -233,18 +255,32 @@
           <button class="touch-btn shoot" data-touch="shoot" aria-label="发射">弹</button>
         </div>
       </nav>
+    </main>
 
-      <aside id="rotatePrompt" class="rotate-prompt" role="region" aria-labelledby="rotatePromptTitle" aria-live="polite">
+    <section id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalText">
+      <div class="modal-card">
+        <span class="eyebrow" id="modalEyebrow">暂停</span>
+        <h2 id="modalTitle">暂停</h2>
+        <p id="modalText"></p>
+        <div class="modal-actions" id="modalActions"></div>
+      </div>
+    </section>
+
+    <div id="rotatePrompt" class="rotate-prompt" role="dialog" aria-modal="true" aria-labelledby="rotatePromptTitle" aria-describedby="rotatePromptText">
+      <div class="rotate-card">
         <div class="rotate-instrument" aria-hidden="true">
           <span class="rotate-orbit"></span>
           <span class="rotate-device">✦</span>
         </div>
         <span class="eyebrow">星图校向</span>
         <strong id="rotatePromptTitle">横持设备，展开完整星路</strong>
-        <p>向左或向右旋转屏幕，星路随转向展开。</p>
-        <button class="rotate-prompt-action" data-action="exit-game">返回菜单</button>
-      </aside>
-    </main>
+        <p id="rotatePromptText">横屏能看见更远的平台。也可以先用竖屏继续，随时旋转设备。</p>
+        <div class="rotate-prompt-actions">
+          <button class="rotate-prompt-action primary" data-action="continue-portrait">继续竖屏</button>
+          <button class="rotate-prompt-action" data-action="exit-game">返回菜单</button>
+        </div>
+      </div>
+    </div>
     <script src="./src/core/storage.js"></script>
     <script src="./src/core/audio.js"></script>
     <script src="./src/core/input-state.js"></script>

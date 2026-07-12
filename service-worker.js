@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v1.7.0-experience-integrity-r1";
+const CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1";
 const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",
@@ -23,6 +23,8 @@ const ASSETS = [
   "./assets/icons/xuanji-union-seal.svg",
   "./assets/fonts/lxgw-wenkai-500.woff2",
   "./assets/fonts/lxgw-wenkai-700.woff2",
+  "./assets/fonts/NOTICE.md",
+  "./assets/fonts/OFL.txt",
   "./assets/characters/nini/nini-atlas-v1.png",
   "./assets/characters/yuan/yuan-atlas-v1.png",
   "./assets/characters/concepts/nini-yuan-song-atlas-v1.png",

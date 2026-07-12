@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. The current source builds on v1.7.0 with an experience-integrity pass for the **宋式星图器物幻想 / Song-atlas Night Observatory** direction: inputs remain isolated across menus and gameplay, both characters respond from a grounded opening frame, collection ratings ignore combat rewards, World 3 timing stays visible on compact phones, low-frame-rate simulation remains real-time, and the Canvas playfield now shares the lacquer, silk, jade, rose, and aged-gold material system used by the interface. The game remains offline, local-only, dependency-light, and WebView-ready: two playable characters, fifteen handcrafted chapters, local save data, landscape touch controls, adjustable background music, PWA metadata, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.8.0 brings the Song-atlas Night Observatory direction into one responsive interface, joins keyboard, touch, pointer, and assistive activation behind the same action model, and gives both characters simulation-timed motion with fixed-step presentation smoothing. The game remains offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
 
 ## Gameplay
 
@@ -10,9 +10,11 @@
 - World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
 - World 3 introduces phase-tide bridges: platforms, pickups, and hazards can alternate between two readable star-tide phases without changing the base character physics.
 - The application runs offline. It does not require login, networking, advertising SDKs, analytics SDKs, or server storage.
-- Desktop play uses arrow keys or WASD. Android starts in landscape and uses on-screen controls.
-- Portrait gameplay guidance keeps the full landscape camera intact while offering a direct return-to-menu action.
-- Gameplay keys never override focused menu buttons or settings controls, and multi-touch holds remain active until the final pointer for that action releases.
+- Desktop play uses arrow keys or WASD. Android starts in landscape and uses a sliding direction rail with separate jump, skill, and projectile controls.
+- The mobile web build pauses behind an orientation dialog in portrait. Players may continue in portrait or return to the menu.
+- Opposite directions use the latest active source, then fall back to an earlier direction that remains held. Aliases and multi-touch actions stay active until their final source releases.
+- Gameplay input never overrides focused menu buttons or settings controls. Menu, modal, focus, visibility, and orientation transitions clear transient input together.
+- Settings cover master and BGM volume, HUD scale, touch size, touch opacity, visual effects, and screen shake.
 - The bundled background track is a local CC0 Vorbis file with an independent volume control.
 
 ## Requirements
@@ -47,7 +49,13 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The test suite covers JavaScript syntax, save schema migration, localStorage tampering recovery, physics balance, character atlas schema validation, Android wrapper safety, PWA assets, BGM integration and retry, lifecycle pause/resume behavior, accessibility, and browser smoke scenarios across desktop, mobile portrait, and mobile landscape viewports. The v1.2.3/v1.2.4 smoke paths still verify the ambient layer, hidden surprises, cartography polish, and reduced-motion contracts. The v1.4.0 expansion adds content, portal, phase-tide, storage, browser-smoke, and typography/copy regression files for three-world grouping, fifteen-chapter save compatibility, safe portal authoring, phase-object validity, shared font-stack usage, local Chinese glyph coverage, and count-free current UI copy. The v1.5.0 game-feel suite pins hit-stop math, camera lookahead, shake clamping, semantic cue shape, landing puff behavior, and unchanged platforming constants. The v1.6.0 coverage validates production atlas geometry, authored versus mirrored direction rules, expressive pose priority, Song-atlas tokens, paired artwork, launcher assets, offline caching, and portrait orientation guidance. The v1.6.1 suite measures launch, reversal, stop, camera intent, touch capture, responsive layout, canonical URL, and release-asset contracts; v1.6.2 adds rendered idle-direction, atlas-boundary, and paired launcher checks; v1.6.3 pins atlas source-facing semantics so Nini's complete idle frame renders forward-right by default; v1.7.0 guards phase countdown copy, enemy intent marks, hit feedback, and accessibility click stability. Current experience-integrity coverage adds pure input, rating, ammunition, terminal-outcome, grounded-spawn, and fixed-step tests plus real-browser checks for keyboard leakage, opening jumps, focus handoff, mobile phase visibility, portrait escape, touch geometry, storage-write budgets, and HUD mutation budgets.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.8.0 adds focused checks for multi-source input fallback, short Nini glide intent, hit-stop interpolation recovery, modal isolation, five viewport and input-modality layouts, deterministic store capture, and local font provenance.
+
+Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
+
+```bash
+node tests/browser-smoke.js
+```
 
 ## Android APK
 
@@ -67,7 +75,7 @@ The Android entry point uses `sensorLandscape`, so phones start in landscape and
 
 ## Store Assets
 
-Generate store screenshots and a 1024 x 500 feature graphic:
+Generate store screenshots and the feature graphic:
 
 ```bash
 npm run capture:store
@@ -78,6 +86,8 @@ The generated files are written to:
 ```text
 dist/store-assets/
 ```
+
+The capture set contains four 1080 by 1920 portrait screenshots, three 1920 by 1080 landscape screenshots, one 1280 by 720 desktop screenshot, and one 1024 by 500 feature graphic. Every file must be an opaque 24-bit RGB PNG. The capture script seeds runtime randomness, removes date-sensitive overlays, waits for visual assets, compares consecutive frames, and rejects invalid dimensions, color type, or screenshot aspect ratio.
 
 ## Project Structure
 
@@ -92,7 +102,7 @@ dist/store-assets/
 ├── assets/
 │   ├── characters/            # Character source art and production atlases
 │   ├── audio/                 # Bundled CC0 BGM and provenance notice
-│   ├── fonts/                 # Local LXGW WenKai subsets
+│   ├── fonts/                 # Local LXGW WenKai subsets, provenance, and OFL
 │   └── icons/                 # PWA icons
 ├── android/app/src/main/      # Android wrapper source and resources
 ├── scripts/                   # APK build and store asset capture scripts
@@ -116,4 +126,8 @@ The game is offline. Save data remains in localStorage on the player's device an
 
 ## License
 
-Code is MIT © iwannabewater. The bundled BGM is CC0 1.0; see [assets/audio/NOTICE.md](assets/audio/NOTICE.md).
+Code is MIT © iwannabewater.
+
+The bundled BGM is CC0 1.0; see [assets/audio/NOTICE.md](assets/audio/NOTICE.md).
+
+The bundled webfonts are application-specific subsets of the official LXGW WenKai v1.522 Regular and Medium release files. Medium is mapped to the application's 700 weight. The fonts remain under the SIL Open Font License 1.1; see [assets/fonts/NOTICE.md](assets/fonts/NOTICE.md) and [assets/fonts/OFL.txt](assets/fonts/OFL.txt).

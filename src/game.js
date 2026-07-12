@@ -3,6 +3,7 @@
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d", { alpha: false });
+  const shell = document.getElementById("shell");
   const screens = {
     menu: document.getElementById("menu"),
     characters: document.getElementById("characterScreen"),
@@ -12,6 +13,7 @@
   const hud = document.getElementById("overlay");
   const modal = document.getElementById("modal");
   const touchControls = document.getElementById("touchControls");
+  const rotatePrompt = document.getElementById("rotatePrompt");
   const toast = document.getElementById("toast");
   const hudEls = {
     character: document.getElementById("hudCharacter"),
@@ -49,6 +51,7 @@
   const YUAN_DASH_MAX_DISTANCE = 170;
   const NINI_GLIDE_DURATION = 1.25;
   const NINI_GLIDE_FALL_SPEED = 190;
+  const NINI_GLIDE_MIN_TAP = 0.12;
   const TURN_POSE_DURATION = 0.1;
   const ENEMY_WIDTH = 38;
   const ENEMY_HEIGHT = 34;
@@ -66,6 +69,7 @@
   const ENEMY_HIT_FLASH_DURATION = 0.18;
   const SUPER_GUARD_FEEDBACK_COOLDOWN = 0.18;
   const SETTINGS_PERSIST_DELAY = 150;
+  const ACCESSIBLE_TOUCH_HOLD = 140;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
   const CANVAS_MATERIAL = Playfield.MATERIAL;
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -81,6 +85,17 @@
   let activeLevel = null;
   let player = null;
   let camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
+  let presentation = {
+    ready: false,
+    playerX: 0,
+    playerY: 0,
+    cameraX: 0,
+    cameraY: 0,
+    snapPlayer: false,
+    snapCamera: false,
+    motionState: { name: "idle", enteredAt: 0 },
+  };
+  let renderAlpha = 1;
   let particles = [];
   let floatTexts = [];
   let keys = Object.create(null);
@@ -101,12 +116,15 @@
   let toastTimer = 0;
   let persistTimer = 0;
   let introTimer = 0;
+  let portraitOverride = false;
+  let orientationGated = false;
   let projectiles = [];
   // v1.2.4 — track HUD state so we can fire one-shot pulses only on real transitions.
   let hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
   const physicalKeys = new Set();
   const suppressedKeys = new Set();
-  const touchPointers = InputState?.createActionPointerState?.(["left", "right", "jump", "skill", "shoot"]);
+  const actionInputs = InputState.createActionInputState(["left", "right", "jump", "skill", "shoot"]);
+  const dialogIsolationState = new Map();
 
   const characters = {
     nini: {
@@ -789,6 +807,49 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
+    syncOrientationGate();
+  }
+
+  function syncOrientationGate() {
+    const gated = mode === "play"
+      && !portraitOverride
+      && typeof matchMedia === "function"
+      && matchMedia("(pointer: coarse) and (orientation: portrait) and (max-width: 680px)").matches;
+    const wasGated = orientationGated;
+    orientationGated = gated;
+    shell.classList.toggle("portrait-gated", gated);
+    syncDialogIsolation();
+    if (gated === wasGated) return;
+    resetControlState();
+    accumulator = 0;
+    if (gated) rotatePrompt.querySelector("button")?.focus({ preventScroll: true });
+    else if (mode === "play") focusGameplay();
+  }
+
+  function syncDialogIsolation() {
+    const externalDialog = document.querySelector(".love-letter:not([aria-hidden='true'])");
+    const activeDialog = externalDialog || (modal.classList.contains("active")
+      ? modal
+      : orientationGated
+        ? rotatePrompt
+        : null);
+    for (const surface of [shell, modal, rotatePrompt]) {
+      setDialogSurfaceInert(surface, !!activeDialog && surface !== activeDialog);
+    }
+    setDialogSurfaceInert(document.querySelector(".skip-link"), !!activeDialog);
+  }
+
+  function setDialogSurfaceInert(surface, shouldBeInert) {
+    if (!surface) return;
+    if (shouldBeInert) {
+      if (!dialogIsolationState.has(surface)) dialogIsolationState.set(surface, surface.inert);
+      surface.inert = true;
+      return;
+    }
+    if (!dialogIsolationState.has(surface)) return;
+    const previous = dialogIsolationState.get(surface);
+    dialogIsolationState.delete(surface);
+    surface.inert = previous;
   }
 
   function showScreen(name, options = {}) {
@@ -797,6 +858,7 @@
     Object.entries(screens).forEach(([key, el]) => el.classList.toggle("active", key === name));
     hud.classList.toggle("active", mode === "play");
     touchControls.classList.toggle("playing", mode === "play");
+    syncDialogIsolation();
     renderMenus();
     if (options.focus !== false) focusScreen(name, previousScreen);
   }
@@ -864,6 +926,7 @@
       turnTimer: 0,
       landingTimer: 0,
       glide: 0,
+      glideIntent: 0,
       bigTimer: 0,
       ammoTimer: 0,
       boostTimer: 0,
@@ -889,6 +952,10 @@
     floatTexts = [];
     projectiles = [];
     camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
+    const initialCamera = cameraTarget(0);
+    camera.x = initialCamera.x;
+    camera.y = initialCamera.y;
+    syncPresentationState();
     resetControlState();
     hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
     GameFeel?.resetHitstop?.();
@@ -896,6 +963,7 @@
     modal.classList.remove("active");
     showScreen("", { focus: false });
     focusGameplay();
+    syncOrientationGate();
     showChapterIntro();
     audioBus.playBgm();
   }
@@ -916,7 +984,7 @@
   }
 
   function update(dt) {
-    if (mode !== "play" || !player || !activeLevel) return;
+    if (mode !== "play" || orientationGated || !player || !activeLevel) return;
     player.elapsed += dt;
     updateInputs();
     if (inputs.left || inputs.right || inputs.jump || inputs.skill || inputs.shoot) dismissChapterIntro();
@@ -944,11 +1012,12 @@
   }
 
   function updateInputs() {
-    inputs.left = !!(keys.ArrowLeft || keys.KeyA || keys.left);
-    inputs.right = !!(keys.ArrowRight || keys.KeyD || keys.right);
-    inputs.jump = !!(keys.Space || keys.ArrowUp || keys.KeyW || keys.jump);
-    inputs.skill = !!(keys.KeyJ || keys.ShiftLeft || keys.ShiftRight || keys.skill);
-    inputs.shoot = !!(keys.KeyK || keys.Enter || keys.shoot);
+    const direction = actionInputs.direction();
+    inputs.left = direction < 0;
+    inputs.right = direction > 0;
+    inputs.jump = actionInputs.isActive("jump");
+    inputs.skill = actionInputs.isActive("skill");
+    inputs.shoot = actionInputs.isActive("shoot");
   }
 
   function consumePressed() {
@@ -1030,6 +1099,12 @@
     player.coyote -= dt;
     player.skillCd = Math.max(0, player.skillCd - dt);
     player.skillTimer = Math.max(0, player.skillTimer - dt);
+    player.glideIntent = Rules.advanceIntentWindow(player.glideIntent, {
+      pressed: inputs.skillPressed,
+      eligible: save.selected === "nini" && player.skillCd <= 0 && (!player.onGround || inputs.jumpPressed),
+      dt,
+      minimum: NINI_GLIDE_MIN_TAP,
+    });
     player.dashFreeze = Math.max(0, (player.dashFreeze || 0) - dt);
     player.shootCd = Math.max(0, player.shootCd - dt);
     player.shootTimer = Math.max(0, player.shootTimer - dt);
@@ -1075,7 +1150,7 @@
     const skillCooldown = ch.skillCooldown * (player.boostTimer > 0 ? 0.55 : 1);
     const canNiniGlide =
       save.selected === "nini" &&
-      inputs.skill &&
+      (inputs.skill || player.glideIntent > 0) &&
       !player.onGround &&
       player.glide < NINI_GLIDE_DURATION &&
       (player.skillCd <= 0 || player.glide > 0);
@@ -1093,27 +1168,21 @@
       player.glide = 0;
     } else if (player.onGround) {
       player.glide = 0;
+      if (!inputs.jumpPressed) player.glideIntent = 0;
     }
 
-    if (inputs.skillPressed && player.skillCd <= 0) {
-      if (save.selected === "yuan") {
-        player.skillTimer = YUAN_DASH_TIME;
-        player.dashDir = player.facing;
-        player.skillCd = skillCooldown;
-        player.dashFreeze = 0.045;
-        GameFeel?.requestHitstop?.(45);
-        player.vx = player.dashDir * YUAN_DASH_SPEED;
-        player.vy *= 0.45;
-        shake(7);
-        burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22);
-        cue("dash");
-        toastMsg("青衡破风");
-      } else if (!player.onGround) {
-        player.skillCd = skillCooldown;
-        player.vy = Math.min(player.vy, 120);
-        burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 14);
-        toastMsg("璇玑星渡");
-      }
+    if (inputs.skillPressed && player.skillCd <= 0 && save.selected === "yuan") {
+      player.skillTimer = YUAN_DASH_TIME;
+      player.dashDir = player.facing;
+      player.skillCd = skillCooldown;
+      player.dashFreeze = 0.045;
+      GameFeel?.requestHitstop?.(45);
+      player.vx = player.dashDir * YUAN_DASH_SPEED;
+      player.vy *= 0.45;
+      shake(7);
+      burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22);
+      cue("dash");
+      toastMsg("青衡破风");
     }
 
     if (save.selected === "yuan" && player.skillTimer > 0) {
@@ -1366,6 +1435,7 @@
     if (!portalExitRectIsSafe(candidate)) return;
     player.x = exit.x;
     player.y = exit.y;
+    requestPresentationSnap(true);
     player.portalCd = PORTAL_COOLDOWN;
     player.portalTimer = 0.42;
     player.portalLock = target.id;
@@ -1648,9 +1718,11 @@
     player.y = player.spawn.y;
     player.vx = 0;
     player.vy = 0;
+    requestPresentationSnap(true);
     player.invuln = 1.2;
     player.skillTimer = 0;
     player.glide = 0;
+    player.glideIntent = 0;
     player.dashDir = player.facing;
     player.guardFeedbackCd = 0;
     refreshGroundedState();
@@ -1689,12 +1761,23 @@
     return Rules.calculateStarRating(player.collectedValue, totalCollectibleValue);
   }
 
-  function updateCamera(dt) {
+  function cameraTarget(dt) {
     const lookahead = GameFeel?.cameraLookaheadOffset?.(player, view, dt, camera) || { x: 0, y: 0 };
-    const targetX = clamp(player.x + lookahead.x - view.w * 0.38, 0, Math.max(0, activeLevel.width - view.w));
-    const targetY = clamp(player.y + lookahead.y - view.h * 0.55, 0, Math.max(0, activeLevel.height - view.h));
-    camera.x = lerp(camera.x, targetX, 1 - Math.pow(0.001, dt));
-    camera.y = lerp(camera.y, targetY, 1 - Math.pow(0.001, dt));
+    return {
+      x: clamp(player.x + lookahead.x - view.w * 0.38, 0, Math.max(0, activeLevel.width - view.w)),
+      y: clamp(player.y + lookahead.y - view.h * 0.55, 0, Math.max(0, activeLevel.height - view.h)),
+    };
+  }
+
+  function updateCamera(dt) {
+    const target = cameraTarget(dt);
+    if (presentation.snapCamera) {
+      camera.x = target.x;
+      camera.y = target.y;
+    } else {
+      camera.x = lerp(camera.x, target.x, 1 - Math.pow(0.001, dt));
+      camera.y = lerp(camera.y, target.y, 1 - Math.pow(0.001, dt));
+    }
     camera.shake = Math.max(0, camera.shake - 35 * dt);
   }
 
@@ -1706,23 +1789,91 @@
     }
     const shakeX = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
     const shakeY = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
-    const camX = snap(camera.x);
-    const camY = snap(camera.y);
+    const quantum = 1 / Math.max(1, view.dpr || 1);
+    const camX = GameFeel?.interpolateCoordinate?.(presentation.cameraX, camera.x, renderAlpha, {
+      snap: presentation.snapCamera,
+      quantum,
+    }) ?? snap(camera.x);
+    const camY = GameFeel?.interpolateCoordinate?.(presentation.cameraY, camera.y, renderAlpha, {
+      snap: presentation.snapCamera,
+      quantum,
+    }) ?? snap(camera.y);
+    const playerX = GameFeel?.interpolateCoordinate?.(presentation.playerX, player.x, renderAlpha, {
+      snap: presentation.snapPlayer,
+      quantum,
+    }) ?? player.x;
+    const playerY = GameFeel?.interpolateCoordinate?.(presentation.playerY, player.y, renderAlpha, {
+      snap: presentation.snapPlayer,
+      quantum,
+    }) ?? player.y;
     updateHud();
     renderBackground(activeLevel, camX, camY);
     ctx.save();
     ctx.translate(-camX + shakeX, -camY + shakeY);
     renderWorld(activeLevel);
     renderParticles();
-    renderPlayer();
+    renderPlayer({ x: playerX, y: playerY });
     renderFloatTexts();
     ctx.restore();
     if (mode !== "play") renderVignette();
+    settlePresentationSnap();
   }
 
   function renderAttract() {
     Playfield.drawBackground(ctx, { view, time: performance.now() / 1000, intensity: 0.3, attract: true });
     renderVignette();
+  }
+
+  function sceneTime() {
+    return player && activeLevel ? player.elapsed : performance.now() / 1000;
+  }
+
+  function syncPresentationState() {
+    presentation.ready = !!player;
+    presentation.playerX = player?.x || 0;
+    presentation.playerY = player?.y || 0;
+    presentation.cameraX = camera.x;
+    presentation.cameraY = camera.y;
+    presentation.snapPlayer = false;
+    presentation.snapCamera = false;
+    presentation.motionState = { name: "idle", enteredAt: player?.elapsed || 0 };
+    renderAlpha = 1;
+  }
+
+  function beginPresentationStep() {
+    if (!player) return;
+    if (!presentation.ready) syncPresentationState();
+    presentation.playerX = player.x;
+    presentation.playerY = player.y;
+    presentation.cameraX = camera.x;
+    presentation.cameraY = camera.y;
+  }
+
+  function syncPresentationCoordinates() {
+    if (player) {
+      presentation.playerX = player.x;
+      presentation.playerY = player.y;
+    }
+    presentation.cameraX = camera.x;
+    presentation.cameraY = camera.y;
+  }
+
+  function requestPresentationSnap(includeCamera = false) {
+    presentation.snapPlayer = true;
+    if (includeCamera) presentation.snapCamera = true;
+  }
+
+  function settlePresentationSnap() {
+    if (presentation.snapPlayer && player) {
+      presentation.playerX = player.x;
+      presentation.playerY = player.y;
+    }
+    if (presentation.snapCamera) {
+      presentation.cameraX = camera.x;
+      presentation.cameraY = camera.y;
+    }
+    presentation.snapPlayer = false;
+    presentation.snapCamera = false;
   }
 
   function renderBackground(level, camX, camY) {
@@ -1731,7 +1882,7 @@
       palette: level.palette,
       camX,
       camY,
-      time: performance.now() / 1000,
+      time: sceneTime(),
       intensity: save.settings.fx ? 1 : 0.4,
     });
   }
@@ -1766,7 +1917,7 @@
   function drawPhaseTide(level, tide) {
     if (!tide.enabled) return;
     const color = phaseColor(tide.active);
-    const t = performance.now() / 1000;
+    const t = sceneTime();
     const startX = Math.floor((camera.x - 160) / 220) * 220;
     ctx.save();
     const urgency = tide.warning ? tide.urgency || 0 : 0;
@@ -1815,14 +1966,14 @@
 
   function drawPhaseGhostPickup(p) {
     ctx.save();
-    ctx.globalAlpha = 0.22 + Math.sin(performance.now() / 220 + p.x) * 0.05;
+    ctx.globalAlpha = 0.22 + Math.sin(sceneTime() * 4.5 + p.x) * 0.05;
     if (p.kind === "coin" || p.kind === "gem") drawCoin(p);
     else drawPowerup(p);
     ctx.restore();
   }
 
   function drawHazard(h) {
-    Playfield.drawHazard(ctx, h, performance.now() / 1000);
+    Playfield.drawHazard(ctx, h, sceneTime());
   }
 
   function drawSpring(s) {
@@ -1831,7 +1982,7 @@
 
   function drawCoin(c) {
     Playfield.drawCoin(ctx, c, {
-      time: performance.now() / 1000,
+      time: sceneTime(),
       reducedMotion: view.reducedMotion,
       fx: save.settings.fx,
     });
@@ -1843,7 +1994,7 @@
 
   function drawPowerup(p) {
     Playfield.drawPowerup(ctx, p, {
-      time: performance.now() / 1000,
+      time: sceneTime(),
       reducedMotion: view.reducedMotion,
       fx: save.settings.fx,
     });
@@ -1856,7 +2007,7 @@
     ctx.shadowBlur = save.settings.fx ? 7 : 0;
     ctx.fillStyle = pr.color;
     if (pr.owner === "nini") {
-      ctx.rotate(performance.now() / 120);
+      ctx.rotate(sceneTime() * 8.3);
       ctx.beginPath();
       for (let i = 0; i < 5; i += 1) {
         const a = -Math.PI / 2 + i * Math.PI * 0.8;
@@ -2092,12 +2243,12 @@
   }
 
   function drawGoal(g) {
-    Playfield.drawGoal(ctx, g, { time: performance.now() / 1000, reducedMotion: view.reducedMotion });
+    Playfield.drawGoal(ctx, g, { time: sceneTime(), reducedMotion: view.reducedMotion });
   }
 
   function drawWind(w) {
     Playfield.drawWind(ctx, w, {
-      time: performance.now() / 1000,
+      time: sceneTime(),
       arrowSpacing: WIND_ARROW_SPACING,
       arrowSpeed: WIND_ARROW_SPEED,
     });
@@ -2108,33 +2259,42 @@
   }
 
   function drawPortal(portal) {
-    Playfield.drawPortal(ctx, portal, { time: performance.now() / 1000, reducedMotion: view.reducedMotion });
+    Playfield.drawPortal(ctx, portal, { time: sceneTime(), reducedMotion: view.reducedMotion });
   }
 
-  function renderPlayer() {
+  function renderPlayer(renderPosition = player) {
     if (!player) return;
+    const renderX = Number(renderPosition?.x) || 0;
+    const renderY = Number(renderPosition?.y) || 0;
     ctx.save();
     ctx.globalAlpha = player.onGround ? 0.3 : 0.16;
     ctx.fillStyle = CANVAS_MATERIAL.lacquer;
-    ellipse(player.x + player.w / 2, player.y + player.h + 3, player.w * 0.86, player.onGround ? 5 : 3.5, 0);
+    ellipse(renderX + player.w / 2, renderY + player.h + 3, player.w * 0.86, player.onGround ? 5 : 3.5, 0);
     ctx.restore();
     if (player.invuln > 0 && Math.floor(player.invuln * 16) % 2 === 0) return;
     if (player.superInvuln > 0) {
       ctx.save();
-      ctx.globalAlpha = 0.42 + Math.sin(performance.now() / 90) * 0.12;
+      ctx.globalAlpha = 0.42 + Math.sin(sceneTime() * 11) * 0.12;
       ctx.strokeStyle = CANVAS_MATERIAL.moonWhite;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(player.x + player.w / 2, player.y + player.h / 2, player.w * 0.92, player.h * 0.66, performance.now() / 500, 0, Math.PI * 2);
+      ctx.ellipse(renderX + player.w / 2, renderY + player.h / 2, player.w * 0.92, player.h * 0.66, sceneTime() * 2, 0, Math.PI * 2);
       ctx.stroke();
       ctx.restore();
     }
     const authoredHeight = save.selected === "nini" ? 238 : 232;
-    const defaultScale = 0.64 * (player.h / player.baseH);
+    const defaultScale = 0.78 * (player.h / player.baseH);
     const maxViewportShare = player.bigTimer > 0 ? 0.4 : 0.34;
     const responsiveScale = view.isMobileLandscape ? (view.h * maxViewportShare) / authoredHeight : defaultScale;
     const artScale = Math.min(defaultScale, responsiveScale);
-    drawCharacterArt(save.selected, snap(player.x + player.w / 2), snap(player.y + player.h), player.facing, artScale, {
+    const motionFacing = CharacterMotion?.resolveMotionFacing?.({
+      id: save.selected,
+      facing: player.facing,
+      dashDir: player.dashDir,
+      skillTimer: player.skillTimer,
+    }) ?? player.facing;
+    const simulationTime = sceneTime();
+    const pose = {
       vx: player.vx,
       vy: player.vy,
       onGround: player.onGround,
@@ -2146,6 +2306,27 @@
       skillTimer: player.skillTimer,
       hurtFlash: player.hurtFlash,
       gaitPhase: player.gaitPhase,
+      simulationTime,
+    };
+    const motion = CharacterMotion?.resolveCharacterMotion?.({
+      id: save.selected,
+      facing: motionFacing,
+      speed: characters[save.selected].speed,
+      now: simulationTime * 1000,
+      ...pose,
+    });
+    const animationName = motion?.animation || characterAnimName(save.selected, pose);
+    presentation.motionState = CharacterMotion?.advanceAnimationState?.(
+      presentation.motionState,
+      animationName,
+      simulationTime,
+    ) || presentation.motionState;
+    const motionElapsed = CharacterMotion?.animationElapsed?.(presentation.motionState, simulationTime) || 0;
+    drawCharacterArt(save.selected, renderX + player.w / 2, renderY + player.h, motionFacing, artScale, {
+      ...pose,
+      motion,
+      animationName,
+      motionElapsed,
     });
   }
 
@@ -2155,7 +2336,7 @@
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(facing * scale, scale);
-    const bob = Math.sin(performance.now() / 120) * 1.2;
+    const bob = Math.sin(sceneTime() * 8.3) * 1.2;
     ctx.translate(0, bob);
     ctx.shadowColor = "rgba(195,164,104,.26)";
     ctx.shadowBlur = 6;
@@ -2254,19 +2435,21 @@
   }
 
   function drawCharacterSprite(id, x, y, facing, scale, pose = null) {
-    const image = characterSprites[id];
-    if (!image || !image.complete || !image.naturalWidth) return false;
-    const atlas = characterAtlases[id]?.data;
-    const motion = CharacterMotion?.resolveCharacterMotion?.({
+    const simulationTime = Math.max(0, Number(pose?.simulationTime) || sceneTime());
+    const motion = pose?.motion || CharacterMotion?.resolveCharacterMotion?.({
       id,
       facing,
       speed: characters[id].speed,
-      now: performance.now(),
+      now: simulationTime * 1000,
       ...pose,
     });
-    const animName = motion?.animation || characterAnimName(id, pose);
+    const animName = pose?.animationName || motion?.animation || characterAnimName(id, pose);
+    const motionElapsed = Math.max(0, Number(pose?.motionElapsed) || 0);
+    const image = characterSprites[id];
+    if (!image || !image.complete || !image.naturalWidth) return false;
+    const atlas = characterAtlases[id]?.data;
     const animConfig = atlas?.animations?.[animName] || atlas?.animations?.idle;
-    const sourceFrame = atlasFrame(atlas, animName, image);
+    const sourceFrame = atlasFrame(atlas, animName, image, motionElapsed);
     const orientation = CharacterMotion?.resolveSpriteOrientation?.(animName, facing, animConfig) || {
       frameScaleX: facing,
       leanScale: 1,
@@ -2280,13 +2463,14 @@
     const stretchY = motion?.scaleY || 1;
     const lift = targetH * (id === "nini" ? 0.045 : 0.03) + (motion?.lift || 0) * scale;
     ctx.save();
-    ctx.translate(snap(x), snap(y + lift + bob));
+    ctx.translate(x, y + lift + bob);
     ctx.scale(orientation.frameScaleX, 1);
     ctx.rotate(lean * orientation.leanScale);
     ctx.scale(stretchX, stretchY);
     ctx.shadowColor = "rgba(195,164,104,.32)";
     ctx.shadowBlur = 6 * scale;
-    drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale);
+    drawMovementTrace(id, motion, targetW, targetH, scale);
+    drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale, simulationTime, motionElapsed);
     ctx.drawImage(
       image,
       sourceFrame.sx,
@@ -2302,7 +2486,26 @@
     return true;
   }
 
-  function drawMotionArtifact(id, artifact, targetW, targetH, scale, directionScale = 1) {
+  function drawMovementTrace(id, motion, targetW, targetH, scale) {
+    const stride = Number(motion?.stride) || 0;
+    if (stride < 0.28 || view.reducedMotion) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(0.22, 0.08 + stride * 0.09);
+    ctx.strokeStyle = id === "nini" ? "rgba(184,123,134,.72)" : "rgba(109,168,149,.72)";
+    ctx.lineWidth = Math.max(1, 1.5 * scale);
+    ctx.lineCap = "round";
+    for (let line = 0; line < 3; line += 1) {
+      const y = -targetH * (0.15 + line * 0.12);
+      const length = targetW * (0.16 + stride * 0.11 + line * 0.04);
+      ctx.beginPath();
+      ctx.moveTo(-targetW * 0.18, y);
+      ctx.quadraticCurveTo(-length * 0.6, y + (line - 1) * 3, -length, y + (line - 1) * 5);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawMotionArtifact(id, artifact, targetW, targetH, scale, directionScale = 1, time = 0, motionElapsed = 0) {
     if (!artifact || artifact === "rest") return;
     ctx.save();
     ctx.shadowBlur = 0;
@@ -2311,7 +2514,7 @@
       const open = artifact === "star-dial-open" ? 1 : 0.72;
       const radius = targetW * (0.42 + open * 0.08);
       ctx.translate(targetW * 0.18 * directionScale, -targetH * 0.58);
-      ctx.rotate((performance.now() / 900) * directionScale);
+      ctx.rotate((time / 0.9) * directionScale);
       ctx.strokeStyle = "rgba(195,164,104,.72)";
       ctx.lineWidth = Math.max(1, 1.4 * scale);
       for (let ring = 0; ring < 3; ring += 1) {
@@ -2334,11 +2537,13 @@
       ctx.quadraticCurveTo(targetW * 0.12, -targetH * 0.25, targetW * 0.72, -targetH * 0.03);
       ctx.stroke();
       if (cut) {
-        ctx.globalAlpha = 0.34;
-        ctx.beginPath();
-        ctx.moveTo(-targetW * 0.48, targetH * 0.24);
-        ctx.quadraticCurveTo(targetW * 0.18, -targetH * 0.16, targetW * 0.62, targetH * 0.02);
-        ctx.stroke();
+        for (let echo = 1; echo <= 3; echo += 1) {
+          ctx.globalAlpha = Math.max(0.08, 0.34 - echo * 0.07) * Math.min(1, 0.45 + motionElapsed * 8);
+          ctx.beginPath();
+          ctx.moveTo(-targetW * (0.48 + echo * 0.06), targetH * (0.24 + echo * 0.015));
+          ctx.quadraticCurveTo(targetW * 0.18, -targetH * (0.16 - echo * 0.01), targetW * (0.62 - echo * 0.035), targetH * (0.02 + echo * 0.015));
+          ctx.stroke();
+        }
       }
     }
     ctx.restore();
@@ -2353,15 +2558,13 @@
     return Math.abs(pose.vx || 0) > characters[id].speed * 0.18 ? "run" : "idle";
   }
 
-  function atlasFrame(atlas, animName, image) {
+  function atlasFrame(atlas, animName, image, elapsed = 0) {
     if (!atlas?.frame || !atlas.animations) return { sx: 0, sy: 0, sw: image.naturalWidth, sh: image.naturalHeight };
     const frameW = Number(atlas.frame.w) || image.naturalWidth;
     const frameH = Number(atlas.frame.h) || image.naturalHeight;
     if (frameW <= 1 || frameH <= 1) return { sx: 0, sy: 0, sw: image.naturalWidth, sh: image.naturalHeight };
     const anim = atlas.animations[animName] || atlas.animations.idle;
-    const frames = anim?.frames?.length ? anim.frames : [0];
-    const fps = Number(anim.fps) || 1;
-    const frame = frames[Math.floor((performance.now() / 1000) * fps) % frames.length];
+    const frame = CharacterMotion?.sampleAnimationFrame?.(anim, elapsed) ?? anim?.frames?.[0] ?? 0;
     const columns = Math.max(1, Math.floor(image.naturalWidth / frameW));
     return {
       sx: (frame % columns) * frameW,
@@ -2503,20 +2706,31 @@
   }
 
   function shake(amount) {
+    if (!save.settings.shake) return;
     camera.shake = GameFeel?.clampShake?.(camera.shake, amount, view.isMobileLandscape, view.reducedMotion) ?? Math.max(camera.shake, amount);
   }
 
   function updateHud() {
     const characterName = characters[save.selected].name;
+    const timeText = formatTime(player.elapsed);
+    const statusText = statusLabel();
+    const skillText = skillLabel();
     if (hudState.character !== null && hudState.character !== characterName) Hud.pulseHudPill?.(hudEls.character.parentElement);
     hudState.character = characterName;
     setHudText("character", hudEls.character, characterName);
     setHudText("health", hudEls.health, heartLabel(player.health, player.maxHealth));
     setHudText("coins", hudEls.coins, player.coins);
     setHudText("ammo", hudEls.ammo, player.ammo);
-    setHudText("time", hudEls.time, formatTime(player.elapsed));
-    setHudText("status", hudEls.status, statusLabel());
-    setHudText("skill", hudEls.skill, skillLabel());
+    setHudText("time", hudEls.time, timeText);
+    setHudText("status", hudEls.status, statusText);
+    setHudText("skill", hudEls.skill, skillText);
+    setHudLabel("characterLabel", hudEls.character.parentElement, `同行 ${characterName}`);
+    setHudLabel("healthLabel", hudEls.health.parentElement, `生命 ${player.health} / ${player.maxHealth}`);
+    setHudLabel("coinsLabel", hudEls.coins.parentElement, `星露 ${player.coins}`);
+    setHudLabel("ammoLabel", hudEls.ammo.parentElement, `星弹 ${player.ammo}`);
+    setHudLabel("timeLabel", hudEls.time.parentElement, `时间 ${timeText}`);
+    setHudLabel("statusLabel", hudEls.status, `状态 ${statusText}`);
+    setHudLabel("skillLabel", hudEls.skill, skillText);
     const phaseCritical = phaseTideState().enabled;
     if (hudState.phaseCritical !== phaseCritical) {
       hudEls.status.classList.toggle("phase-critical", phaseCritical);
@@ -2541,6 +2755,14 @@
     const text = String(value);
     if (hudState.values[key] === text) return;
     element.textContent = text;
+    hudState.values[key] = text;
+  }
+
+  function setHudLabel(key, element, value) {
+    if (!element) return;
+    const text = String(value);
+    if (hudState.values[key] === text) return;
+    element.setAttribute("aria-label", text);
     hudState.values[key] = text;
   }
 
@@ -2613,12 +2835,16 @@
     toast.textContent = text;
     toast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toast.classList.remove("show"), 2400);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove("show");
+      toast.textContent = "";
+    }, 2400);
   }
 
   function openModal(title, text, actions, eyebrow = "暂停") {
     resetControlState();
     mode = "paused";
+    modal.dataset.modalKind = eyebrow === "胜利" ? "complete" : eyebrow === "挑战失败" ? "fail" : title === "暂停" ? "pause" : "notice";
     document.getElementById("modalEyebrow").textContent = eyebrow;
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalText").textContent = text;
@@ -2637,6 +2863,7 @@
     hudEls.intro.classList.remove("active");
     touchControls.classList.remove("playing");
     audioBus.pauseBgm();
+    syncOrientationGate();
     box.querySelector(".primary, button")?.focus({ preventScroll: true });
   }
 
@@ -2648,21 +2875,26 @@
     hud.classList.add("active");
     touchControls.classList.add("playing");
     audioBus.playBgm();
-    focusGameplay();
+    syncOrientationGate();
+    if (!orientationGated) focusGameplay();
   }
 
   function pauseGame() {
     if (mode !== "play") return;
     const ch = characters[save.selected];
-    openModal("暂停", `${activeLevel.name} · ${ch.skillName} · ${ch.projectileName}。键盘：方向/WASD 移动，空格跳跃，J 技能，K 发射。`, [
+    const touchHint = typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
+    const controls = touchHint
+      ? "触控：左侧星盘可按住滑动换向，右侧依次为跳跃、技能与星弹。"
+      : "键盘：方向键或 WASD 移动，空格跳跃，J 技能，K 发射。";
+    openModal("暂停", `${activeLevel.name} · ${ch.skillName} · ${ch.projectileName}。${controls}`, [
       ["继续", resumeGame, "primary"],
       ["重新开始", () => startLevel(currentLevelIndex)],
       ["返回菜单", backToMenu],
     ]);
   }
 
-  function trapModalFocus(event) {
-    const actions = [...modal.querySelectorAll("button:not([disabled])")].filter((button) => button.getClientRects().length > 0);
+  function trapDialogFocus(event, dialog) {
+    const actions = [...dialog.querySelectorAll("button:not([disabled])")].filter((button) => button.getClientRects().length > 0);
     if (!actions.length) {
       event.preventDefault();
       return;
@@ -2670,10 +2902,10 @@
     const first = actions[0];
     const last = actions[actions.length - 1];
     const active = document.activeElement;
-    if (event.shiftKey && (active === first || !modal.contains(active))) {
+    if (event.shiftKey && (active === first || !dialog.contains(active))) {
       event.preventDefault();
       last.focus({ preventScroll: true });
-    } else if (!event.shiftKey && (active === last || !modal.contains(active))) {
+    } else if (!event.shiftKey && (active === last || !dialog.contains(active))) {
       event.preventDefault();
       first.focus({ preventScroll: true });
     }
@@ -2685,22 +2917,41 @@
     activeLevel = null;
     player = null;
     introTimer = 0;
+    portraitOverride = false;
     hudEls.intro.classList.remove("active");
     modal.classList.remove("active");
     audioBus.pauseBgm();
+    syncOrientationGate();
     showScreen("menu");
   }
 
   function renderMenus() {
-    document.querySelectorAll(".character-card").forEach((card) => card.classList.toggle("selected", card.dataset.character === save.selected));
+    document.querySelectorAll(".character-card").forEach((card) => {
+      const selected = card.dataset.character === save.selected;
+      card.classList.toggle("selected", selected);
+      const pick = card.querySelector("[data-pick]");
+      pick?.setAttribute("aria-pressed", String(selected));
+      if (pick) {
+        pick.textContent = selected ? `已选 · ${characters[card.dataset.character].name}` : `选择${characters[card.dataset.character].name}`;
+        pick.classList.toggle("primary", selected);
+      }
+    });
     const levelList = document.getElementById("levelList");
     Hud.renderSaveStrip(document.getElementById("saveStrip"), save, characters, levels);
     Hud.renderLevelList(levelList, { levels, save, startLevel, formatTime });
     document.getElementById("volumeRange").value = save.settings.volume;
     document.getElementById("bgmRange").value = save.settings.bgmVolume;
     document.getElementById("touchRange").value = save.settings.touch;
+    document.getElementById("touchOpacityRange").value = save.settings.touchOpacity;
+    document.getElementById("hudScaleRange").value = save.settings.hudScale;
     document.getElementById("fxToggle").checked = save.settings.fx;
-    document.documentElement.style.setProperty("--touch-size", `${save.settings.touch}px`);
+    document.getElementById("shakeToggle").checked = save.settings.shake;
+    const continueIndex = Math.min(save.unlocked - 1, levels.length - 1);
+    const continueButton = document.getElementById("continueAction");
+    continueButton.textContent = `继续冒险 · 第 ${continueIndex + 1} 章`;
+    continueButton.setAttribute("aria-label", `继续冒险：${levels[continueIndex].name}`);
+    applySettingsToDocument();
+    updateSettingOutputs();
   }
 
   function bindUi() {
@@ -2717,6 +2968,10 @@
       }
       if (action === "pause") pauseGame();
       if (action === "exit-game") backToMenu();
+      if (action === "continue-portrait") {
+        portraitOverride = true;
+        syncOrientationGate();
+      }
       if (action === "reset" && confirm("确定清除所有本地存档？")) {
         flushPersist();
         save = Storage.cloneDefaultSave();
@@ -2736,20 +2991,40 @@
     document.getElementById("volumeRange").addEventListener("input", (e) => {
       save.settings.volume = Number(e.target.value);
       audioBus.syncBgmVolume();
+      updateSettingOutputs();
       schedulePersist();
     });
     document.getElementById("bgmRange").addEventListener("input", (e) => {
       save.settings.bgmVolume = Number(e.target.value);
       audioBus.syncBgmVolume();
+      updateSettingOutputs();
       schedulePersist();
     });
     document.getElementById("touchRange").addEventListener("input", (e) => {
       save.settings.touch = Number(e.target.value);
-      document.documentElement.style.setProperty("--touch-size", `${save.settings.touch}px`);
+      applySettingsToDocument();
+      updateSettingOutputs();
+      schedulePersist();
+    });
+    document.getElementById("touchOpacityRange").addEventListener("input", (e) => {
+      save.settings.touchOpacity = Number(e.target.value);
+      applySettingsToDocument();
+      updateSettingOutputs();
+      schedulePersist();
+    });
+    document.getElementById("hudScaleRange").addEventListener("input", (e) => {
+      save.settings.hudScale = Number(e.target.value);
+      applySettingsToDocument();
+      updateSettingOutputs();
       schedulePersist();
     });
     document.getElementById("fxToggle").addEventListener("change", (e) => {
       save.settings.fx = e.target.checked;
+      persist();
+    });
+    document.getElementById("shakeToggle").addEventListener("change", (e) => {
+      save.settings.shake = e.target.checked;
+      if (!save.settings.shake) camera.shake = 0;
       persist();
     });
     for (const range of document.querySelectorAll(".settings-list input[type='range']")) {
@@ -2757,11 +3032,32 @@
     }
   }
 
+  function applySettingsToDocument() {
+    document.documentElement.style.setProperty("--touch-size", `${save.settings.touch}px`);
+    document.documentElement.style.setProperty("--touch-opacity", String(save.settings.touchOpacity / 100));
+    document.documentElement.style.setProperty("--hud-scale", String(save.settings.hudScale / 100));
+  }
+
+  function updateSettingOutputs() {
+    document.getElementById("volumeValue").value = `${save.settings.volume}%`;
+    document.getElementById("bgmValue").value = `${save.settings.bgmVolume}%`;
+    document.getElementById("touchValue").value = `${save.settings.touch} px`;
+    document.getElementById("touchOpacityValue").value = `${save.settings.touchOpacity}%`;
+    document.getElementById("hudScaleValue").value = `${save.settings.hudScale}%`;
+  }
+
   function bindControls() {
     window.addEventListener("keydown", (e) => {
-      if (e.code === "Tab" && mode === "paused" && modal.classList.contains("active")) {
-        trapModalFocus(e);
-        return;
+      if (e.code === "Tab") {
+        const activeDialog = mode === "paused" && modal.classList.contains("active")
+          ? modal
+          : orientationGated
+            ? rotatePrompt
+            : null;
+        if (activeDialog) {
+          trapDialogFocus(e, activeDialog);
+          return;
+        }
       }
       if (e.code === "Escape") {
         if (e.repeat) {
@@ -2782,12 +3078,11 @@
       if (!InputState.isGameplayKeyEvent(e, mode)) return;
       e.preventDefault();
       if (suppressedKeys.has(e.code)) return;
-      if (!keys[e.code]) {
-        if (["Space", "ArrowUp", "KeyW"].includes(e.code)) inputs.jumpPressed = true;
-        if (["KeyJ", "ShiftLeft", "ShiftRight"].includes(e.code)) inputs.skillPressed = true;
-        if (["KeyK", "Enter"].includes(e.code)) inputs.shootPressed = true;
-      }
+      const action = InputState.actionForGameplayCode(e.code);
+      const result = actionInputs.press(`key:${e.code}`, action);
+      applyActionPress(result);
       keys[e.code] = true;
+      syncTouchControlState();
     }, { passive: false });
     window.addEventListener("keyup", (e) => {
       const wasHeld = !!keys[e.code];
@@ -2795,39 +3090,64 @@
       suppressedKeys.delete(e.code);
       if (!wasHeld && !InputState.isGameplayKeyEvent(e, mode)) return;
       if (mode === "play") e.preventDefault();
-      if (wasHeld && ["Space", "ArrowUp", "KeyW"].includes(e.code)) inputs.jumpReleased = true;
+      applyActionRelease(actionInputs.release(`key:${e.code}`));
       keys[e.code] = false;
+      syncTouchControlState();
     }, { passive: false });
 
     const hapticTouches = new Set(["jump", "skill", "shoot"]);
+    const activationTimers = new Map();
     for (const btn of document.querySelectorAll("[data-touch]")) {
       const name = btn.dataset.touch;
       const down = (e) => {
         e.preventDefault();
-        if (mode !== "play") return;
+        if (mode !== "play" || orientationGated) return;
         btn.setPointerCapture?.(e.pointerId);
-        const result = touchPointers.press(e.pointerId, name);
+        const result = actionInputs.press(`pointer:${e.pointerId}`, name);
         if (!result.accepted) return;
-        if (result.becameActive && name === "jump") inputs.jumpPressed = true;
-        if (result.becameActive && name === "skill") inputs.skillPressed = true;
-        if (result.becameActive && name === "shoot") inputs.shootPressed = true;
-        keys[name] = true;
-        if (result.becameActive && hapticTouches.has(name)) haptic();
-        btn.classList.add("active");
+        applyActionPress(result);
+        if (result.added && hapticTouches.has(name)) haptic();
+        syncTouchControlState();
+      };
+      const move = (e) => {
+        if (name !== "left" && name !== "right") return;
+        const sourceId = `pointer:${e.pointerId}`;
+        const heldAction = actionInputs.actionForSource(sourceId);
+        if (heldAction !== "left" && heldAction !== "right") return;
+        e.preventDefault();
+        const rail = btn.closest(".touch-left");
+        const rect = rail?.getBoundingClientRect();
+        if (!rect?.width) return;
+        const nextAction = e.clientX < rect.left + rect.width / 2 ? "left" : "right";
+        if (nextAction === heldAction) return;
+        actionInputs.press(sourceId, nextAction);
+        syncTouchControlState();
       };
       const up = (e) => {
         e.preventDefault();
-        const result = touchPointers.release(e.pointerId, name);
-        if (result.released && result.becameInactive) {
-          if (result.action === "jump") inputs.jumpReleased = true;
-          keys[name] = false;
-          btn.classList.remove("active");
-        }
+        applyActionRelease(actionInputs.release(`pointer:${e.pointerId}`));
+        syncTouchControlState();
       };
       btn.addEventListener("pointerdown", down, { passive: false });
+      btn.addEventListener("pointermove", move, { passive: false });
       btn.addEventListener("pointerup", up, { passive: false });
       btn.addEventListener("pointercancel", up, { passive: false });
       btn.addEventListener("lostpointercapture", up, { passive: false });
+      btn.addEventListener("click", (e) => {
+        if (e.detail !== 0 || mode !== "play" || orientationGated) return;
+        e.preventDefault();
+        const sourceId = `activation:${name}`;
+        clearTimeout(activationTimers.get(sourceId));
+        const result = actionInputs.press(sourceId, name);
+        applyActionPress(result);
+        if (result.added && hapticTouches.has(name)) haptic();
+        syncTouchControlState();
+        activationTimers.set(sourceId, setTimeout(() => {
+          activationTimers.delete(sourceId);
+          applyActionRelease(actionInputs.release(sourceId));
+          syncTouchControlState();
+        }, ACCESSIBLE_TOUCH_HOLD));
+      });
     }
     document.addEventListener("focusin", (e) => {
       if (mode !== "play" || e.target === canvas || e.target?.closest?.("[data-touch]")) return;
@@ -2836,12 +3156,29 @@
     window.addEventListener("blur", resetPhysicalControlState);
   }
 
+  function applyActionPress(result) {
+    if (!result?.becameActive) return;
+    if (result.action === "jump") inputs.jumpPressed = true;
+    if (result.action === "skill") inputs.skillPressed = true;
+    if (result.action === "shoot") inputs.shootPressed = true;
+  }
+
+  function applyActionRelease(result) {
+    if (result?.becameInactive && result.action === "jump") inputs.jumpReleased = true;
+  }
+
+  function syncTouchControlState() {
+    document.querySelectorAll("[data-touch]").forEach((button) => {
+      button.classList.toggle("active", actionInputs.isActive(button.dataset.touch));
+    });
+  }
+
   function resetControlState() {
-    InputState.resetTransientState({ keys, inputs, pointerActions: touchPointers });
+    InputState.resetTransientState({ keys, inputs, actionInputs });
     for (const key of Object.keys(inputs)) inputs[key] = false;
     suppressedKeys.clear();
     for (const code of physicalKeys) suppressedKeys.add(code);
-    document.querySelectorAll("[data-touch].active").forEach((button) => button.classList.remove("active"));
+    syncTouchControlState();
   }
 
   function resetPhysicalControlState() {
@@ -2889,19 +3226,46 @@
     }
     const frameDt = clamp((now - last) / 1000, 0, FixedStep.MAX_FRAME_DT);
     last = now;
-    const simulationDt = mode === "play" ? GameFeel?.consumeHitstop?.(frameDt) ?? frameDt : frameDt;
-    if (mode === "play" && simulationDt <= 0) {
+    const gameplayActive = mode === "play" && !orientationGated;
+    if (!gameplayActive) {
+      accumulator = 0;
+      render();
+      requestAnimationFrame(loop);
+      return;
+    }
+    const hitstopBeforeFrame = GameFeel?.getHitstopRemaining?.() || 0;
+    const simulationDt = GameFeel?.consumeHitstop?.(frameDt) ?? frameDt;
+    const hitstopAfterConsume = GameFeel?.getHitstopRemaining?.() || 0;
+    if (simulationDt <= 0) {
+      if (GameFeel?.shouldSyncPresentationAfterHitstop?.({
+        before: hitstopBeforeFrame,
+        after: hitstopAfterConsume,
+        steps: 0,
+      })) {
+        syncPresentationCoordinates();
+      }
+      renderAlpha = 1;
       render();
       requestAnimationFrame(loop);
       return;
     }
     const frame = FixedStep.runFrame(accumulator, simulationDt, (dt) => {
       const hitstopBefore = GameFeel?.getHitstopRemaining?.() || 0;
+      beginPresentationStep();
       update(dt);
       const hitstopAfter = GameFeel?.getHitstopRemaining?.() || 0;
       return hitstopAfter > hitstopBefore;
     });
     accumulator = frame.accumulator;
+    const resumedWithoutStep = GameFeel?.shouldSyncPresentationAfterHitstop?.({
+      before: hitstopBeforeFrame,
+      after: hitstopAfterConsume,
+      steps: frame.steps,
+    });
+    if (resumedWithoutStep) syncPresentationCoordinates();
+    renderAlpha = frame.hitstopRequested || resumedWithoutStep
+      ? 1
+      : clamp(frame.accumulator / FixedStep.FIXED_DT, 0, 1);
     render();
     requestAnimationFrame(loop);
   }
@@ -2909,6 +3273,7 @@
   function init() {
     resize();
     window.addEventListener("resize", resize);
+    document.addEventListener("nini:dialog-change", syncDialogIsolation);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", () => {
       pageHidden = true;

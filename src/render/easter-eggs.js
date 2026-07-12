@@ -78,11 +78,13 @@
     card.appendChild(close);
     root.appendChild(card);
     document.body.appendChild(root);
+    document.dispatchEvent(new CustomEvent("nini:dialog-change"));
     const dismiss = () => {
       if (dismissed) return;
       dismissed = true;
       root.classList.remove("show");
       root.setAttribute("aria-hidden", "true");
+      document.dispatchEvent(new CustomEvent("nini:dialog-change"));
       window.setTimeout(() => root.remove(), 320);
       document.removeEventListener("keydown", onKey);
       if (returnFocus?.isConnected && typeof returnFocus.focus === "function") {

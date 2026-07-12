@@ -1,121 +1,112 @@
 # Motion Guide
 
-## Principles
+Motion in `Nini & Yuan` has two jobs: confirm intent and make the Song-atlas Night Observatory readable at speed. Control response belongs to the simulation. Animation, interpolation, particles, camera lead, and screen shake belong to presentation and must not change collision geometry or ability timing.
 
-Motion confirms input, clarifies hierarchy, and supports the **宋式星图器物幻想 / Song-atlas Night Observatory** identity. Decorative motion must not impair control response or produce measurable frame loss on low-end Android WebView devices.
+## Control Pipeline
 
-Animation is limited to `transform` and `opacity` on small surfaces. Full-screen animated blur, masks, `backdrop-filter`, and `transition: all` are not used.
+`src/core/input-state.js` is the boundary between physical input and gameplay actions. `src/game.js` consumes actions only while the game is in `play` mode and no orientation dialog owns the surface.
 
-## Timing and Easing
+1. `ACTION_BY_KEY_CODE` maps every gameplay key to `left`, `right`, `jump`, `skill`, or `shoot`. `GAMEPLAY_KEY_CODES` is derived from that map.
+2. Keyboard, pointer, and synthesized activation each register a source reference such as `key:KeyD`, `pointer:7`, or `activation:jump`.
+3. An action becomes active when its first source is added. It becomes inactive only after its final source is released. This preserves holds when two keys or fingers represent the same action.
+4. If left and right are both held, the most recently pressed source wins. Releasing it falls back to the direction that remains held.
+5. The fixed-step update reads the resolved action state. It never reads DOM focus, pointer IDs, or raw keyboard aliases directly.
+
+The left touch rail captures its pointer. A held finger may slide across the rail midpoint to switch between left and right without lifting. Pointer up, pointer cancellation, and lost capture release that source. Drift outside an individual button does not release it.
+
+Touch buttons remain semantic buttons. A keyboard or assistive-technology click with `detail === 0` creates a 140 ms action hold, which gives movement and jump enough time to reach a fixed update. Pointer-generated clicks do not create a second press after `pointerdown`.
+
+Every menu, modal, focus, blur, visibility, and orientation transition clears held actions, pressed edges, and pointer references together. A mapped physical key that remains down across a transition stays suppressed until its matching `keyup`.
+
+## Response Contracts
+
+- Character-specific launch acceleration reaches full ground speed within 140 ms.
+- A full-speed ground reversal finishes within 190 ms. Neutral ground stopping finishes within 120 ms.
+- Coyote time remains 120 ms and the jump buffer remains 140 ms.
+- A grounded jump pressed during the first 100 ms of a chapter remains a ground jump and does not spend Nini's air jump.
+- A valid short Nini skill press opens a 120 ms glide-intent window. The skill cooldown begins only when glide starts.
+- Yuan records `dashDir` when a dash begins. Movement and the authored dash pose retain that direction until the dash ends.
+- Pause and portrait orientation dialogs freeze simulation. Returning to play starts from cleared action state.
+
+## Simulation and Presentation
+
+The simulation runs at 120 Hz. A rendered frame executes no more than eight fixed steps, and lifecycle gaps clamp at 80 ms. Normal delivery at 60, 30, 25, or 20 fps preserves real simulation time; only overload beyond the guard drops whole steps.
+
+Before each fixed step, `beginPresentationStep()` stores the previous player and camera coordinates. Rendering samples between those coordinates and the current simulation values with the accumulator ratio.
+
+- Player and camera interpolation use the same render alpha.
+- Samples quantize to `1 / devicePixelRatio`, so Canvas placement lands on physical-pixel boundaries without rounding to whole CSS pixels.
+- Level entry frames the initial camera before the first rendered step.
+- Portal travel, respawn, and other discontinuities request a presentation snap instead of drawing a sweep across the level.
+- When hit-stop ends inside a frame that produces no fixed step, presentation history synchronizes to the current player and camera coordinates. The next frame cannot rewind the sprite or camera.
+
+`presentation.motionState` owns animation state. Gameplay entities do not store render state. State entry time comes from the simulation clock, `player.elapsed`, so animation pauses with gameplay and remains stable across variable display rates.
+
+Atlas frames use time elapsed since the current state began. Looping states wrap through their frame list. A state with `loop: false` starts on its first authored frame and holds its final frame after the sequence finishes.
+
+Ground gait follows accumulated horizontal travel rather than wall time. Starts, stops, wall contacts, and reversals therefore keep the pose attached to actual movement.
+
+## Character State Selection
+
+The resolver in `src/render/character-motion.js` selects presentation in this order:
+
+1. Hurt.
+2. Nini glide or Yuan dash.
+3. Projectile attack.
+4. Airborne jump or fall.
+5. Readable landing beat.
+6. Ground turn.
+7. Run.
+8. Idle.
+
+Airborne direction changes retain a jump or fall pose instead of borrowing a grounded turn. A fast landing returns to run after its short impact beat. Yuan's dash-facing resolver uses `dashDir`, even if collision or later input changes `player.facing` during the active dash.
+
+The complete atlas schema and orientation rules are recorded in [CHARACTER_ATLAS.md](CHARACTER_ATLAS.md).
+
+## Camera, Hit-Stop, and Shake
+
+Camera lookahead leads up to 56 px horizontally and 30 px vertically. Explicit reversal intent retargets horizontal lead before velocity crosses zero. Portal travel, respawn, and visibility changes reset lookahead.
+
+Stomps, projectile hits, hurt, crystal breaks, and Yuan dash anticipation may request 35 to 70 ms of hit-stop. Hit-stop pauses simulation and keeps rendering active. Requests take the larger active value and are capped at 120 ms; they do not accumulate.
+
+The `画面震动` setting is a persistent master switch. Turning it off clears current shake and blocks new shake requests. With shake enabled, mobile landscape scales event amplitude to 65 percent. Reduced motion scales it to 30 percent.
+
+## Interface Motion
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--d-fast` | 140 ms | Button press, hover, immediate feedback |
-| `--d-base` | 240 ms | HUD chips, chapter cards, modal veil, toast |
-| `--d-slow` | 520 ms | Hero card lift, screen entry tail |
-| `--d-breath` | 3.2 s | Touch action readiness pulse |
-| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Entry, lift, pop |
-| `--ease-in` | `cubic-bezier(0.7, 0, 0.84, 0)` | Exit |
-| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Toast, modal card, hero parallax |
-| `--ease-soft` | `cubic-bezier(0.25, 0.46, 0.45, 0.94)` | Long hover transitions |
+| `--d-fast` | 140 ms | Press, hover, and immediate feedback |
+| `--d-base` | 240 ms | HUD chips, cards, dialogs, and toast |
+| `--d-slow` | 520 ms | Screen entry and hero-card settling |
+| `--d-breath` | 3.2 s | Optional touch readiness pulse |
+| `--ease-out` | `cubic-bezier(0.16, 1, 0.3, 1)` | Entry and lift |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Short pop feedback |
 
-## Signature Micro-Interactions
+DOM animation is limited to `transform` and `opacity` on small surfaces. The interface does not use `transition: all`, full-screen animated blur, animated masks, or `backdrop-filter`.
 
-| # | Element | Trigger | Behavior |
-| --- | --- | --- | --- |
-| 1 | `.brand h1` | Menu enters | Brushwork title reveal: opacity rises and the title settles over 1.1 s. |
-| 2 | `.menu-heroes::before/.menu-heroes::after` | Static | Lacquer halo and star-chart tracery behind the heroes add color depth without animation or blur filters. |
-| 3 | `.character-card[data-character]::after` | Hover, focus, selected | Character-tinted halo (rose for Nini, jade for Yuan) fades in and lights a gold ring. |
-| 4 | `.level-item.featured::before` | Static | Atlas ring marks the next available chapter with a hairline arc and star core. |
-| 5 | `.touch-btn.jump/.skill/.shoot::before` | Idle | Breath aura ring scales 0.96 -> 1.04 over 3.2 s; cancels instantly on press. |
-| 6 | `.ambient-rune` / `.ambient-spark` / `.ambient-constellation` | Menu surfaces only | Calligraphic rune drift, sparkle twinkle, and connected six-star glyph pulse fill the empty viewport zones outside the panel and pause during gameplay. |
-| 7 | `.cursor-spark` | Pointer move on cover or title (`(hover: hover) and (pointer: fine)`) | Distance-interpolated gold/rose/jade/cyan stardust emits into a fixed full-viewport layer above the active menu panel, fills fast pointer movement at roughly 18 px intervals, lifts 30-54 px, and fades over 960 ms; capped at 56 active sparks; disabled under reduced-motion. |
-| 8 | `.love-letter` / `.love-heart` / `.love-toast` | Hidden Yuan-to-Nini surprises | A discovered easter egg fades a centered letter card, a beating constellation heart, or a top-center toast in for a few seconds, then fades back out. The heart beats at 1.6 s and pauses under reduced-motion. |
-| 9 | `.level-item.featured::before` | Static featured chapter | `compass-rotate` slowly turns the gold conic ring at 18 s per revolution; the four-point `✦` core stays static for legibility. Paused under reduced-motion. |
-| 10 | `.level-list::after` | Hover (fine pointer) | Hairline meridian rail fades from 0 to 0.42 opacity over `--d-slow`, connecting the four ordinary chapters and the featured chapter into one inked map. |
-| 11 | `.brand::after` | Menu enters | `aurora-sweep` paints a gold/rose/jade/cyan brushwork under the wordmark at 1.4 s ease-out with a 220 ms delay, then settles at 60 % horizontal scale and 50 % opacity. Hidden under reduced-motion. |
-| 12 | `.menu-hero-art` `--mx` / `--my` | Pointer move (fine pointer) | The paired scroll illustration drifts up to 4 px against the pointer, preserving the protagonists as one composed artwork. Touch devices substitute a 7 s `hero-breath` tilt. Both pause under reduced-motion. |
-| 13 | `.hud-pill.pulse` | Character / skill state actually flips | `hud-pulse` 420 ms ease-spring scales 1.0 → 1.04 → 1.0 with a gold inset-glow flash. Fired only when the cached previous value differs. Static under reduced-motion. |
-| 14 | `.bossbar span` | Continuous during gameplay | `bossbar-shimmer` 7 s linear loops the auroral wash; the leading-edge gleam pseudo sits at 100 % of the fill. Paused under reduced-motion. |
-| 15 | `body:has(.chapter-intro.active) .bossbar / #controlTips` | Chapter starts | `bossbar-rise` and `tips-rise` stagger the bossbar (0 ms), chapter intro card (its own 240 ms transition), and control tips (160 ms delay) into a single orchestrated entrance. Collapsed to zero under reduced-motion. |
-| 16 | `.touch-btn.jump / .skill / .shoot::after` | Static decoration | Refined SVG-data-URL glyph mark rendered via `mask-image` and `currentColor`, sized at 32 % of the button. No animation; no asset cost. |
-| 17 | `.modal-card::after` | Pause / completion modal open | `seal-breathe` 9 s ease-soft scales 0.96 ↔ 1.04 and 0.78 ↔ 0.92 opacity on a gold conic seal masked into a hairline ring. Paused under reduced-motion. |
-| 18 | `.settings-list label[data-rune]::before` | Static decoration | Gold rune chip (♪ / ♬ / ◐ / ✦) with hairline ribbon stub. CSS-only, reads `attr(data-rune)`. |
-| 19 | `.ambient-spark.lit` | Constellation-hunt click | `spark-lit` 1.4 s ease-soft scales the spark to 2.2× with a doubled glow then settles. Active only on `(hover: hover) and (pointer: fine)`. |
-| 20 | Canvas star gate | Player overlap | Paired rings pulse once, teleport the player to the paired safe exit, and show a brief `星门` status/float cue while preserving movement momentum. |
-| 21 | Canvas phase-tide bridges | World 3 tide clock | Active phase objects render solid while inactive phase bridges draw as translucent dashed mirror silhouettes; the background tide-line motif breathes with the current phase and the HUD status reports `星潮 甲相 / 乙相`. |
-| 22 | Canvas hit-stop | Stomp, projectile hit, hurt, crystal break, Yuan dash anticipation | The fixed-step update pauses for 35-70 ms while rendering continues, giving impacts a readable beat without changing physics state. Disabled under reduced-motion. |
-| 23 | Canvas landing puff | Hard landing after a fall | Dust-ivory sparks emit at the character's feet only for meaningful landings and only when high-frame-rate FX is enabled. |
-| 24 | Canvas camera lookahead | Sustained horizontal speed or vertical fall | The camera target leads up to 56 px horizontally and 30 px vertically, then resets on portal travel, respawn, or visibility changes. Reduced-motion contributes 0 px. |
-| 25 | `.respawn-veil` | Non-lethal fall respawn | A reused full-screen night-ink flash with a soft gold center halo marks the teleport back to spawn over 180 ms. Reduced-motion collapses to a 40 ms flash. |
-| 26 | Canvas character gait | Ground travel | Procedural bob, lean, and stretch follow accumulated horizontal distance instead of wall-clock time, so the pose cadence remains attached to actual movement through starts, collisions, and stops. |
-| 27 | Canvas camera lookahead | Direction reversal | Explicit movement intent retargets lookahead immediately, using a faster crossing response when the player reverses while preserving the existing 56 px bound and reduced-motion zero-output contract. |
-| 28 | Canvas enemy intent | Enemy render | Ground enemies draw a quiet patrol rail and direction notch tied to their current support platform; wisps draw a dashed hover tether instead of ground feet. |
-| 29 | Canvas enemy hit flash | Projectile impact | A 180 ms ivory halo and body-core flash confirms non-lethal projectile hits without moving the enemy or altering hit-stop, health, patrol, or collision rules. |
-| 30 | Canvas ink-scroll field | Camera travel | Three continuous lacquer and indigo ridge bands move at separate parallax depths; sparse chart points drift slowly, and all decorative drift stops under reduced motion. |
-| 31 | Canvas collection seal | Pickup idle and collect | Coins rotate as gilt star seals, gems as carved-jade diamonds, and power-ups bob within a three-pixel range. Local glow stays below eight pixels and disappears with high-frame-rate FX disabled. |
-| 32 | Moon Sugar guard | Hazard contact while invulnerable | Damage remains blocked continuously, while the shield burst, cue, and shake may fire at most once per 180 ms so sustained overlap never becomes an audio or particle storm. |
-
-## Input Response
-
-- Launch acceleration remains character-specific and reaches full speed within 140 ms.
-- Ground reversals apply a short, bounded turn response and reach full speed in the opposite direction within 190 ms.
-- Neutral ground stopping remains below 120 ms.
-- The authored turn pose lasts 100 ms. Once movement becomes neutral, both characters keep the last explicit travel direction; a fresh level defaults to right-facing idle. Generic idle source cells must declare `sourceFacing` when their visual source direction is not right-facing.
-- A chapter starts grounded on its first platform. A jump pressed 50 to 100 ms after entry uses the ground jump and does not consume Nini's air jump.
-- Gameplay keys are ignored in menus, settings controls, and modal buttons. Every mode, focus, blur, and visibility boundary clears gameplay held and edge-triggered input before the next play step; a mapped physical key held across that boundary remains suppressed until `keyup`.
-- Captured touch controls ignore pointer drift outside the visible circle and release only on pointer up, cancellation, or lost capture. Each action keeps a pointer reference set, so releasing one of two fingers cannot cancel the other.
-
-## Continuous Motion
-
-| Element | Trigger | Behavior |
-| --- | --- | --- |
-| `.screen.active` | Screen mount | Opacity 0→1, translateY(14)→0, scale(0.992)→1 over 480 ms ease-out. |
-| `button:active` | Press | `translateY(2px) scale(0.97)` over 140 ms. |
-| `button:hover` | Hover | translateY(-1) + gold halo box-shadow. |
-| `.character-card:hover` | Hover | translateY(-3) + halo opacity rises. |
-| `.chapter-intro.active` | Gameplay start | Opacity 0→1, translateY(-10)→0, scale(0.98)→1. |
-| `.toast.show` | Message | Spring slide from translateY(-12) to 0. |
-| `.modal.active` | Modal open | Veil fades, card pops with spring scale + translate. |
-| `.hud-pill.skill-state` | State change | Underline color flips between jade and gold. |
-| `.bossbar span` | Progress change | Width interpolates over 240 ms. |
+State changes, rather than render frequency, trigger HUD pulses. Canvas feedback uses short event-bound effects: landing dust, enemy hit flash, respawn veil, portal rings, collectible seals, and phase-tide silhouettes. Decorative field motion stops when the game is not on a menu surface.
 
 ## Reduced Motion
 
 Under `prefers-reduced-motion: reduce`:
 
-- All transition and animation durations collapse to ~0 ms.
-- `body::after` aurora remains static with reduced opacity.
-- `.menu-heroes::before` and `.level-item.featured::before` are already static.
-- `.touch-btn` breath aura is hidden.
-- Ambient runes, sparks, the constellation glyph, and the gold strip mark stop animating.
-- Pointer stardust trail (`.cursor-trail`) is hidden so no spawn-and-fade particles run.
-- Hidden easter-egg heart pauses its heartbeat scale loop.
-- v1.2.4 keyframes pause: featured-chapter compass rotation, brand sub-aurora sweep, HUD pulse, bossbar shimmer, hero breath, modal seal breathe, spark-lit, and the chapter-intro orchestration `bossbar-rise` / `tips-rise`.
-- Cover-hero parallax stops writing `--mx` / `--my` because the script gates on reduced-motion at attach time, so the heroes return to their static rotated transforms.
-- Canvas particles and star-gate fields remain available because they communicate gameplay events; players can reduce optional pickup bursts through the visual effects setting.
-- Canvas phase-tide silhouettes remain visible because they communicate route availability; they are tied to gameplay readability rather than decorative-only motion.
-- v1.5.0 hit-stop is disabled, dash anticipation inherits that no-op, camera lookahead contributes 0 px, shake is multiplied by 0.30, and the respawn veil uses a single 40 ms flash. Landing puff remains governed by the existing visual effects setting.
-- v1.6.1 movement-response timing remains active because it is gameplay control logic, while camera lookahead still contributes 0 px under reduced motion.
-- v1.7.0 enemy intent marks remain static geometry, and projectile hit flashes use the same short feedback window as existing combat hit-stop so they do not add decorative looping motion.
-- Ink-scroll parallax and star-chart drift become static; gameplay platforms, collectible silhouettes, hazards, phase state, and contact shadows remain visible.
+- Decorative CSS transitions and animations collapse to near-zero duration or pause.
+- Hero parallax, pointer stardust, atlas-ring rotation, touch breathing, ambient drift, bossbar shimmer, and modal seal breathing stop.
+- Hit-stop is disabled and camera lookahead contributes 0 px.
+- Ink-scroll parallax and star-chart drift become static.
+- The respawn veil becomes a single 40 ms flash.
+- Gameplay timing, platform state, hazards, phase silhouettes, contact shadows, and essential event cues remain visible.
+- Optional pickup bursts still follow the high-frame-rate visual-effects setting.
 
-## Frame and DOM Budgets
+## Runtime Budgets
 
-- Fixed-step simulation runs at 120 Hz with an eight-step rendered-frame ceiling and an 80 ms lifecycle clamp. A hit-stop request ends the current batch immediately, and the hit-stop consumer returns any time left after the freeze ends inside a rendered frame so 20 to 60 fps delivery does not add a second frozen frame.
-- HUD text and class writes occur once per animation frame at most and only when the rendered value changes. Chapter progress is quantized to quarter-percent increments before writing its width.
-- Settings sliders preview immediately but persist through a 150 ms trailing write, then flush on `change`, `visibilitychange`, or `pagehide`.
+- HUD text, classes, and ARIA labels are written only when their rendered values change. Chapter progress is quantized to quarter-percent increments.
+- Settings sliders preview immediately, persist after a 150 ms trailing delay, and flush on `change`, `visibilitychange`, or `pagehide`.
+- Pointer stardust is limited to fine pointers, interpolates gaps at about 18 px, and caps the live particle count at 56.
+- Canvas material helpers remain stateless. Collision geometry, render order, and gameplay state remain in `src/game.js`.
 
-## BGM and Audio
+## Audio Timing
 
-Audio is managed by `src/core/audio.js` through `AudioBus`.
+`src/core/audio.js` owns master, BGM, and semantic SFX levels. BGM starts after entering gameplay, pauses for menus and modal outcomes, and retries after a later gesture if WebView autoplay blocks the first request. Visibility loss suspends the audio context and pauses BGM. Foreground return resumes it only when gameplay remains active.
 
-- Master volume uses `settings.volume`.
-- Background music uses `settings.bgmVolume`.
-- SFX uses a semantic Web Audio cue table in `src/core/audio.js`. The low-level `beep()` helper remains for compatibility, but gameplay events call named cues such as `jump`, `dash`, `stomp`, `portal`, `pickup_gem`, `complete`, and `fail`.
-- BGM uses a local looped OGG Vorbis file.
-- BGM starts after entering gameplay and pauses in menus, modals, completion states, and failure states.
-- If browser or WebView autoplay blocks BGM, the audio bus keeps pointer and keyboard retry listeners attached until a later gesture successfully starts the requested track.
-- `visibilitychange` and `pagehide` suspend the AudioContext and pause BGM; foreground return resumes only when gameplay remains active.
-
-The current BGM is `Fairy Adventure` by MintoDog, licensed CC0 1.0 Universal. Source and license data are recorded in [assets/audio/NOTICE.md](../assets/audio/NOTICE.md).
+The current BGM is `Fairy Adventure` by MintoDog under CC0 1.0 Universal. Source and license details are in [assets/audio/NOTICE.md](../assets/audio/NOTICE.md).

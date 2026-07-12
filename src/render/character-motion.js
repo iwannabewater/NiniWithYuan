@@ -5,6 +5,33 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function resolveMotionFacing(input = {}) {
+    const facing = input.facing < 0 ? -1 : 1;
+    if (input.id === "yuan" && Number(input.skillTimer) > 0) return input.dashDir < 0 ? -1 : 1;
+    return facing;
+  }
+
+  function advanceAnimationState(previous, animation, simulationTime = 0) {
+    const name = typeof animation === "string" && animation ? animation : "idle";
+    const now = Math.max(0, Number(simulationTime) || 0);
+    if (previous?.name === name && Number.isFinite(previous.enteredAt)) return previous;
+    return { name, enteredAt: now };
+  }
+
+  function animationElapsed(state, simulationTime = 0) {
+    const now = Math.max(0, Number(simulationTime) || 0);
+    return Math.max(0, now - Math.max(0, Number(state?.enteredAt) || 0));
+  }
+
+  function sampleAnimationFrame(animation, elapsed = 0) {
+    const frames = animation?.frames?.length ? animation.frames : [0];
+    if (frames.length === 1) return frames[0];
+    const fps = Math.max(0.001, Number(animation?.fps) || 1);
+    const index = Math.floor(Math.max(0, Number(elapsed) || 0) * fps);
+    const sampledIndex = animation?.loop === false ? Math.min(frames.length - 1, index) : index % frames.length;
+    return frames[sampledIndex];
+  }
+
   function resolveCharacterMotion(input) {
     const {
       id,
@@ -46,15 +73,15 @@
     } else if (shootTimer > 0) {
       animation = `shoot_${direction}`;
       artifact = id === "nini" ? "star-dial-cast" : "gui-sword-cast";
-    } else if (landingTimer > 0) {
+    } else if (!onGround) {
+      animation = vy > 120 ? "fall" : `jump_${direction}`;
+      artifact = id === "nini" ? "star-dial-follow" : "gui-sword-follow";
+    } else if (landingTimer > 0 && (landingTimer > 0.11 || stride < 0.62)) {
       animation = `land_${direction}`;
       artifact = "settle";
     } else if (turnTimer > 0) {
       animation = `turn_${direction}`;
       artifact = "turn";
-    } else if (!onGround) {
-      animation = vy > 120 ? "fall" : `jump_${direction}`;
-      artifact = id === "nini" ? "star-dial-follow" : "gui-sword-follow";
     } else if (stride > 0.18) {
       animation = "run";
     }
@@ -109,7 +136,7 @@
       scaleX += 0.025;
     }
 
-    return { animation, artifact, direction, bob, lean, scaleX, scaleY, lift };
+    return { animation, artifact, direction, bob, lean, scaleX, scaleY, lift, stride, forward, gaitWave };
   }
 
   function resolveSpriteOrientation(animation, facing = 1, options = {}) {
@@ -132,7 +159,14 @@
     };
   }
 
-  const api = { resolveCharacterMotion, resolveSpriteOrientation };
+  const api = {
+    resolveCharacterMotion,
+    resolveSpriteOrientation,
+    resolveMotionFacing,
+    advanceAnimationState,
+    animationElapsed,
+    sampleAnimationFrame,
+  };
   root.NiniYuanCharacterMotion = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

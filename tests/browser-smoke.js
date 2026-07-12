@@ -5,6 +5,7 @@ const PORT = 4173;
 const BASE = `http://127.0.0.1:${PORT}`;
 const IDLE_RIGHT_TRANSFORM = { nini: -1, yuan: 1 };
 const IDLE_LEFT_TRANSFORM = { nini: 1, yuan: -1 };
+let passedScenarios = 0;
 
 function startServer() {
   const server = spawn("python3", ["-m", "http.server", String(PORT), "--bind", "127.0.0.1"], {
@@ -60,6 +61,7 @@ async function withPage(testName, fn, options = {}) {
   await fn(page);
   await browser.close();
   if (errors.length) throw new Error(`${testName}: ${errors.join("\n")}`);
+  passedScenarios += 1;
 }
 
 async function run() {
@@ -278,8 +280,10 @@ async function run() {
         const characterState = await page.evaluate(() => ({
           footerDisplay: getComputedStyle(document.querySelector(".ambient-strip")).display,
           panelOverflow: document.querySelector("#characterScreen").scrollWidth <= document.querySelector("#characterScreen").clientWidth + 1,
+          cards: document.querySelectorAll(".character-card").length,
+          trackScrollable: document.querySelector(".character-grid").scrollWidth > document.querySelector(".character-grid").clientWidth,
         }));
-        if (characterState.footerDisplay !== "none" || !characterState.panelOverflow) {
+        if (characterState.footerDisplay !== "none" || !characterState.panelOverflow || characterState.cards !== 2 || !characterState.trackScrollable) {
           throw new Error(`Mobile character layout should keep decorative footer out of long content: ${JSON.stringify(characterState)}`);
         }
 
@@ -290,8 +294,18 @@ async function run() {
           footerDisplay: getComputedStyle(document.querySelector(".ambient-strip")).display,
           worldHeights: [...document.querySelectorAll(".level-world")].map((world) => world.getBoundingClientRect().height),
           panelOverflow: document.querySelector("#levelScreen").scrollWidth <= document.querySelector("#levelScreen").clientWidth + 1,
+          groups: [...document.querySelectorAll(".level-world-group")].map((group) => ({
+            items: group.querySelectorAll(".level-item").length,
+            trackScrollable: group.querySelector(".level-world-track").scrollWidth > group.querySelector(".level-world-track").clientWidth,
+          })),
         }));
-        if (levelState.footerDisplay !== "none" || !levelState.panelOverflow || !levelState.worldHeights.every((height) => height <= 60)) {
+        if (
+          levelState.footerDisplay !== "none" ||
+          !levelState.panelOverflow ||
+          !levelState.worldHeights.every((height) => height <= 90) ||
+          levelState.groups.length !== 3 ||
+          !levelState.groups.every((group) => group.items === 5 && group.trackScrollable)
+        ) {
           throw new Error(`Mobile world headings should stay compact and unobscured: ${JSON.stringify(levelState)}`);
         }
       },
@@ -362,7 +376,11 @@ async function run() {
       "menu polish layout",
       async (page) => {
         const menuState = await page.evaluate(() => {
-          const heroDetail = getComputedStyle(document.querySelector(".menu-heroes"), "::after").backgroundImage;
+          const hero = document.querySelector(".menu-heroes");
+          const heroImage = document.querySelector(".menu-hero-art");
+          const panel = document.querySelector("#menu");
+          const primary = document.querySelector(".menu-actions .primary").getBoundingClientRect();
+          const secondary = document.querySelector(".menu-actions button:not(.primary)").getBoundingClientRect();
           const ambient = {
             left: !!document.querySelector(".ambient.ambient-left .ambient-streamer"),
             right: !!document.querySelector(".ambient.ambient-right .ambient-streamer"),
@@ -376,7 +394,9 @@ async function run() {
             subtitle: document.querySelector(".brand p").textContent.trim(),
             description: document.querySelector('meta[name="description"]').content,
             chapterScopeCopy: document.querySelector('meta[name="description"]').content.includes("多世界章节"),
-            heroHasStarChart: heroDetail.includes("circle at 18% 24%") && heroDetail.includes("circle at 66% 21%"),
+            heroLoaded: heroImage.complete && heroImage.naturalWidth === 1024,
+            heroAnchorsLayout: hero.getBoundingClientRect().width > panel.getBoundingClientRect().width * 0.5,
+            primaryHierarchy: primary.width > secondary.width * 2.5 && primary.height > secondary.height,
             ambient,
             ambientStripVisible: stripStyle.opacity !== "0",
             ambientAboveShell: Number(ambientStyle.zIndex) > Number(shellStyle.zIndex),
@@ -390,7 +410,9 @@ async function run() {
           !menuState.subtitle.includes("璇玑渡空") ||
           !menuState.subtitle.includes("青玉破风") ||
           menuState.description.includes("平台跳跃") ||
-          !menuState.heroHasStarChart ||
+          !menuState.heroLoaded ||
+          !menuState.heroAnchorsLayout ||
+          !menuState.primaryHierarchy ||
           !menuState.chapterScopeCopy ||
           !menuState.ambient.left ||
           !menuState.ambient.right ||
@@ -500,12 +522,14 @@ async function run() {
             headings,
             world2Unlocked: ![...document.querySelectorAll(".level-item")].find((card) => card.textContent.includes("第六章 星门浅湾"))?.disabled,
             world3Unlocked: ![...document.querySelectorAll(".level-item")].find((card) => card.textContent.includes("第十一章 相位浅滩"))?.disabled,
+            groups: [...document.querySelectorAll(".level-world-group")].map((group) => group.querySelectorAll(".level-item").length),
+            currentSteps: document.querySelectorAll('.level-item[aria-current="step"]').length,
             offsets,
           };
         });
         const copyLefts = levelState.offsets.map((item) => item.copyLeft);
         const metaLefts = levelState.offsets.map((item) => item.metaLeft);
-        const expectedLeftEdge = (value) => value >= 18 && value <= 24;
+        const expectedLeftEdge = (value) => value >= 8 && value <= 16;
         const isGoldish = (color) => {
           if (!color) return false;
           const rgb = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(color);
@@ -526,6 +550,9 @@ async function run() {
           !levelState.world2Unlocked ||
           !levelState.world3Unlocked ||
           levelState.headings.length !== 3 ||
+          levelState.groups.length !== 3 ||
+          !levelState.groups.every((count) => count === 5) ||
+          levelState.currentSteps !== 1 ||
           !levelState.headings.some((heading) => heading.world === "world1" && heading.text.includes("第一星域")) ||
           !levelState.headings.some((heading) => heading.world === "world2" && heading.text.includes("第二星域")) ||
           !levelState.headings.some((heading) => heading.world === "world3" && heading.text.includes("第三星域")) ||
@@ -638,14 +665,17 @@ async function run() {
           return {
             panelWithinViewport: panelRect.left >= -1 && panelRect.right <= innerWidth + 1 && panelRect.top >= -1 && panelRect.bottom <= innerHeight + 1,
             panelNoOverflow: panel.scrollWidth <= panel.clientWidth + 1 && panel.scrollHeight <= panel.clientHeight + 1,
-            actionsSingleRow: new Set(actions.map((rect) => rect.top)).size === 1,
+            actionHierarchy:
+              actions[0].top < actions[1].top &&
+              new Set(actions.slice(1).map((rect) => rect.top)).size === 1 &&
+              actions[0].width > actions[1].width * 2.5,
             actionsReadable: actions.every((rect) => rect.width >= 86),
             heroWithinPanel: hero.left >= panelRect.left && hero.right <= panelRect.right && hero.top >= panelRect.top && hero.bottom <= panelRect.bottom,
             panel: { left: panelRect.left, right: panelRect.right, top: panelRect.top, bottom: panelRect.bottom, scrollWidth: panel.scrollWidth, clientWidth: panel.clientWidth, scrollHeight: panel.scrollHeight, clientHeight: panel.clientHeight },
             actions,
           };
         });
-        if (!menuState.panelWithinViewport || !menuState.panelNoOverflow || !menuState.actionsSingleRow || !menuState.actionsReadable || !menuState.heroWithinPanel) {
+        if (!menuState.panelWithinViewport || !menuState.panelNoOverflow || !menuState.actionHierarchy || !menuState.actionsReadable || !menuState.heroWithinPanel) {
           throw new Error(`Landscape menu layout invalid: ${JSON.stringify(menuState)}`);
         }
 
@@ -724,7 +754,7 @@ async function run() {
       { page: { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } }
     );
 
-    console.log("browser-smoke: 10 passed");
+    console.log(`browser-smoke: ${passedScenarios} passed`);
   } finally {
     server.kill();
   }

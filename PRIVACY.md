@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: 2026-05-02
+Last updated: 2026-07-12
 
 `Nini & Yuan` is developed and maintained by iwannabewater. The application is an offline single-player game.
 
@@ -21,7 +21,7 @@ The application stores gameplay state in browser or Android WebView localStorage
 - unlocked chapter count;
 - best times and star ratings per chapter;
 - total collected starlight;
-- settings for volume, touch control size, visual effects, and background music volume.
+- settings for master and background music volume, touch control size and opacity, HUD scale, visual effects, and screen shake.
 
 This data remains on the device. Uninstalling the application, clearing application data, or clearing browser site data removes it.
 

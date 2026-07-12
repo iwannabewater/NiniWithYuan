@@ -119,6 +119,40 @@
     ctx.restore();
   }
 
+  function drawObservatoryDisc(ctx, options) {
+    const { view, camX = 0, camY = 0, time = 0, intensity = 1 } = options;
+    const radius = Math.min(view.w, view.h) * 0.16;
+    const x = view.w * 0.78 - (camX * 0.035) % Math.max(1, view.w * 0.18);
+    const y = view.h * 0.24 - camY * 0.02;
+    const rotation = view.reducedMotion ? 0 : time * 0.018;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(rotation);
+    ctx.globalAlpha = 0.12 * intensity;
+    ctx.strokeStyle = MATERIAL.agedGold;
+    ctx.lineWidth = 1;
+    for (let ring = 0; ring < 3; ring += 1) {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius * (1 - ring * 0.2), radius * (0.54 + ring * 0.08), ring * 0.58, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.18 * intensity;
+    for (let tick = 0; tick < 12; tick += 1) {
+      const angle = (tick * Math.PI) / 6;
+      const inner = radius * (tick % 3 === 0 ? 0.78 : 0.86);
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner * 0.54);
+      ctx.lineTo(Math.cos(angle) * radius, Math.sin(angle) * radius * 0.54);
+      ctx.stroke();
+    }
+    ctx.fillStyle = MATERIAL.dustyRose;
+    ctx.globalAlpha = 0.26 * intensity;
+    ctx.beginPath();
+    ctx.arc(radius * 0.64, 0, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
   function drawBackground(ctx, options) {
     const { view, palette, camX = 0, camY = 0, time = 0, intensity = 1, attract = false } = options;
     const gradient = ctx.createLinearGradient(0, 0, attract ? view.w : 0, view.h);
@@ -138,6 +172,7 @@
     }
     drawSkyMotifs(ctx, { view, time, intensity });
     if (attract) return;
+    drawObservatoryDisc(ctx, { view, camX, camY, time, intensity });
 
     for (let layer = 0; layer < 3; layer += 1) {
       const depth = SKY_DEPTHS[layer];
@@ -171,6 +206,7 @@
   }
 
   function drawPlatform(ctx, platform) {
+    ctx.save();
     const color = platform.type === "phase"
       ? platform.phase === "b" ? PLATFORM_COLORS.phaseB : PLATFORM_COLORS.phaseA
       : PLATFORM_COLORS[platform.type] || PLATFORM_COLORS.ground;
@@ -178,6 +214,13 @@
     gradient.addColorStop(0, color[0]);
     gradient.addColorStop(1, color[1]);
     roundRect(ctx, platform.x, platform.y, platform.w, platform.h, 3, gradient);
+    const cap = ctx.createLinearGradient(platform.x, platform.y, platform.x + platform.w, platform.y);
+    cap.addColorStop(0, color[2]);
+    cap.addColorStop(0.5, MATERIAL.moonWhiteSoft);
+    cap.addColorStop(1, color[2]);
+    ctx.globalAlpha = 0.72;
+    ctx.fillStyle = cap;
+    ctx.fillRect(platform.x + 3, platform.y + 1, Math.max(0, platform.w - 6), 3);
     ctx.strokeStyle = color[2];
     ctx.globalAlpha = 0.72;
     ctx.lineWidth = 2;
@@ -193,18 +236,40 @@
       ctx.lineTo(x + 12, platform.y + Math.min(12, platform.h - 3));
       ctx.stroke();
     }
-    ctx.globalAlpha = 1;
-    if (platform.type !== "breakable") return;
-    ctx.strokeStyle = "rgba(238,231,213,.28)";
-    for (let x = platform.x + 16; x < platform.x + platform.w; x += 38) {
+    ctx.globalAlpha = 0.13;
+    ctx.strokeStyle = MATERIAL.moonWhiteSoft;
+    for (let x = platform.x + 72; x < platform.x + platform.w - 10; x += 96) {
       ctx.beginPath();
-      ctx.moveTo(x, platform.y + 8);
-      ctx.lineTo(x + 14, platform.y + platform.h - 10);
+      ctx.moveTo(x, platform.y + 9);
+      ctx.lineTo(x, platform.y + platform.h - 4);
       ctx.stroke();
+      ctx.save();
+      ctx.translate(x, platform.y + 9);
+      ctx.rotate(Math.PI / 4);
+      ctx.strokeRect(-2.5, -2.5, 5, 5);
+      ctx.restore();
     }
+    ctx.globalAlpha = 0.26;
+    ctx.strokeStyle = MATERIAL.lacquer;
+    ctx.beginPath();
+    ctx.moveTo(platform.x + 4, platform.y + platform.h - 2);
+    ctx.lineTo(platform.x + platform.w - 4, platform.y + platform.h - 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (platform.type === "breakable") {
+      ctx.strokeStyle = "rgba(238,231,213,.28)";
+      for (let x = platform.x + 16; x < platform.x + platform.w; x += 38) {
+        ctx.beginPath();
+        ctx.moveTo(x, platform.y + 8);
+        ctx.lineTo(x + 14, platform.y + platform.h - 10);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
 
   function drawHazard(ctx, hazard, time = 0) {
+    ctx.save();
     ctx.fillStyle = hazard.type === "lava" ? "#d59662" : MATERIAL.danger;
     if (hazard.type === "lava") {
       roundRect(ctx, hazard.x, hazard.y + hazard.h * 0.25, hazard.w, hazard.h * 0.75, 3, "#713d37");
@@ -214,8 +279,14 @@
         ctx.arc(x + 12, hazard.y + 18 + Math.sin(time / 0.17 + x) * 3, 12, 0, Math.PI * 2);
         ctx.fill();
       }
+      ctx.restore();
       return;
     }
+    ctx.fillStyle = MATERIAL.lacquerRaised;
+    ctx.fillRect(hazard.x, hazard.y + hazard.h - 7, hazard.w, 7);
+    ctx.fillStyle = MATERIAL.danger;
+    ctx.strokeStyle = "rgba(238,231,213,.38)";
+    ctx.lineWidth = 1;
     for (let x = hazard.x; x < hazard.x + hazard.w; x += 24) {
       ctx.beginPath();
       ctx.moveTo(x, hazard.y + hazard.h);
@@ -223,7 +294,9 @@
       ctx.lineTo(x + 24, hazard.y + hazard.h);
       ctx.closePath();
       ctx.fill();
+      ctx.stroke();
     }
+    ctx.restore();
   }
 
   function drawSpring(ctx, spring) {

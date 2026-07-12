@@ -46,10 +46,15 @@ assert.equal(rules.groundedSpawnY(-10, 56), 0);
 assert.equal(rules.groundedSpawnY(Number.NaN, 56), 0);
 assert.equal(rules.groundedSpawnY(720, Number.NaN), 664);
 
+assert.equal(rules.advanceIntentWindow(0, { pressed: true, eligible: true, dt: 1 / 120, minimum: 0.12 }), 0.12);
+assert.ok(Math.abs(rules.advanceIntentWindow(0.12, { pressed: false, eligible: true, dt: 0.02, minimum: 0.12 }) - 0.1) < 1e-9);
+assert.equal(rules.advanceIntentWindow(0.04, { pressed: true, eligible: false, dt: 0.02, minimum: 0.12 }), 0.02);
+assert.equal(rules.advanceIntentWindow(0.01, { pressed: false, eligible: true, dt: 0.02, minimum: 0.12 }), 0);
+
 assert.match(
   gameSource,
   /updatePlayer\(dt\);\s*if \(mode !== "play" \|\| player\.settledOutcome\) return;\s*if \(player\.onGround/,
   "A terminal player update must stop downstream enemies, projectiles, pickups, and rewards in the same fixed step"
 );
 
-console.log("game-integrity-rules: collectible rating, ammo caps, terminal arbitration, and grounded spawns passed");
+console.log("game-integrity-rules: collectible rating, ammo caps, intent windows, terminal arbitration, and grounded spawns passed");

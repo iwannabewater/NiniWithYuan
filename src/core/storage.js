@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "nini-yuan-save-v1";
-  const SAVE_SCHEMA_VERSION = 2;
+  const SAVE_SCHEMA_VERSION = 3;
   const DEFAULT_LEVEL_COUNT = 15;
 
   const defaultSave = {
@@ -14,7 +14,10 @@
     levelStars: {},
     settings: {
       volume: 70,
-      touch: 84,
+      touch: 76,
+      touchOpacity: 68,
+      hudScale: 100,
+      shake: true,
       fx: true,
       bgmVolume: 60,
     },
@@ -61,6 +64,9 @@
     return {
       volume: sanitizeInteger(settings.volume, defaultSave.settings.volume, 0, 100),
       touch: sanitizeInteger(settings.touch, defaultSave.settings.touch, 64, 84),
+      touchOpacity: sanitizeInteger(settings.touchOpacity, defaultSave.settings.touchOpacity, 45, 100),
+      hudScale: sanitizeInteger(settings.hudScale, defaultSave.settings.hudScale, 90, 140),
+      shake: settings.shake !== false,
       fx: settings.fx !== false,
       bgmVolume: sanitizeInteger(settings.bgmVolume, defaultSave.settings.bgmVolume, 0, 100),
     };

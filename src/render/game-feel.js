@@ -78,6 +78,25 @@
     camera.lookY = 0;
   }
 
+  function interpolateCoordinate(previous, current, alpha, options = {}) {
+    const from = Number(previous);
+    const to = Number(current);
+    if (!Number.isFinite(to)) return Number.isFinite(from) ? from : 0;
+    if (!Number.isFinite(from) || options.snap === true) return to;
+    const snapDistance = Math.max(0, Number(options.snapDistance) || 160);
+    if (Math.abs(to - from) >= snapDistance) return to;
+    const value = lerp(from, to, clamp(Number(alpha) || 0, 0, 1));
+    const quantum = Math.max(0, Number(options.quantum) || 0);
+    return quantum > 0 ? Math.round(value / quantum) * quantum : value;
+  }
+
+  function shouldSyncPresentationAfterHitstop(options = {}) {
+    const before = Math.max(0, Number(options.before) || 0);
+    const after = Math.max(0, Number(options.after) || 0);
+    const steps = Math.max(0, Math.floor(Number(options.steps) || 0));
+    return before > 0 && after === 0 && steps === 0;
+  }
+
   function clampShake(currentShake, eventShake, isMobileLandscape, isReducedMotion) {
     const multiplier = isReducedMotion ? 0.3 : isMobileLandscape ? 0.65 : 1;
     return Math.max(Number(currentShake) || 0, (Number(eventShake) || 0) * multiplier);
@@ -96,6 +115,8 @@
     horizontalVelocity,
     cameraLookaheadOffset,
     cameraLookaheadReset,
+    interpolateCoordinate,
+    shouldSyncPresentationAfterHitstop,
     clampShake,
     landingPuff,
     getHitstopRemaining: () => hitstopRemaining,
