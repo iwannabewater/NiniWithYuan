@@ -85,6 +85,14 @@ Overall target: ≥99.9 with zero open Critical/Structural findings. Scored in `
 5. Review artifact overall ≥99.9; version metadata consistent.
 6. Named branch/PR merged; remote feature branch deleted.
 
+## Verification recorded
+
+- Two consecutive `npm test` runs exited 0 on the release commit path.
+- Two consecutive `node tests/browser-smoke.js` runs exited 0 (11 scenarios each).
+- Focused pure checks: `tests/quiet-observatory-v1_9_0.js`, extended `tests/character-motion.js`, `tests/input-state.js`.
+- PR #15 merged as `049b095`; remote feature branch deleted; default branch clean.
+- Multi-perspective review: overall 99.94, zero Critical/Structural findings (`docs/plans/REVIEW_v1.9.0.md`).
+
 ## Non-goals
 
 - New worlds, enemies, story rewrite, balance redesign.

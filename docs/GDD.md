@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-v1.9.0 keeps the fifteen-chapter structure and core physics while refining **宋式星图器物幻想 / Song-atlas Night Observatory** into a quieter instrument: calmer ornament, clearer control feedback, and presentation pose blending without changing routes or abilities. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
+v1.9.0 keeps the fifteen-chapter structure and core physics. It refines **宋式星图器物幻想 / Song-atlas Night Observatory** with quieter ornament, clearer control feedback, and presentation pose blending, without changing routes or abilities. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
 
 ## Fiction
 

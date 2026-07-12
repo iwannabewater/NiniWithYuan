@@ -2,10 +2,10 @@
 
 ## v1.9.0
 
-- Quiet Observatory polish: lower ambient ornament weight, single aged-gold brand undertrace, calmer screen and modal entry, and denser but non-overlapping corner instruments while preserving Song-atlas materials.
-- Presentation pose blending for bob, lean, stretch, and lift samples simulation state without writing display data into player entities, saves, or terminal outcomes. Discrete hurt, skill, and land entries still snap.
-- Pure input edge helpers and landing-readability rules keep multi-source arbitration, latest-direction fallback, coyote, jump buffer, and glide-intent contracts testable and unchanged.
-- Touch seals gain clearer active edges by action (direction rail gilt, skill jade, shoot rose) with press scale retained.
+- Lowered ambient ornament weight, replaced the multi-color brand undertrace with a single aged-gold line, calmed screen and modal entry, and tightened corner instruments so hierarchy reads before decoration. Song-atlas lacquer, silk, gold, jade, and rose materials stay the identity.
+- Blended presentation bob, lean, stretch, and lift between fixed-step poses so movement reads more cleanly at variable frame rates. Hurt, skill, and land still snap; display state never writes into player entities, saves, or terminal outcomes.
+- Extracted pure input edge helpers and landing-readability rules so multi-source arbitration, latest-direction fallback, coyote time, jump buffer, and glide intent stay testable without changing those contracts.
+- Gave touch seals clearer pressed edges by action: gilt on the direction rail, jade on skill, rose on shoot, with the existing press scale retained.
 - Bumped the web package to `1.9.0`, Android to `versionCode=19` and `versionName=1.9.0`, and the service-worker cache to `nini-yuan-v1.9.0-quiet-observatory-r1`. Added focused coverage for edge math, pose blend, quiet CSS markers, and release metadata.
 
 ## v1.8.0
