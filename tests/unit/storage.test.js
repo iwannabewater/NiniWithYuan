@@ -19,18 +19,26 @@ const expansionOptions = {
       totalCoins: "12.9",
       bestTimes: { sakura: 42.5, evil: 10, moonruin: -1 },
       levelStars: { sakura: 4, moonruin: 3 },
-      settings: { volume: 0, touch: 999, fx: "yes", bgmVolume: -20 },
+      settings: { volume: 0, touch: 999, touchOpacity: -5, hudScale: 999, shake: false, fx: "yes", bgmVolume: -20 },
     },
     levelOptions
   );
 
-  assert.equal(save.schemaVersion, 2);
+  assert.equal(save.schemaVersion, 3);
   assert.equal(save.selected, "nini");
   assert.equal(save.unlocked, 15);
   assert.equal(save.totalCoins, 12);
   assert.deepEqual(save.bestTimes, { sakura: 42.5 });
   assert.deepEqual(save.levelStars, { moonruin: 3 });
-  assert.deepEqual(save.settings, { volume: 0, touch: 84, fx: true, bgmVolume: 0 });
+  assert.deepEqual(save.settings, {
+    volume: 0,
+    touch: 84,
+    touchOpacity: 45,
+    hudScale: 140,
+    shake: false,
+    fx: true,
+    bgmVolume: 0,
+  });
 }
 
 {
@@ -50,11 +58,14 @@ const expansionOptions = {
   assert.equal(loaded.unlocked, 2);
   assert.equal(loaded.settings.fx, false);
   assert.equal(loaded.settings.bgmVolume, 60);
+  assert.equal(loaded.settings.touchOpacity, 68);
+  assert.equal(loaded.settings.hudScale, 100);
+  assert.equal(loaded.settings.shake, true);
 
   assert.equal(storage.persist({ ...loaded, unlocked: 900 }, { ...levelOptions, storage: stub }), true);
   const written = JSON.parse(stub.written);
   assert.equal(written.unlocked, 15);
-  assert.equal(written.schemaVersion, 2);
+  assert.equal(written.schemaVersion, 3);
 }
 
 {

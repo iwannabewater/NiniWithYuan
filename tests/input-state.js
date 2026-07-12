@@ -18,6 +18,10 @@ const range = { tagName: "INPUT", type: "range" };
 assert.equal(InputState.isGameplayKeyCode("Space"), true);
 assert.equal(InputState.isGameplayKeyCode("ArrowRight"), true);
 assert.equal(InputState.isGameplayKeyCode("Enter"), true);
+assert.equal(InputState.actionForGameplayCode("Space"), "jump");
+assert.equal(InputState.actionForGameplayCode("ShiftRight"), "skill");
+assert.equal(InputState.actionForGameplayCode("KeyQ"), null);
+assert.deepEqual(InputState.GAMEPLAY_KEY_CODES, Object.keys(InputState.ACTION_BY_KEY_CODE));
 
 assert.equal(
   InputState.isGameplayKeyEvent({ code: "Space", target: canvas }, "menu"),
@@ -121,4 +125,54 @@ assert.equal(pointers.isActive("left"), false);
 assert.equal(pointers.isActive("shoot"), false);
 assert.equal(pointers.actionForPointer(21), null);
 
-console.log("input-state: keyboard gating, transient reset, and multi-pointer refs passed");
+const actions = InputState.createActionInputState(["left", "right", "jump", "skill", "shoot"]);
+assert.deepEqual(actions.press("key:Space", "jump"), {
+  accepted: true,
+  added: true,
+  action: "jump",
+  count: 1,
+  becameActive: true,
+  released: null,
+});
+assert.equal(actions.count("jump", "key:"), 1);
+assert.equal(actions.press("key:KeyW", "jump").becameActive, false, "a jump alias must not emit a second press edge");
+assert.equal(actions.release("key:Space").becameInactive, false, "releasing one jump alias must keep jump held");
+assert.equal(actions.isActive("jump"), true);
+assert.equal(actions.release("key:KeyW").becameInactive, true, "the final jump source should emit the release edge");
+
+actions.press("key:Space", "jump");
+assert.equal(actions.press("pointer:7", "jump").becameActive, false, "touch takeover must share the held jump action");
+assert.equal(actions.release("key:Space").becameInactive, false, "keyboard release must not cut a held touch jump");
+assert.equal(actions.release("pointer:7").becameInactive, true);
+
+actions.press("key:KeyA", "left");
+assert.equal(actions.direction(), -1);
+actions.press("key:KeyD", "right");
+assert.equal(actions.direction(), 1, "the most recently pressed direction should win an overlap");
+actions.release("key:KeyD");
+assert.equal(actions.direction(), -1, "releasing the winning direction should reveal the held opposite direction");
+
+const moved = actions.press("pointer:11", "right");
+assert.equal(moved.action, "right");
+const switched = actions.press("pointer:11", "left");
+assert.equal(switched.released.action, "right");
+assert.equal(switched.released.becameInactive, true);
+assert.equal(actions.actionForSource("pointer:11"), "left");
+assert.equal(actions.direction(), -1, "a captured pointer should be able to slide across the movement rail");
+
+assert.deepEqual(new Set(actions.releaseAll()), new Set(["left"]));
+assert.equal(actions.direction(), 0);
+
+actions.press("key:Space", "jump");
+InputState.resetTransientState({ keys: {}, inputs: { jumpPressed: true }, actionInputs: actions });
+assert.equal(actions.isActive("jump"), false, "a generic action-input handle should reset with transient state");
+
+const directionAliases = InputState.createActionInputState(["left", "right"]);
+directionAliases.press("key:KeyA", "left");
+directionAliases.press("key:KeyD", "right");
+directionAliases.press("key:ArrowLeft", "left");
+assert.equal(directionAliases.direction(), -1, "the newest alias should temporarily own direction");
+directionAliases.release("key:ArrowLeft");
+assert.equal(directionAliases.direction(), 1, "releasing a newer alias should reveal the newest surviving source");
+
+console.log("input-state: gating, unified action refs, direction arbitration, and pointer refs passed");

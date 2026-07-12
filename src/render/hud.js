@@ -17,19 +17,38 @@
   function renderSaveStrip(container, save, characters, levels) {
     clear(container);
     const selected = characters[save.selected] || characters.nini;
-    const items = [
-      ["已解锁章节", `${Math.min(save.unlocked, levels.length)} / ${levels.length}`],
-      ["当前角色", selected.name],
-      ["累计星露", String(save.totalCoins)],
-    ];
-    for (const [label, value] of items) {
-      const chip = document.createElement("div");
-      chip.className = "save-chip";
-      chip.append(document.createTextNode(label));
-      chip.append(document.createElement("br"));
-      appendText(chip, "strong", value);
-      container.appendChild(chip);
+    const unlocked = Math.min(save.unlocked, levels.length);
+    const current = levels[Math.max(0, unlocked - 1)];
+    const progress = levels.length ? Math.round((unlocked / levels.length) * 100) : 0;
+    const currentBlock = document.createElement("div");
+    currentBlock.className = "journey-current";
+    appendText(currentBlock, "span", "当前星路", "journey-kicker");
+    appendText(currentBlock, "strong", current?.name || "第一章", "journey-title");
+
+    const route = document.createElement("div");
+    route.className = "journey-route";
+    route.setAttribute("role", "progressbar");
+    route.setAttribute("aria-label", "章节解锁进度");
+    route.setAttribute("aria-valuemin", "0");
+    route.setAttribute("aria-valuemax", String(levels.length));
+    route.setAttribute("aria-valuenow", String(unlocked));
+    const routeFill = document.createElement("span");
+    routeFill.style.setProperty("--journey-progress", `${progress}%`);
+    route.appendChild(routeFill);
+
+    const stats = document.createElement("div");
+    stats.className = "journey-stats";
+    for (const [label, value] of [
+      ["章节", `${unlocked} / ${levels.length}`],
+      ["同行", selected.name],
+      ["星露", String(save.totalCoins)],
+    ]) {
+      const stat = document.createElement("span");
+      appendText(stat, "small", label);
+      appendText(stat, "strong", value);
+      stats.appendChild(stat);
     }
+    container.append(currentBlock, route, stats);
   }
 
   function renderChapterIntroMeta(container, items) {
@@ -42,16 +61,26 @@
     const { levels, save, startLevel, formatTime } = options;
     const featuredIndex = Math.max(0, Math.min(levels.length - 1, save.unlocked - 1));
     let lastWorldId = "";
+    let worldTrack = null;
     levels.forEach((level, i) => {
       const world = typeof level.world === "object" && level.world ? level.world : { id: "world1", name: "第一星域 破碎星图", subtitle: "" };
       if (world.id !== lastWorldId) {
         lastWorldId = world.id;
-        const heading = document.createElement("div");
+        const group = document.createElement("section");
+        group.className = "level-world-group";
+        group.dataset.world = world.id;
+        const heading = document.createElement("header");
         heading.className = "level-world";
         heading.dataset.world = world.id;
-        appendText(heading, "span", world.name, "level-world-name");
+        const headingId = `level-world-${world.id}`;
+        const worldName = appendText(heading, "h3", world.name, "level-world-name");
+        worldName.id = headingId;
         if (world.subtitle) appendText(heading, "strong", world.subtitle, "level-world-subtitle");
-        container.appendChild(heading);
+        worldTrack = document.createElement("div");
+        worldTrack.className = "level-world-track";
+        group.setAttribute("aria-labelledby", headingId);
+        group.append(heading, worldTrack);
+        container.appendChild(group);
       }
       const locked = i >= save.unlocked;
       const button = document.createElement("button");
@@ -62,6 +91,7 @@
 
       const intro = document.createElement("span");
       intro.className = "level-copy";
+      appendText(intro, "span", String(i + 1).padStart(2, "0"), "level-index");
       appendText(intro, "strong", level.name);
       appendText(intro, "span", level.vibe, "level-vibe");
       appendText(intro, "span", level.hint, "level-hint");
@@ -95,11 +125,17 @@
       bestGroup.appendChild(bestLabel);
       bestGroup.appendChild(bestValue);
       meta.appendChild(bestGroup);
+      const state = document.createElement("span");
+      state.className = "level-state";
+      state.textContent = locked ? "锁定 · 完成上一章后解锁" : i === featuredIndex ? "当前星路" : stars > 0 ? `已录 · ${stars} 星` : "可挑战";
+      if (locked) button.setAttribute("aria-label", `${level.name}，锁定，完成上一章后解锁`);
+      if (i === featuredIndex && !locked) button.setAttribute("aria-current", "step");
       button.appendChild(meta);
+      button.appendChild(state);
 
       button.insertBefore(intro, button.firstChild);
       button.addEventListener("click", () => startLevel(i));
-      container.appendChild(button);
+      worldTrack?.appendChild(button);
     });
   }
 

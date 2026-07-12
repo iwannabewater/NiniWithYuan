@@ -78,6 +78,8 @@ const source = fs.readFileSync("src/render/playfield-material.js", "utf8");
 assert.doesNotMatch(source, /function drawSkyMotifs[\s\S]*?const points = \[\]/, "Sky drawing must not allocate point objects per frame");
 assert.doesNotMatch(source, /function drawBackground[\s\S]*?const ridge = \[\]/, "Ridge drawing must not allocate point objects per frame");
 assert.match(source, /function drawPlatform[\s\S]*?PLATFORM_COLORS/, "Platforms must reuse the static material table");
+assert.match(source, /function drawObservatoryDisc/, "Backgrounds should carry the shared star-dial instrument grammar");
+assert.match(source, /platform\.y \+ platform\.h - 2/, "Platforms should render a lacquered lower edge without changing collision geometry");
 assert.doesNotMatch(source, /function powerupColor\(kind\) \{\s*return \{/, "Power-up colors must not rebuild a map per draw");
 assert.doesNotMatch(source, /function portalColor\(portal\) \{\s*return \{/, "Portal colors must not rebuild a map per draw");
 for (const banned of ["#61e5ff", "#7ff1ba", "#ff7fb1", "#8cf6ff"]) {

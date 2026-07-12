@@ -163,6 +163,7 @@ async function beginHudProbe(page) {
       characterData: 0,
       attributes: 0,
       styleAttributes: 0,
+      ariaLabelAttributes: 0,
       progressStyleAttributes: 0,
     };
 
@@ -174,6 +175,7 @@ async function beginHudProbe(page) {
           probe.styleAttributes += 1;
           if (record.target === progressBar) probe.progressStyleAttributes += 1;
         }
+        if (record.type === "attributes" && record.attributeName === "aria-label") probe.ariaLabelAttributes += 1;
       }
     };
 
@@ -183,7 +185,7 @@ async function beginHudProbe(page) {
       childList: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ["class", "style"],
+      attributeFilter: ["aria-label", "class", "style"],
     });
 
     window.__runtimeEfficiency.hudProbe = {
@@ -242,6 +244,9 @@ async function verifyHudMutationBudget(page) {
   }
   if (result.hud.records > HUD_MUTATION_BUDGET) {
     throw new Error(`HUD exceeded the ${HUD_MUTATION_BUDGET}-mutation budget: ${JSON.stringify(result.hud)}`);
+  }
+  if (result.hud.ariaLabelAttributes > 8) {
+    throw new Error(`HUD repeated aria-label mutations instead of updating changed values only: ${JSON.stringify(result.hud)}`);
   }
   if (result.fixedStep.frames < 20 || result.fixedStep.executedSteps < 20 || result.fixedStep.observedFrameTime <= 0) {
     throw new Error(`Fixed-step runtime was not exercised during movement: ${JSON.stringify(result.fixedStep)}`);

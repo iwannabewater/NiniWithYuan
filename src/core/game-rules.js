@@ -50,6 +50,13 @@
     return Math.max(0, top - Math.min(height, top));
   }
 
+  function advanceIntentWindow(current, options = {}) {
+    const dt = Math.max(0, finiteNumber(options.dt));
+    const remaining = Math.max(0, finiteNumber(current) - dt);
+    if (options.pressed !== true || options.eligible !== true) return remaining;
+    return Math.max(remaining, Math.max(0, finiteNumber(options.minimum)));
+  }
+
   const api = {
     BASE_AMMO_CAP,
     RESERVE_AMMO_CAP,
@@ -60,6 +67,7 @@
     clampAmmo,
     resolveTerminalOutcome,
     groundedSpawnY,
+    advanceIntentWindow,
   };
 
   root.NiniRules = api;

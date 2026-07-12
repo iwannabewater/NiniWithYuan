@@ -24,10 +24,11 @@ const WOFF2_KNOWN_TAGS = [
   "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"
 ];
 
-assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version), "package.json should be v1.4.0 or later");
-assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
+assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(pkg.version), "package.json should be v1.4.0 or later");
+assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
 assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
+  sw.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
+    sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
     sw.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"') ||
@@ -35,8 +36,8 @@ assert.ok(
     /CACHE = "nini-yuan-v(1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/.test(sw),
   "service worker cache should use a v1.4.0+ key"
 );
-assert.ok(/versionCode="(10|11|12|13|14|15|16|17)"/.test(androidManifest), "Android versionCode should be 10 or later");
-assert.ok(/versionName="(1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0)"/.test(androidManifest), "Android versionName should be 1.4.0 or later");
+assert.ok(/versionCode="(10|11|12|13|14|15|16|17|18)"/.test(androidManifest), "Android versionCode should be 10 or later");
+assert.ok(/versionName="(1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0|1\.8\.0)"/.test(androidManifest), "Android versionName should be 1.4.0 or later");
 
 assert.ok(css.includes("--font-ui:"), "styles.css should define the shared UI font stack");
 assert.ok(css.includes("--font-canvas:"), "styles.css should define the shared Canvas font stack");

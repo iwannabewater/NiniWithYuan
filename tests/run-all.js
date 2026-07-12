@@ -29,6 +29,7 @@ const checks = [
   ["node", ["tests/content-expansion-v1_4_0.js"]],
   ["node", ["tests/phase-tide-v1_4_0.js"]],
   ["node", ["tests/readability-polish-v1_7_0.js"]],
+  ["node", ["tests/experience-overhaul-v1_8_0.js"]],
   ["node", ["tests/typography-copy-v1_4_0.js"]],
   ["node", ["tests/ci-workflows.js"]],
   ["node", ["tests/canonical-url.js"]],
@@ -43,7 +44,9 @@ const checks = [
   ["node", ["tests/e2e/pwa-registration.js"]],
   ["node", ["tests/e2e/accessibility.js"]],
   ["node", ["tests/e2e/interaction-integrity.js"]],
+  ["node", ["tests/e2e/input-arbitration.js"]],
   ["node", ["tests/e2e/mobile-integrity.js"]],
+  ["node", ["tests/e2e/ui-layout-integrity.js"]],
   ["node", ["tests/e2e/runtime-efficiency.js"]],
   ["node", ["tests/browser-smoke.js"]],
 ];

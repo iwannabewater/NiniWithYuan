@@ -21,7 +21,8 @@ for (const token of ["--c-lacquer", "--c-indigo-silk", "--c-aged-gold", "--c-car
   assert.ok(css.includes(token), `Missing Night Observatory token: ${token}`);
 }
 assert.doesNotMatch(css, /background-clip:\s*text/);
-assert.match(css, /#shell:has\(#overlay\.active\) \.rotate-prompt/);
+assert.match(css, /#shell\.portrait-gated ~ \.rotate-prompt/);
+assert.doesNotMatch(css, /\.portrait-gated:has\(/);
 
 for (const phrase of ["宋式星图器物幻想", "夜观天象", "双璧入卷", "刻金显纹", "四角仪轨"]) {
   assert.ok(design.includes(phrase), `Design system should record ${phrase}`);

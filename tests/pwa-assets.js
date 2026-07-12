@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const vm = require("node:vm");
 
@@ -52,6 +53,27 @@ for (const atlas of ["./assets/characters/nini/atlas.json", "./assets/characters
 assert.ok(serviceWorker.includes("./assets/characters/nini/nini-atlas-v1.png"), "Service worker should cache the production Nini atlas");
 assert.ok(serviceWorker.includes("./assets/characters/yuan/yuan-atlas-v1.png"), "Service worker should cache the production Yuan atlas");
 
+const fontLicense = "./assets/fonts/OFL.txt";
+const fontNotice = "./assets/fonts/NOTICE.md";
+assert.ok(fs.existsSync(fontLicense.replace(/^\.\//, "")), "Bundled font license should exist");
+assert.ok(serviceWorker.includes(fontLicense), "Service worker should cache the bundled font license");
+assert.ok(fs.existsSync(fontNotice.replace(/^\.\//, "")), "Bundled font provenance notice should exist");
+assert.ok(serviceWorker.includes(fontNotice), "Service worker should cache the bundled font provenance notice");
+const fontLicenseText = fs.readFileSync(fontLicense.replace(/^\.\//, ""), "utf8");
+assert.match(fontLicenseText, /Copyright 2021-2026 LXGW/);
+assert.match(fontLicenseText, /Copyright 2020 The Klee Project Authors/);
+assert.match(fontLicenseText, /SIL OPEN FONT LICENSE Version 1\.1/);
+const fontNoticeText = fs.readFileSync(fontNotice.replace(/^\.\//, ""), "utf8");
+assert.match(fontNoticeText, /LXGW WenKai v1\.522 release/);
+assert.match(fontNoticeText, /Medium subset to CSS weight 700/);
+for (const [fontPath, expectedHash] of [
+  ["assets/fonts/lxgw-wenkai-500.woff2", "25c8b344099eb47ee841d887b5f2a9a1c1d3451c440a7771792c2ee50206999b"],
+  ["assets/fonts/lxgw-wenkai-700.woff2", "79881da3e370ed94c75219482a6c4d13d702e656c8704b36a238cfe6d73e45fc"],
+]) {
+  const digest = crypto.createHash("sha256").update(fs.readFileSync(fontPath)).digest("hex");
+  assert.equal(digest, expectedHash, `${fontPath} should match the documented v1.522 subset`);
+}
+
 for (const audioAsset of ["./assets/audio/fairy-adventure.ogg", "./assets/audio/NOTICE.md"]) {
   assert.ok(fs.existsSync(audioAsset.replace(/^\.\//, "")), `Missing audio asset: ${audioAsset}`);
   assert.ok(serviceWorker.includes(audioAsset), `Service worker missing audio cache asset: ${audioAsset}`);
@@ -67,6 +89,7 @@ async function verifyCacheIsolation() {
       keys: async () => [
         "nini-yuan-v1.6.3-forward-idle",
         "nini-yuan-v1.7.0-experience-integrity-r1",
+        "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
         "other-game-offline-v8",
         "shared-font-cache-v2",
       ],
@@ -96,13 +119,13 @@ async function verifyCacheIsolation() {
   let activation;
   listeners.activate({ waitUntil(promise) { activation = promise; } });
   await activation;
-  assert.deepEqual(deleted, ["nini-yuan-v1.6.3-forward-idle"]);
+  assert.deepEqual(deleted, ["nini-yuan-v1.6.3-forward-idle", "nini-yuan-v1.7.0-experience-integrity-r1"]);
 
   let response;
   const request = { method: "GET", url: "https://example.test/styles.css" };
   listeners.fetch({ request, respondWith(promise) { response = promise; } });
   assert.deepEqual(await response, { source: "current-app-cache" });
-  assert.deepEqual(opened, ["nini-yuan-v1.7.0-experience-integrity-r1"]);
+  assert.deepEqual(opened, ["nini-yuan-v1.8.0-song-atlas-overhaul-r1"]);
   assert.deepEqual(matched, [request.url]);
 }
 

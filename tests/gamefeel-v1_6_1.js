@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const GameFeel = require("../src/render/game-feel.js");
+const FixedStep = require("../src/core/fixed-step.js");
 
 const DT = 1 / 120;
 
@@ -65,6 +66,33 @@ while (camera.lookX > 0 && cameraElapsed < 1) {
 }
 assert.ok(cameraElapsed < 0.1, `camera should cross the old direction within 100ms, got ${cameraElapsed}s`);
 
+assert.equal(GameFeel.interpolateCoordinate(10, 18, 0), 10, "presentation interpolation should begin at the prior fixed-step sample");
+assert.equal(GameFeel.interpolateCoordinate(10, 18, 0.5), 14, "presentation interpolation should sample between fixed steps");
+assert.equal(GameFeel.interpolateCoordinate(10, 18, 0.53, { quantum: 0.5 }), 14, "DPR-aware sampling should land on a physical-pixel quantum");
+assert.equal(GameFeel.interpolateCoordinate(10, 300, 0.2), 300, "large teleports must snap instead of sweeping across the level");
+assert.equal(GameFeel.interpolateCoordinate(10, 18, 0.2, { snap: true }), 18, "explicit respawn and portal snaps must bypass interpolation");
+
+GameFeel.resetHitstop();
+GameFeel.requestHitstop(45);
+assert.equal(GameFeel.consumeHitstop(1 / 60), 0);
+assert.equal(GameFeel.consumeHitstop(1 / 60), 0);
+const crossingRemainder = GameFeel.consumeHitstop(1 / 60);
+const crossingFrame = FixedStep.runFrame(0, crossingRemainder, () => {});
+assert.equal(crossingFrame.steps, 0, "the hitstop crossing frame should exercise the zero-step interpolation edge");
+const syncAfterHitstop = GameFeel.shouldSyncPresentationAfterHitstop({
+  before: 45 - 2 * (1000 / 60),
+  after: GameFeel.getHitstopRemaining(),
+  steps: crossingFrame.steps,
+});
+assert.equal(syncAfterHitstop, true);
+const displayedAfterHitstop = GameFeel.interpolateCoordinate(
+  syncAfterHitstop ? 151 : 144,
+  151,
+  crossingFrame.accumulator / FixedStep.FIXED_DT,
+);
+assert.equal(displayedAfterHitstop, 151, "finishing hitstop without a fixed step must not rewind presentation");
+GameFeel.resetHitstop();
+
 const game = fs.readFileSync("src/game.js", "utf8");
 const capture = fs.readFileSync("scripts/capture-store-assets.js", "utf8");
 const serviceWorker = fs.readFileSync("service-worker.js", "utf8");
@@ -80,17 +108,18 @@ assert.ok(game.includes('window.addEventListener("blur", resetPhysicalControlSta
 assert.ok(game.includes("suppressedKeys"), "held transition keys should stay suppressed until release");
 assert.ok(game.includes("InputState.resetTransientState"), "control reset should clear key edges and pointer refs together");
 assert.ok(game.includes("dismissChapterIntro"), "gameplay input should dismiss the chapter intro");
-assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(pkg.version));
-assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0"].includes(lock.version));
-assert.match(androidManifest, /versionCode="(14|15|16|17)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0)"/);
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(pkg.version));
+assert.ok(["1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0"].includes(lock.version));
+assert.match(androidManifest, /versionCode="(14|15|16|17|18)"[\s\S]*versionName="(1\.6\.(1|2|3)|1\.7\.0|1\.8\.0)"/);
 assert.ok(
+  serviceWorker.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
   serviceWorker.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"'),
 );
-assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3") || html.includes("星图 · v1.7.0"));
-for (const assetMarker of ["04-rotate-prompt", "06-gameplay-landscape.png", "07-pause-landscape.png", "08-gameplay-desktop.png"]) {
+assert.ok(html.includes("星图 · v1.6.1") || html.includes("星图 · v1.6.2") || html.includes("星图 · v1.6.3") || html.includes("星图 · v1.7.0") || html.includes("星图 · v1.8.0"));
+for (const assetMarker of ["04-rotate-prompt", "06-gameplay-landscape", "07-pause-landscape", "08-gameplay-desktop"]) {
   assert.ok(capture.includes(assetMarker), `store capture should produce ${assetMarker}`);
 }
 

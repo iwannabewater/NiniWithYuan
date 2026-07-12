@@ -27,10 +27,20 @@ assert.equal(resolve("nini", { facing: -1, onGround: false, vy: -500 }).animatio
 assert.equal(resolve("yuan", { onGround: false, vy: 420 }).animation, "fall");
 assert.equal(resolve("nini", { facing: -1, landingTimer: 0.1 }).animation, "land_left");
 assert.equal(resolve("yuan", { facing: 1, turnTimer: 0.1 }).animation, "turn_right");
+assert.equal(
+  resolve("yuan", { facing: -1, onGround: false, vy: -300, turnTimer: 0.1 }).animation,
+  "jump_left",
+  "airborne direction changes must keep an airborne pose",
+);
 assert.equal(resolve("nini", { shootTimer: 0.1 }).animation, "shoot_right");
 assert.equal(resolve("yuan", { hurtFlash: 0.1, skillTimer: 0.1 }).animation, "hurt_right");
 assert.equal(resolve("nini", { vx: 300 }).animation, "run");
 assert.equal(resolve("yuan").animation, "idle");
+assert.equal(
+  resolve("yuan", { vx: 440, landingTimer: 0.06 }).animation,
+  "run",
+  "a fast landing should hand back to locomotion after its readable impact beat",
+);
 
 const glide = resolve("nini", { onGround: false, vy: 160, glide: 0.3 });
 assert.equal(glide.artifact, "star-dial-open");
@@ -39,6 +49,25 @@ assert.ok(glide.lift < 0, "Nini glide should lift the authored sprite");
 const dash = resolve("yuan", { skillTimer: 0.12, vx: 900 });
 assert.equal(dash.artifact, "gui-sword-cut");
 assert.ok(dash.lean > 0.1, "Yuan dash should carry a strong forward lean");
+assert.equal(
+  Motion.resolveMotionFacing({ id: "yuan", facing: -1, dashDir: 1, skillTimer: 0.12 }),
+  1,
+  "Yuan's authored dash pose must follow dashDir while the dash is active",
+);
+assert.equal(Motion.resolveMotionFacing({ id: "yuan", facing: -1, dashDir: 1, skillTimer: 0 }), -1);
+
+const entered = Motion.advanceAnimationState(null, "jump_right", 4.2);
+assert.deepEqual(entered, { name: "jump_right", enteredAt: 4.2 });
+assert.equal(Motion.advanceAnimationState(entered, "jump_right", 4.6), entered, "an active state must keep its entry time");
+assert.deepEqual(Motion.advanceAnimationState(entered, "land_right", 4.7), { name: "land_right", enteredAt: 4.7 });
+assert.equal(Motion.animationElapsed(entered, 4.45), 0.25);
+assert.equal(
+  Motion.sampleAnimationFrame({ frames: [4, 5, 6], fps: 10, loop: false }, 0),
+  4,
+  "non-looping actions must begin on their first authored frame",
+);
+assert.equal(Motion.sampleAnimationFrame({ frames: [4, 5, 6], fps: 10, loop: false }, 2), 6, "non-looping actions must hold their last frame");
+assert.equal(Motion.sampleAnimationFrame({ frames: [1, 2], fps: 4, loop: true }, 0.3), 2, "looping motion should wrap from state-local time");
 
 assert.deepEqual(Motion.resolveSpriteOrientation("jump_left", -1), {
   authoredDirection: true,
