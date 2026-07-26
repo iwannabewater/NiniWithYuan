@@ -8,6 +8,7 @@
     menu: document.getElementById("menu"),
     characters: document.getElementById("characterScreen"),
     levels: document.getElementById("levelScreen"),
+    record: document.getElementById("recordScreen"),
     settings: document.getElementById("settingsScreen"),
   };
   const hud = document.getElementById("overlay");
@@ -24,6 +25,15 @@
     status: document.getElementById("hudStatus"),
     skill: document.getElementById("hudSkill"),
     bar: document.querySelector("#chapterBar span"),
+    chain: document.getElementById("hudChain"),
+    chainCount: document.getElementById("hudChainCount"),
+    chainMult: document.getElementById("hudChainMult"),
+    chainFill: document.getElementById("hudChainFill"),
+    wardenBar: document.getElementById("wardenBar"),
+    wardenName: document.getElementById("wardenName"),
+    wardenPhase: document.getElementById("wardenPhase"),
+    wardenTrack: document.getElementById("wardenTrack"),
+    wardenFill: document.getElementById("wardenFill"),
     intro: document.getElementById("chapterIntro"),
     introEyebrow: document.getElementById("chapterIntroEyebrow"),
     introTitle: document.getElementById("chapterIntroTitle"),
@@ -35,12 +45,14 @@
   const Audio = window.NiniYuanAudio;
   const InputState = window.NiniInputState;
   const Rules = window.NiniRules;
+  const Progression = window.NiniProgression;
   const FixedStep = window.NiniFixedStep;
   const Hud = window.NiniYuanHud;
   const CharacterMotion = window.NiniYuanCharacterMotion;
   const Playfield = window.NiniYuanPlayfieldMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
+  const WardenArt = window.NiniYuanWarden;
   const TILE = 48;
   const PICKUP_REACH_X = 10;
   const PICKUP_REACH_TOP = 46;
@@ -68,6 +80,22 @@
   const PHASE_WARNING_DEFAULT = 0.45;
   const ENEMY_HIT_FLASH_DURATION = 0.18;
   const SUPER_GUARD_FEEDBACK_COOLDOWN = 0.18;
+  // v2.0.0 — Astral Echo. Warden encounters, chain scoring, and hidden star marrow.
+  const WARDEN_TELEGRAPH = 0.55;
+  const WARDEN_RECOVER = 0.7;
+  const WARDEN_HIT_FLASH = 0.16;
+  const WARDEN_CONTACT_COOLDOWN = 0.5;
+  const WARDEN_BOLT_SPEED = 330;
+  const WARDEN_SHARD_SPEED = 520;
+  const WARDEN_SWEEP_SPEED = 520;
+  const MARROW_SIZE = 30;
+  const GOAL_REACH_X = 22;
+  const GOAL_REACH_Y = 34;
+  const SENTRY_COOLDOWN = 2.1;
+  const SENTRY_TELEGRAPH = 0.45;
+  const COMBO_DECAY_GRACE = 0.35;
+  const SENTRY_RANGE = 560;
+  const PROJECTILE_CULL_RADIUS = 1400;
   const SETTINGS_PERSIST_DELAY = 150;
   const ACCESSIBLE_TOUCH_HOLD = 140;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
@@ -122,6 +150,13 @@
   let portraitOverride = false;
   let orientationGated = false;
   let projectiles = [];
+  // v2.0.0 — Astral Echo runtime state. `warden` is the active world-finale
+  // guardian, `wardenBolts` its projectiles, `combo` the chain scoring window,
+  // and `run` the per-attempt facts the completion screen and records read.
+  let warden = null;
+  let wardenBolts = [];
+  let combo = { chain: 0, remaining: 0, multiplier: 1, best: 0, flash: 0 };
+  let run = { damaged: false, stomps: 0, marrow: false, deaths: 0, assist: false };
   // v1.2.4 — track HUD state so we can fire one-shot pulses only on real transitions.
   let hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
   const physicalKeys = new Set();
@@ -208,10 +243,45 @@
     return atlas;
   }
 
+  // --- v2.0.0 星辉护佑 / assist mode ----------------------------------------
+  // Assist never changes authored level geometry. It relaxes failure pressure
+  // only, and any run that used it is excluded from best times and trial medals
+  // so records stay comparable.
+
+  function assistSettings() {
+    return save.settings.assist || {};
+  }
+
+  function assistActive() {
+    return assistSettings().enabled === true;
+  }
+
+  function assistOn(key) {
+    const assist = assistSettings();
+    return assist.enabled === true && assist[key] === true;
+  }
+
+  /** Simulation time scale. Assist can slow the whole fixed-step clock. */
+  function assistTimeScale() {
+    if (!assistActive()) return 1;
+    return clamp((Number(assistSettings().speed) || 100) / 100, 0.6, 1);
+  }
+
+  /** Air-jump budget for the selected character, plus the assist bonus jump. */
+  function airJumpBudget() {
+    return characters[save.selected].airJumps + (assistOn("extraJump") ? 1 : 0);
+  }
+
+  /** A run that used assist never writes best times, medals, or the solo route. */
+  function recordsAreRanked() {
+    return run.assist !== true;
+  }
+
   function storageOptions() {
     return {
       levelCount: levels.length,
       levelIds: levels.map((level) => level.id),
+      achievementIds: Progression.ACHIEVEMENT_IDS,
       onError: () => toastMsg("本地存档暂不可用，本次进度仍可继续游玩"),
     };
   }
@@ -240,6 +310,7 @@
   }
 
   function buildLevels() {
+    const rectsOverlapRaw = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
     const P = (x, y, w, h, type = "ground", phase = "") => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, type, phase });
     const C = (x, y, kind = "coin", phase = "") => ({ x: x * TILE + 18, y: y * TILE + 16, w: 22, h: 22, kind, phase, taken: false });
     const F = (x, y, kind = "berry", phase = "") => ({ x: x * TILE + 10, y: y * TILE + 10, w: 30, h: 30, kind, phase, taken: false });
@@ -291,8 +362,27 @@
     const W1 = { id: "world1", name: "第一星域 破碎星图", subtitle: "五枚心石碎片" };
     const W2 = { id: "world2", name: "第二星域 星门群岛", subtitle: "星门重新接合路线" };
     const W3 = { id: "world3", name: "第三星域 星潮镜域", subtitle: "星潮相位路线" };
+    // v2.0.0 — new hostiles. `sentry` is a fixed emplacement that telegraphs then
+    // fires; `warder` is a shelled ground enemy that projectiles cannot break.
+    const T = (x, y, facing = -1, cadence = SENTRY_COOLDOWN) => ({
+      x: x * TILE + 5,
+      y: y * TILE + TILE - ENEMY_HEIGHT,
+      w: ENEMY_WIDTH - 10,
+      h: ENEMY_HEIGHT,
+      baseX: x * TILE + 5,
+      baseY: y * TILE + TILE - ENEMY_HEIGHT,
+      vx: 0,
+      patrol: 0,
+      type: "sentry",
+      facing,
+      cadence,
+      fireTimer: cadence * 0.6,
+      alive: true,
+      phase: 0,
+    });
+    const A = (x, y, patrol = 150) => ({ ...E(x, y, patrol, "warder"), vx: 70 });
 
-    return [
+    const chapters = [
       {
         id: "sakura",
         world: W1,
@@ -793,6 +883,137 @@
         moving: [M(30, 15, 3, 6, 104, "x", "jade"), M(76, 12, 4, 5, 92, "y", "jade", "b"), M(105, 10, 3, 6, 106, "x", "jade", "a"), M(128, 8, 4, 4, 92, "y", "jade")],
       },
     ];
+
+    // v2.0.0 — chapter tuning applied after authoring so the level literals above
+    // stay readable. `par` is the gold trial target in seconds, `marrow` is the
+    // hidden star-marrow tile, `extra` adds the two new hostile types, and
+    // `warden` seals a world finale behind its guardian.
+    const TUNING = {
+      sakura: { par: 20, marrow: [40, 8] },
+      moonruin: { par: 24, marrow: [70, 4] },
+      cloudsea: { par: 28, marrow: [23, 12] },
+      crystalforge: { par: 30, marrow: [104, 6], extra: [A(47, 13), A(94, 11, 190)] },
+      auroracitadel: {
+        par: 55,
+        marrow: [62, 11],
+        extra: [A(86, 12, 200)],
+        warden: {
+          id: "aurorawarden",
+          name: "极光守望者",
+          title: "第一星域 · 守望",
+          palette: "aurora",
+          health: 16,
+          arena: { x: 118 * TILE, w: 20 * TILE },
+          ground: 10 * TILE,
+          home: { x: 126 * TILE, y: 5 * TILE },
+          sigil: "极",
+        },
+      },
+      stargatecove: { par: 24, marrow: [82, 9] },
+      loopinglighthouse: { par: 28, marrow: [29, 9], extra: [T(66, 12)] },
+      ringconservatory: { par: 32, marrow: [58, 11], extra: [A(64, 13, 190)] },
+      starbridgetide: { par: 30, marrow: [101, 8], extra: [T(92, 12)] },
+      islandstarcore: {
+        par: 65,
+        marrow: [66, 11],
+        extra: [A(104, 12, 190), T(88, 13)],
+        warden: {
+          id: "corewarden",
+          name: "群岛守望者",
+          title: "第二星域 · 守望",
+          palette: "core",
+          health: 20,
+          arena: { x: 134 * TILE, w: 12 * TILE },
+          ground: 9 * TILE,
+          home: { x: 139 * TILE, y: 4 * TILE },
+          sigil: "核",
+        },
+      },
+      phaseshallows: { par: 32, marrow: [30, 10], extra: [T(66, 12)] },
+      tidecorridor: { par: 36, marrow: [62, 10], extra: [A(64, 13, 180)] },
+      moonmirrorbreak: { par: 40, marrow: [109, 9], extra: [T(82, 13)] },
+      twinstarclocktower: { par: 42, marrow: [75, 10], extra: [A(80, 12, 190)] },
+      phasetidecourt: {
+        par: 78,
+        marrow: [82, 11],
+        extra: [T(88, 13), A(112, 12, 190)],
+        warden: {
+          id: "tidewarden",
+          name: "星潮守望者",
+          title: "第三星域 · 守望",
+          palette: "tide",
+          health: 24,
+          arena: { x: 132 * TILE, w: 22 * TILE },
+          ground: 10 * TILE,
+          home: { x: 143 * TILE, y: 5 * TILE },
+          sigil: "潮",
+        },
+      },
+    };
+
+    // Warden difficulty ramps by remaining health: each stage speeds the cadence
+    // and widens the attack pool. Patterns stay data-driven so the three
+    // encounters share one simulation path.
+    const WARDEN_STAGES = [
+      { above: 0.66, cadence: 2.4, patterns: ["volley", "sweep"] },
+      { above: 0.33, cadence: 2.0, patterns: ["volley", "rain", "sweep"] },
+      { above: 0, cadence: 1.65, patterns: ["rain", "sweep", "volley", "summon"] },
+    ];
+
+    for (const level of chapters) {
+      const tuning = TUNING[level.id];
+      if (!tuning) continue;
+      level.par = tuning.par;
+      const [mx, my] = tuning.marrow;
+      level.marrow = {
+        x: mx * TILE + (TILE - MARROW_SIZE) / 2,
+        y: my * TILE + (TILE - MARROW_SIZE) / 2,
+        w: MARROW_SIZE,
+        h: MARROW_SIZE,
+        taken: false,
+      };
+      if (tuning.extra) level.enemies = level.enemies.concat(tuning.extra);
+
+      // v2.0.0 — 星灯 checkpoints. A fall used to end the whole attempt; now it
+      // costs one heart and returns the player to the last lit lantern. Lanterns
+      // are derived from the authored main platforms so no chapter needs
+      // re-laying out, and they never sit over a hazard.
+      const hosts = level.platforms.filter(
+        (p) => !p.phase && p.h >= TILE * 2 && p.w >= TILE * 5 && p.type !== "breakable"
+      );
+      const hazardBlocks = (rect) => level.hazards.some((h) => !h.phase && rectsOverlapRaw(rect, h));
+      const lanternAt = (targetX) => {
+        const ranked = hosts
+          .slice()
+          .sort((a, b) => Math.abs(a.x + a.w / 2 - targetX) - Math.abs(b.x + b.w / 2 - targetX));
+        for (const host of ranked) {
+          const rect = { x: host.x + host.w / 2 - 13, y: host.y - 52, w: 26, h: 52, lit: false };
+          if (!hazardBlocks(rect)) return rect;
+        }
+        return null;
+      };
+      const anchors = [0.34, 0.64];
+      if (tuning.warden) anchors.push((tuning.warden.arena.x - TILE * 3) / level.width);
+      const lanterns = [];
+      for (const fraction of anchors) {
+        const lantern = lanternAt(level.width * fraction);
+        if (!lantern) continue;
+        if (lantern.x < TILE * 6) continue;
+        if (lanterns.some((existing) => Math.abs(existing.x - lantern.x) < TILE * 6)) continue;
+        lanterns.push(lantern);
+      }
+      level.lanterns = lanterns;
+      if (tuning.warden) {
+        level.warden = {
+          ...tuning.warden,
+          w: 104,
+          h: 96,
+          stages: WARDEN_STAGES,
+        };
+      }
+    }
+
+    return chapters;
   }
 
   function resize() {
@@ -918,7 +1139,7 @@
       onGround: true,
       coyote: 0.12,
       jumpBuffer: 0,
-      airJumps: ch.airJumps,
+      airJumps: airJumpBudget(),
       facing: 1,
       moveIntent: 0,
       dashDir: 1,
@@ -954,6 +1175,10 @@
     particles = [];
     floatTexts = [];
     projectiles = [];
+    wardenBolts = [];
+    warden = createWardenState(activeLevel);
+    combo = { chain: 0, remaining: 0, multiplier: 1, best: 0, flash: 0 };
+    run = { damaged: false, stomps: 0, marrow: false, deaths: 0, assist: assistActive() };
     camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
     const initialCamera = cameraTarget(0);
     camera.x = initialCamera.x;
@@ -983,7 +1208,57 @@
       moving: level.moving.map((m) => ({ ...m })),
       wind: (level.wind || []).map((w) => ({ ...w })),
       portals: (level.portals || []).map((p) => ({ ...p })),
+      lanterns: (level.lanterns || []).map((l) => ({ ...l, lit: false })),
+      marrow: level.marrow ? { ...level.marrow, taken: false } : null,
+      warden: level.warden ? { ...level.warden, arena: { ...level.warden.arena }, home: { ...level.warden.home } } : null,
     };
+  }
+
+  /**
+   * Runtime state for one warden encounter. The authored record stays immutable;
+   * everything that changes during the fight lives here so a restart is a fresh
+   * object rather than a partially reset one.
+   */
+  function createWardenState(level) {
+    const warden = level.warden;
+    if (!warden) return null;
+    return {
+      data: warden,
+      x: warden.home.x,
+      y: warden.home.y,
+      w: warden.w,
+      h: warden.h,
+      homeX: warden.home.x,
+      homeY: warden.home.y,
+      health: warden.health,
+      maxHealth: warden.health,
+      active: false,
+      defeated: false,
+      hitTimer: 0,
+      contactCd: 0,
+      phase: "idle",
+      phaseTimer: 1.1,
+      attack: "",
+      attackIndex: 0,
+      sweepDir: -1,
+      hurtCount: 0,
+      bob: 0,
+      markers: [],
+    };
+  }
+
+  function activeWarden() {
+    return warden && !warden.defeated ? warden : null;
+  }
+
+  function wardenStage() {
+    if (!warden) return null;
+    const ratio = warden.maxHealth > 0 ? warden.health / warden.maxHealth : 0;
+    const stages = warden.data.stages;
+    for (const stage of stages) {
+      if (ratio > stage.above) return stage;
+    }
+    return stages[stages.length - 1];
   }
 
   function update(dt) {
@@ -1007,11 +1282,303 @@
       );
     }
     updateEnemies(dt);
+    // Sentries fire in chapters without a warden, so bolts advance on their own
+    // schedule rather than inside the encounter update.
+    updateHostileBolts(dt);
+    if (mode !== "play" || player.settledOutcome) return;
+    updateWarden(dt);
+    if (mode !== "play" || player.settledOutcome) return;
     updateProjectiles(dt);
     updatePickups();
+    updateCombo(dt);
     updateParticles(dt);
     updateCamera(dt);
     updateChapterIntro(dt);
+  }
+
+  // --- v2.0.0 chain scoring -------------------------------------------------
+  // The chain only ever multiplies star dew. Collection rating still reads
+  // `player.collectedValue`, which chain rewards never touch.
+
+  /** The full chain window, grace included. One source for HUD, decay, and refresh. */
+  function chainWindow() {
+    return Progression.COMBO_WINDOW + COMBO_DECAY_GRACE;
+  }
+
+  function updateCombo(dt) {
+    const next = Progression.decayCombo(combo, dt);
+    if (combo.chain > 0 && next.chain === 0) cue("combo_end");
+    combo.chain = next.chain;
+    combo.remaining = next.remaining;
+    combo.multiplier = next.multiplier;
+    combo.flash = Math.max(0, combo.flash - dt);
+  }
+
+  /**
+   * Register one chain link and return the star dew it is worth.
+   * `base` is the authored reward before the multiplier.
+   */
+  function chainReward(base, x, y, color) {
+    const previousMultiplier = combo.multiplier;
+    const next = Progression.advanceCombo(combo, { window: Progression.COMBO_WINDOW });
+    combo.chain = next.chain;
+    combo.remaining = chainWindow();
+    combo.multiplier = next.multiplier;
+    combo.best = Math.max(combo.best, combo.chain);
+    combo.flash = 0.32;
+    if (combo.multiplier > previousMultiplier) {
+      cue("combo_up");
+      floatText(`连星 ×${combo.multiplier}`, x, y - 26, CANVAS_MATERIAL.agedGold);
+    }
+    const amount = Progression.comboReward(base, combo.chain);
+    player.coins += amount;
+    floatText(`+${amount}`, x, y, color);
+    return amount;
+  }
+
+  function breakCombo() {
+    if (combo.chain === 0) return;
+    combo.chain = 0;
+    combo.remaining = 0;
+    combo.multiplier = 1;
+    combo.flash = 0;
+  }
+
+  // --- v2.0.0 warden encounters ---------------------------------------------
+
+  function wardenArenaRect() {
+    const data = warden?.data;
+    if (!data) return null;
+    return { x: data.arena.x, y: 0, w: data.arena.w, h: activeLevel.height + 400 };
+  }
+
+  function updateWarden(dt) {
+    if (!warden || warden.defeated) return;
+    warden.hitTimer = Math.max(0, warden.hitTimer - dt);
+    warden.contactCd = Math.max(0, warden.contactCd - dt);
+    warden.bob += dt;
+    if (!warden.active) {
+      if (player.x + player.w > warden.data.arena.x + TILE) {
+        warden.active = true;
+        warden.phase = "wait";
+        warden.phaseTimer = 1.2;
+        shake(10);
+        cue("warden_wake");
+        toastMsg(`${warden.data.name} · 星门已封`);
+      }
+      return;
+    }
+    const stage = wardenStage();
+    warden.phaseTimer -= dt;
+    if (warden.phase === "wait" && warden.phaseTimer <= 0) beginWardenAttack(stage);
+    else if (warden.phase === "telegraph" && warden.phaseTimer <= 0) fireWardenAttack(stage);
+    else if (warden.phase === "act") advanceWardenAct(dt, stage);
+    else if (warden.phase === "recover" && warden.phaseTimer <= 0) {
+      warden.phase = "wait";
+      warden.phaseTimer = stage.cadence;
+    }
+    if (warden.phase !== "act" || warden.attack !== "sweep") driftWardenHome(dt);
+    resolveWardenContact();
+  }
+
+  /**
+   * Hover behaviour. The guardian rides high while it winds up and drops into
+   * player reach during its recovery beat, so every exchange has one readable
+   * opening instead of a war of attrition at an unreachable altitude.
+   */
+  function driftWardenHome(dt) {
+    const openingY = warden.data.ground - warden.h - 26;
+    const restingY = warden.homeY + Math.sin(warden.bob * 1.5) * 10;
+    const targetY = warden.phase === "recover" ? openingY : restingY;
+    const targetX = clamp(
+      player.x + player.w / 2 - warden.w / 2,
+      warden.data.arena.x + TILE,
+      warden.data.arena.x + warden.data.arena.w - warden.w - TILE
+    );
+    const settle = warden.phase === "recover" ? 0.0006 : 0.02;
+    warden.x = lerp(warden.x, lerp(warden.homeX, targetX, 0.55), 1 - Math.pow(0.02, dt));
+    warden.y = lerp(warden.y, targetY, 1 - Math.pow(settle, dt));
+  }
+
+  /** True while the guardian is inside its punishable recovery window. */
+  function wardenIsOpen() {
+    return Boolean(warden && warden.active && !warden.defeated && warden.phase === "recover");
+  }
+
+  function beginWardenAttack(stage) {
+    const patterns = stage.patterns;
+    warden.attack = patterns[warden.attackIndex % patterns.length];
+    warden.attackIndex += 1;
+    warden.phase = "telegraph";
+    warden.phaseTimer = WARDEN_TELEGRAPH;
+    if (warden.attack === "rain") {
+      const arena = warden.data.arena;
+      warden.markers = [0, 1, 2, 3].map((i) => arena.x + TILE * 2 + ((arena.w - TILE * 4) / 3) * i);
+    } else if (warden.attack === "sweep") {
+      warden.sweepDir = player.x + player.w / 2 < warden.x + warden.w / 2 ? -1 : 1;
+    }
+    cue("warden_charge");
+  }
+
+  function fireWardenAttack(stage) {
+    const center = { x: warden.x + warden.w / 2, y: warden.y + warden.h / 2 };
+    if (warden.attack === "volley") {
+      const dx = player.x + player.w / 2 - center.x;
+      const dy = player.y + player.h / 2 - center.y;
+      const base = Math.atan2(dy, dx);
+      const count = stage.patterns.length >= 4 ? 5 : 3;
+      for (let i = 0; i < count; i += 1) {
+        const angle = base + (i - (count - 1) / 2) * 0.22;
+        wardenBolts.push({
+          x: center.x - 9,
+          y: center.y - 9,
+          w: 18,
+          h: 18,
+          vx: Math.cos(angle) * WARDEN_BOLT_SPEED,
+          vy: Math.sin(angle) * WARDEN_BOLT_SPEED,
+          life: 3.4,
+          kind: "bolt",
+        });
+      }
+      warden.phase = "recover";
+      warden.phaseTimer = WARDEN_RECOVER;
+      cue("warden_volley");
+    } else if (warden.attack === "rain") {
+      for (const markerX of warden.markers) {
+        wardenBolts.push({
+          x: markerX - 11,
+          y: warden.y + warden.h * 0.5,
+          w: 22,
+          h: 26,
+          vx: 0,
+          vy: WARDEN_SHARD_SPEED,
+          life: 3.4,
+          kind: "shard",
+        });
+      }
+      warden.markers = [];
+      warden.phase = "recover";
+      warden.phaseTimer = WARDEN_RECOVER;
+      cue("warden_rain");
+    } else if (warden.attack === "summon") {
+      spawnWardenMinions();
+      warden.phase = "recover";
+      warden.phaseTimer = WARDEN_RECOVER;
+      cue("warden_summon");
+    } else {
+      warden.phase = "act";
+      warden.phaseTimer = 1.35;
+      cue("warden_sweep");
+    }
+  }
+
+  function advanceWardenAct(dt, stage) {
+    const arena = warden.data.arena;
+    const groundY = warden.data.ground - warden.h - 6;
+    warden.y = moveToward(warden.y, groundY, 900 * dt);
+    warden.x += warden.sweepDir * WARDEN_SWEEP_SPEED * dt;
+    const minX = arena.x + 8;
+    const maxX = arena.x + arena.w - warden.w - 8;
+    if (warden.x <= minX || warden.x >= maxX) {
+      warden.x = clamp(warden.x, minX, maxX);
+      warden.sweepDir *= -1;
+      spawnSpark(warden.x + warden.w / 2, groundY + warden.h, CANVAS_MATERIAL.agedGold, 10);
+      shake(6);
+    }
+    if (warden.phaseTimer <= 0) {
+      warden.phase = "recover";
+      warden.phaseTimer = WARDEN_RECOVER + 0.25;
+      warden.attack = "";
+    }
+  }
+
+  function spawnWardenMinions() {
+    const arena = warden.data.arena;
+    const living = activeLevel.enemies.filter((enemy) => enemy.summoned && enemy.alive).length;
+    if (living >= 4) return;
+    for (const offset of [TILE * 3, arena.w - TILE * 4]) {
+      activeLevel.enemies.push({
+        x: arena.x + offset,
+        y: warden.data.ground - TILE * 3,
+        w: ENEMY_WIDTH,
+        h: ENEMY_HEIGHT,
+        baseX: arena.x + offset,
+        baseY: warden.data.ground - TILE * 3,
+        vx: 70,
+        patrol: TILE * 2,
+        type: "wisp",
+        alive: true,
+        phase: 0,
+        summoned: true,
+      });
+    }
+  }
+
+  function updateHostileBolts(dt) {
+    for (const bolt of wardenBolts) {
+      bolt.x += bolt.vx * dt;
+      bolt.y += bolt.vy * dt;
+      bolt.life -= dt;
+      if (bolt.life <= 0) continue;
+      if (bolt.y > activeLevel.height + 200) bolt.life = 0;
+      if (rectsOverlap(bodyRect(player), bolt)) {
+        bolt.life = 0;
+        hurt(1);
+        if (mode !== "play" || player.settledOutcome) return;
+      }
+    }
+    wardenBolts = wardenBolts.filter((bolt) => bolt.life > 0);
+  }
+
+  function resolveWardenContact() {
+    if (!rectsOverlap(bodyRect(player), warden)) return;
+    const stomping = player.vy > 140 && player.y + player.h - warden.y < 34;
+    if (stomping) {
+      damageWarden(2, "stomp");
+      player.vy = -640;
+      return;
+    }
+    if (player.superInvuln > 0 || (save.selected === "yuan" && player.skillTimer > 0)) {
+      if (warden.contactCd > 0) return;
+      warden.contactCd = WARDEN_CONTACT_COOLDOWN;
+      damageWarden(save.selected === "yuan" && player.skillTimer > 0 ? 2 : 1, "impact");
+      return;
+    }
+    hurt(1);
+  }
+
+  function damageWarden(amount, source) {
+    if (!warden || warden.defeated) return;
+    warden.health = Math.max(0, warden.health - amount);
+    warden.hitTimer = WARDEN_HIT_FLASH;
+    warden.hurtCount += 1;
+    GameFeel?.requestHitstop?.(source === "stomp" ? 60 : 40);
+    shake(source === "stomp" ? 9 : 6);
+    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, source === "stomp" ? 22 : 14);
+    chainReward(3, warden.x + warden.w / 2, warden.y, CANVAS_MATERIAL.agedGold);
+    cue(source === "stomp" ? "stomp" : "hit_enemy");
+    if (warden.health <= 0) defeatWarden();
+  }
+
+  function defeatWarden() {
+    warden.defeated = true;
+    warden.active = false;
+    wardenBolts = [];
+    for (const enemy of activeLevel.enemies) if (enemy.summoned) enemy.alive = false;
+    shake(18);
+    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, 90);
+    floatText(`${warden.data.name} 归位`, warden.x, warden.y, CANVAS_MATERIAL.agedGold);
+    cue("warden_fall");
+    toastMsg(`${warden.data.name} 已归位 · 星门开启`);
+    save.wardens[activeLevel.id] = 1;
+    if (!run.damaged) {
+      save.stats.wardenFlawless = Math.min(9999999, (save.stats.wardenFlawless || 0) + 1);
+    }
+    persist();
+  }
+
+  function goalIsSealed() {
+    return Boolean(warden && !warden.defeated);
   }
 
   function updateInputs() {
@@ -1100,7 +1667,7 @@
     if (inputs.jumpPressed) player.jumpBuffer = 0.14;
     player.jumpBuffer -= dt;
     player.coyote -= dt;
-    player.skillCd = Math.max(0, player.skillCd - dt);
+    player.skillCd = assistOn("infiniteSkill") ? 0 : Math.max(0, player.skillCd - dt);
     player.skillTimer = Math.max(0, player.skillTimer - dt);
     player.glideIntent = Rules.advanceIntentWindow(player.glideIntent, {
       pressed: inputs.skillPressed,
@@ -1249,21 +1816,19 @@
       if (stomp) {
         e.alive = false;
         player.vy = -620;
-        player.coins += 2;
+        run.stomps += 1;
         GameFeel?.requestHitstop?.(50);
         burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.agedGold, 20);
-        floatText("+2", e.x, e.y, CANVAS_MATERIAL.agedGold);
+        chainReward(enemyReward(e), e.x, e.y, CANVAS_MATERIAL.agedGold);
         cue("stomp");
       } else if (player.superInvuln > 0) {
         e.alive = false;
-        player.coins += 2;
         burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.moonWhite, 28);
-        floatText("无敌", e.x, e.y, CANVAS_MATERIAL.moonWhite);
+        chainReward(enemyReward(e), e.x, e.y, CANVAS_MATERIAL.moonWhite);
       } else if (player.skillTimer > 0 && save.selected === "yuan") {
         e.alive = false;
-        player.coins += 3;
         burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.carvedJade, 24);
-        floatText("破击", e.x, e.y, CANVAS_MATERIAL.carvedJade);
+        chainReward(enemyReward(e) + 1, e.x, e.y, CANVAS_MATERIAL.carvedJade);
       } else {
         hurt(1);
         if (mode !== "play") {
@@ -1288,18 +1853,87 @@
       }
     }
 
-    if (player.y > activeLevel.height + 260) hurt(3, true);
+    if (player.y > activeLevel.height + 260) hurt(1, true);
     if (mode !== "play") {
       consumePressed();
       return;
     }
+    holdInsideArena();
+    lightLanterns();
+    collectMarrow();
     const outcome = Rules.resolveTerminalOutcome({
       isDead: player.health <= 0,
-      reachedGoal: !player.completed && rectsOverlap(bodyRect(player), activeLevel.goal),
+      reachedGoal: !player.completed && !goalIsSealed() && rectsOverlap(bodyRect(player), goalReachRect()),
       settledOutcome: player.settledOutcome,
     });
     if (outcome === Rules.OUTCOME_COMPLETE) completeLevel();
     consumePressed();
+  }
+
+  /**
+   * The gate is drawn at its authored rect but accepts a slightly larger reach,
+   * the same forgiveness pickups already get. Grazing the beacon's edge at speed
+   * now finishes the chapter instead of sliding past a 70 px column.
+   */
+  function goalReachRect() {
+    const goal = activeLevel.goal;
+    return {
+      x: goal.x - GOAL_REACH_X,
+      y: goal.y - GOAL_REACH_Y,
+      w: goal.w + GOAL_REACH_X * 2,
+      h: goal.h + GOAL_REACH_Y * 2,
+    };
+  }
+
+  /** While a warden is awake its arena edge is solid, so the fight cannot be skipped. */
+  function holdInsideArena() {
+    const active = activeWarden();
+    if (!active || !active.active) return;
+    const edge = active.data.arena.x;
+    if (player.x >= edge) return;
+    player.x = edge;
+    if (player.vx < 0) player.vx = 0;
+    syncPresentationCoordinates();
+  }
+
+  /**
+   * Light any star lantern the player touches and move the respawn anchor there.
+   * Lanterns are one-way: progress is never taken back by walking left.
+   */
+  function lightLanterns() {
+    for (const lantern of activeLevel.lanterns || []) {
+      if (lantern.lit || !rectsOverlap(bodyRect(player), lantern)) continue;
+      lantern.lit = true;
+      player.spawn = {
+        x: clamp(lantern.x + lantern.w / 2 - player.baseW / 2, 0, activeLevel.width - player.baseW),
+        y: lantern.y + lantern.h - player.baseH,
+      };
+      burst(lantern.x + lantern.w / 2, lantern.y + 12, CANVAS_MATERIAL.agedGold, 26);
+      cue("lantern");
+      toastMsg("星灯已点亮 · 从此处重启");
+    }
+  }
+
+  function collectMarrow() {
+    const marrow = activeLevel.marrow;
+    if (!marrow || marrow.taken || !rectsOverlap(pickupRect(player), marrow)) return;
+    marrow.taken = true;
+    run.marrow = true;
+    save.marrow[activeLevel.id] = 1;
+    persist();
+    shake(6);
+    burst(marrow.x + marrow.w / 2, marrow.y + marrow.h / 2, CANVAS_MATERIAL.dustyRose, 44);
+    floatText("星髓", marrow.x, marrow.y, CANVAS_MATERIAL.dustyRose);
+    cue("marrow");
+    toastMsg("拾得星髓 · 已记入星录");
+  }
+
+  /** Star dew a hostile is worth before the chain multiplier. */
+  function enemyReward(enemy) {
+    if (enemy.type === "warder") return 4;
+    if (enemy.type === "sentry") return 3;
+    if (enemy.type === "wisp") return 3;
+    return 2;
   }
 
   function moveToward(value, target, amount) {
@@ -1479,7 +2113,7 @@
     player.onGround = allSolids().some((p) => !p.broken && rectsOverlap(foot, p));
     if (player.onGround) {
       player.coyote = 0.12;
-      player.airJumps = characters[save.selected].airJumps;
+      player.airJumps = airJumpBudget();
     }
   }
 
@@ -1504,7 +2138,7 @@
           player.vy = 0;
           player.onGround = true;
           player.coyote = 0.12;
-          player.airJumps = characters[save.selected].airJumps;
+          player.airJumps = airJumpBudget();
           groundedByPlatform = p;
         }
         if (amount < 0) {
@@ -1548,24 +2182,53 @@
       }
       for (const e of activeLevel.enemies) {
         if (!e.alive || pr.life <= 0 || !rectsOverlap(pr, e)) continue;
-        e.hp = (e.hp || (e.type === "ember" ? 3 : 2)) - pr.damage;
+        if (enemyResistsProjectiles(e)) {
+          // 石胄 shells deflect star bolts; the fight has to be answered with impact.
+          e.hitTimer = ENEMY_HIT_FLASH_DURATION;
+          pr.life = 0;
+          burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.moonWhite, 8);
+          floatText("护甲", e.x, e.y, CANVAS_MATERIAL.moonWhite);
+          cue("deflect");
+          continue;
+        }
+        e.hp = (e.hp || enemyHitPoints(e)) - pr.damage;
         e.hitTimer = ENEMY_HIT_FLASH_DURATION;
         GameFeel?.requestHitstop?.(35);
         burst(e.x + e.w / 2, e.y + e.h / 2, pr.color, 14);
         cue("hit_take");
         if (e.hp <= 0) {
           e.alive = false;
-          player.coins += 2 + pr.damage;
-          floatText(`+${2 + pr.damage}`, e.x, e.y, CANVAS_MATERIAL.agedGold);
+          chainReward(enemyReward(e) + pr.damage, e.x, e.y, CANVAS_MATERIAL.agedGold);
         }
         if (pr.pierce > 0) pr.pierce -= 1;
         else pr.life = 0;
       }
+      const guardian = activeWarden();
+      if (guardian && guardian.active && pr.life > 0 && rectsOverlap(pr, guardian)) {
+        damageWarden(pr.damage, "bolt");
+        if (pr.pierce > 0) pr.pierce -= 1;
+        else pr.life = 0;
+      }
     }
-    projectiles = projectiles.filter((pr) => pr.life > 0 && pr.x > camera.x - 160 && pr.x < camera.x + view.w + 260);
+    // World-space cull radius rather than a viewport-relative one: a projectile
+    // must not survive longer on a wide monitor than on a phone. The radius sits
+    // beyond the furthest a boosted shot can travel inside its own lifetime, so
+    // `pr.life` stays the real limit and this is only a safety net.
+    projectiles = projectiles.filter(
+      (pr) => pr.life > 0 && Math.abs(pr.x - (player.x + player.w / 2)) < PROJECTILE_CULL_RADIUS
+    );
+  }
+
+  function enemyHitPoints(enemy) {
+    if (enemy.type === "sentry") return 2;
+    if (enemy.type === "ember") return 3;
+    return 2;
   }
 
   function nearestEnemy(pr) {
+    // Nini's mild homing tracks the open guardian too, so the recovery window is
+    // usable without pixel-accurate aiming.
+    if (wardenIsOpen()) return warden;
     let best = null;
     let bestDist = 999999;
     for (const e of activeLevel.enemies) {
@@ -1584,6 +2247,10 @@
       if (!e.alive) continue;
       e.hitTimer = Math.max(0, (e.hitTimer || 0) - dt);
       e.phase += dt;
+      if (e.type === "sentry") {
+        updateSentry(e, dt);
+        continue;
+      }
       if (e.type === "wisp") {
         e.y = e.baseY + Math.sin(e.phase * 4) * WISP_HOVER_RANGE;
         e.x += e.vx * dt;
@@ -1617,6 +2284,45 @@
     }
   }
 
+  /**
+   * v2.0.0 — 哨星 sentry. A fixed emplacement that faces the player, telegraphs
+   * for a readable beat, then fires one slow bolt. It never moves, so the answer
+   * is always positioning rather than reaction speed.
+   */
+  function updateSentry(e, dt) {
+    const support = enemySupportPlatform(e);
+    if (support) e.y = support.y - e.h;
+    const toPlayer = player.x + player.w / 2 - (e.x + e.w / 2);
+    if (Math.abs(toPlayer) > 24) e.facing = Math.sign(toPlayer);
+    // World-space range. Reading the viewport here would make the same chapter
+    // play differently on a wide desktop than on a phone.
+    const inRange = Math.abs(toPlayer) < SENTRY_RANGE && Math.abs(player.y - e.y) < TILE * 6;
+    if (!inRange) {
+      e.fireTimer = Math.min(e.fireTimer, e.cadence * 0.5);
+      return;
+    }
+    e.fireTimer -= dt;
+    if (e.fireTimer > 0) return;
+    e.fireTimer = e.cadence;
+    wardenBolts.push({
+      x: e.x + e.w / 2 - 8 + e.facing * 16,
+      y: e.y + e.h * 0.34,
+      w: 16,
+      h: 16,
+      vx: e.facing * WARDEN_BOLT_SPEED * 0.82,
+      vy: -30,
+      life: 2.6,
+      kind: "sentry",
+    });
+    burst(e.x + e.w / 2 + e.facing * 18, e.y + e.h * 0.4, CANVAS_MATERIAL.danger, 6);
+    cue("sentry_fire");
+  }
+
+  /** Shelled hostiles ignore projectiles; only impact answers them. */
+  function enemyResistsProjectiles(enemy) {
+    return enemy?.type === "warder";
+  }
+
   function enemySupportPlatform(e) {
     const probe = { x: e.x + 4, y: e.y + e.h - 2, w: e.w - 8, h: TILE + 4 };
     let support = null;
@@ -1633,11 +2339,19 @@
       if (c.taken || !phaseIsActive(c) || !rectsOverlap(reach, c)) continue;
       c.taken = true;
       const amount = c.kind === "gem" ? 5 : 1;
-      player.coins += amount;
+      // The collection rating reads `collectedValue`, which always takes the
+      // authored value. Only star dew is allowed to grow with the chain.
       player.collectedValue += amount;
-      if (c.kind === "gem") player.gems += 1;
       const pickupColor = c.kind === "gem" ? CANVAS_MATERIAL.carvedJade : CANVAS_MATERIAL.agedGold;
-      floatText(`+${amount}`, c.x, c.y, pickupColor);
+      if (c.kind === "gem") {
+        player.gems += 1;
+        chainReward(amount, c.x, c.y, pickupColor);
+      } else {
+        player.coins += amount;
+        // Common star dew keeps a live chain breathing without extending it.
+        if (combo.chain > 0) combo.remaining = chainWindow();
+        floatText(`+${amount}`, c.x, c.y, pickupColor);
+      }
       burst(c.x + 10, c.y + 10, pickupColor, c.kind === "gem" ? 18 : 9);
       cue(c.kind === "gem" ? "pickup_gem" : "pickup_coin");
     }
@@ -1692,7 +2406,22 @@
       return;
     }
     if (player.invuln > 0 && !forceRespawn) return;
+    if (assistOn("invulnerable")) {
+      // Assist absorbs the damage. A fall still returns the player to the last
+      // lit lantern, because the level below the floor has nowhere to stand.
+      if (forceRespawn) {
+        respawn();
+        return;
+      }
+      if (player.guardFeedbackCd > 0) return;
+      player.guardFeedbackCd = SUPER_GUARD_FEEDBACK_COOLDOWN;
+      burst(player.x + player.w / 2, player.y + player.h / 2, CANVAS_MATERIAL.moonWhite, 10);
+      cue("hit_super");
+      return;
+    }
     GameFeel?.requestHitstop?.(70);
+    run.damaged = true;
+    breakCombo();
     player.health -= damage;
     player.invuln = 1.1;
     player.hurtFlash = 0.3;
@@ -1704,6 +2433,8 @@
     if (player.health <= 0 || forceRespawn) {
       if (player.health <= 0) {
         player.settledOutcome = Rules.OUTCOME_DEATH;
+        save.stats.deaths = Math.min(9999999, (save.stats.deaths || 0) + 1);
+        persist();
         cue("fail");
         openModal("再试一次", "星光暂时黯淡，但路线已经记住了。", [
           ["重新挑战", () => startLevel(currentLevelIndex), "primary"],
@@ -1717,8 +2448,13 @@
 
   function respawn() {
     RespawnVeil?.flash?.(180);
+    wardenBolts = [];
+    breakCombo();
     player.x = player.spawn.x;
-    player.y = player.spawn.y;
+    // Spawn anchors are authored for the base silhouette. Bottom-align instead of
+    // copying the y directly, so respawning while enlarged does not start the
+    // player inside the platform.
+    player.y = player.spawn.y + player.baseH - player.h;
     player.vx = 0;
     player.vy = 0;
     requestPresentationSnap(true);
@@ -1739,17 +2475,47 @@
     player.settledOutcome = Rules.OUTCOME_COMPLETE;
     player.completed = true;
     const id = activeLevel.id;
-    const prev = save.bestTimes[id];
-    if (!prev || player.elapsed < prev) save.bestTimes[id] = player.elapsed;
+    const stars = starCount();
+    const previousBest = save.bestTimes[id];
+    const ranked = recordsAreRanked();
+    // Assist runs still unlock chapters, star ratings, and star marrow. They do
+    // not write best times or trial medals, so ranked records stay comparable.
+    const newRecord = ranked && (!previousBest || player.elapsed < previousBest);
+    if (newRecord) save.bestTimes[id] = player.elapsed;
     save.unlocked = Math.max(save.unlocked, currentLevelIndex + 2);
     save.totalCoins += player.coins;
-    save.levelStars[id] = Math.max(save.levelStars[id] || 0, starCount());
+    save.levelStars[id] = Math.max(save.levelStars[id] || 0, stars);
+    save.clears[save.selected][id] = 1;
+    save.stats.bestCombo = Math.max(save.stats.bestCombo || 0, combo.best);
+    save.stats.stomps = Math.min(9999999, (save.stats.stomps || 0) + run.stomps);
+    if (!run.damaged) save.flawless[id] = 1;
+    if (run.assist) save.assistUsed = true;
+    const unlockedNow = Progression.newlyUnlocked(save, levels);
+    for (const achievementId of unlockedNow) save.achievements[achievementId] = 1;
     persist();
     burst(activeLevel.goal.x + 35, activeLevel.goal.y + 50, CANVAS_MATERIAL.agedGold, 80);
     cue("complete");
+    const medal = ranked ? Progression.medalForTime(save.bestTimes[id], activeLevel.par) : "";
+    Hud.renderOutcomeReport(document.getElementById("modalReport"), {
+      stars,
+      coins: player.coins,
+      elapsed: player.elapsed,
+      best: save.bestTimes[id],
+      newRecord,
+      medal,
+      medalLabel: Progression.medalLabel(medal),
+      par: activeLevel.par,
+      marrow: run.marrow,
+      marrowFound: Boolean(save.marrow[id]),
+      flawless: !run.damaged,
+      bestCombo: combo.best,
+      assist: run.assist,
+      achievements: unlockedNow.map((achievementId) => Progression.achievementById(achievementId)).filter(Boolean),
+      formatTime,
+    });
     openModal(
       "通关完成",
-      `${activeLevel.name} 已通关。获得星露 ${player.coins}，收藏评级 ${"★".repeat(starCount())}${"☆".repeat(3 - starCount())}。`,
+      `${activeLevel.name} 已通关。`,
       [
         currentLevelIndex < levels.length - 1 ? ["下一章", () => startLevel(currentLevelIndex + 1), "primary"] : ["回到菜单", backToMenu, "primary"],
         ["重玩本章", () => startLevel(currentLevelIndex)],
@@ -1899,6 +2665,7 @@
     drawPhaseTide(level, tide);
     for (const w of level.wind || []) drawWind(w);
     drawGoal(level.goal);
+    for (const lantern of level.lanterns || []) drawLantern(lantern);
     for (const p of level.platforms) if (!p.broken && isPhaseItem(p) && !phaseIsActive(p, tide)) drawPhaseGhostPlatform(p, tide);
     for (const m of level.moving) if (isPhaseItem(m) && !phaseIsActive(m, tide)) drawPhaseGhostPlatform(m, tide);
     for (const p of level.platforms) if (!p.broken && phaseIsActive(p, tide)) drawPlatform(p);
@@ -1913,8 +2680,47 @@
     for (const c of level.coins) if (!c.taken && isPhaseItem(c) && !phaseIsActive(c, tide)) drawPhaseGhostPickup(c, tide);
     for (const p of level.powerups || []) if (!p.taken && phaseIsActive(p, tide)) drawPowerup(p);
     for (const p of level.powerups || []) if (!p.taken && isPhaseItem(p) && !phaseIsActive(p, tide)) drawPhaseGhostPickup(p, tide);
+    drawMarrow(level);
     for (const pr of projectiles) drawProjectile(pr);
     for (const e of level.enemies) if (e.alive) drawEnemy(e);
+    drawWardenScene(level);
+  }
+
+  function drawLantern(lantern) {
+    WardenArt?.drawLantern?.(ctx, lantern, { time: sceneTime() });
+  }
+
+  function drawMarrow(level) {
+    if (!level.marrow || level.marrow.taken) return;
+    WardenArt?.drawMarrow?.(ctx, level.marrow, { time: sceneTime() });
+  }
+
+  function drawWardenScene(level) {
+    const time = sceneTime();
+    for (const bolt of wardenBolts) WardenArt?.drawHostileBolt?.(ctx, bolt, time);
+    if (!warden) return;
+    const arena = warden.data.arena;
+    WardenArt?.drawArenaSeal?.(ctx, {
+      x: arena.x,
+      top: Math.max(0, camera.y - 80),
+      bottom: level.height + 40,
+      time,
+      active: warden.active && !warden.defeated,
+    });
+    if (warden.defeated) return;
+    if (warden.phase === "telegraph" && warden.attack === "rain") {
+      WardenArt?.drawWardenMarkers?.(ctx, warden.markers, {
+        groundY: warden.data.ground,
+        progress: 1 - clamp(warden.phaseTimer / WARDEN_TELEGRAPH, 0, 1),
+      });
+    }
+    WardenArt?.drawWarden?.(ctx, { ...warden, palette: warden.data.palette }, {
+      time,
+      telegraph: warden.phase === "telegraph" ? 1 - clamp(warden.phaseTimer / WARDEN_TELEGRAPH, 0, 1) : 0,
+      flash: warden.hitTimer,
+      sigil: warden.data.sigil,
+      fontFamily: CANVAS_FONT_FAMILY,
+    });
   }
 
   function phaseColor(phase) {
@@ -2032,6 +2838,18 @@
   }
 
   function drawEnemy(e) {
+    if (e.type === "sentry") {
+      WardenArt?.drawSentry?.(ctx, e, {
+        time: sceneTime(),
+        charge: clamp(1 - e.fireTimer / Math.max(0.01, SENTRY_TELEGRAPH), 0, 1),
+        flash: e.hitTimer || 0,
+      });
+      return;
+    }
+    if (e.type === "warder") {
+      WardenArt?.drawWarder?.(ctx, e, { time: sceneTime(), flash: e.hitTimer || 0 });
+      return;
+    }
     drawEnemyIntent(e);
     if (e.hitTimer > 0) drawEnemyHitFlash(e);
     if (e.type === "wisp") {
@@ -2250,7 +3068,8 @@
   }
 
   function drawGoal(g) {
-    Playfield.drawGoal(ctx, g, { time: sceneTime(), reducedMotion: view.reducedMotion });
+    const sealed = goalIsSealed();
+    Playfield.drawGoal(ctx, g, { time: sceneTime(), reducedMotion: view.reducedMotion, sealed });
   }
 
   function drawWind(w) {
@@ -2788,6 +3607,49 @@
       hudEls.bar.style.width = `${progressPercent}%`;
       hudState.values.progress = progressPercent;
     }
+    updateChainHud();
+    updateWardenHud();
+  }
+
+  function updateChainHud() {
+    const live = combo.chain > 0;
+    if (hudState.values.chainLive !== live) {
+      hudEls.chain.hidden = !live;
+      hudState.values.chainLive = live;
+    }
+    if (!live) return;
+    setHudText("chainCount", hudEls.chainCount, combo.chain);
+    setHudText("chainMult", hudEls.chainMult, `×${combo.multiplier}`);
+    const remaining = Math.round(clamp(combo.remaining / chainWindow(), 0, 1) * 100);
+    if (hudState.values.chainFill !== remaining) {
+      hudEls.chainFill.style.width = `${remaining}%`;
+      hudState.values.chainFill = remaining;
+    }
+  }
+
+  function updateWardenHud() {
+    const showing = Boolean(warden && warden.active && !warden.defeated);
+    if (hudState.values.wardenShowing !== showing) {
+      hudEls.wardenBar.hidden = !showing;
+      hudState.values.wardenShowing = showing;
+    }
+    if (!showing) return;
+    setHudText("wardenName", hudEls.wardenName, warden.data.name);
+    setHudText("wardenPhase", hudEls.wardenPhase, wardenPhaseLabel());
+    const ratio = Math.round(clamp(warden.health / warden.maxHealth, 0, 1) * 100);
+    if (hudState.values.wardenFill !== ratio) {
+      hudEls.wardenFill.style.width = `${ratio}%`;
+      hudEls.wardenTrack.setAttribute("aria-valuenow", String(ratio));
+      hudEls.wardenTrack.setAttribute("aria-valuetext", `${warden.data.name} 残余星力 ${ratio}%`);
+      hudState.values.wardenFill = ratio;
+    }
+  }
+
+  function wardenPhaseLabel() {
+    if (warden.phase === "telegraph") return "蓄势";
+    if (warden.phase === "act") return "横扫";
+    if (warden.phase === "recover") return "破绽";
+    return "对峙";
   }
 
   function setHudText(key, element, value) {
@@ -2887,6 +3749,8 @@
     document.getElementById("modalEyebrow").textContent = eyebrow;
     document.getElementById("modalTitle").textContent = title;
     document.getElementById("modalText").textContent = text;
+    // The completion report is written before openModal; every other dialog clears it.
+    if (eyebrow !== "胜利") Hud.clearOutcomeReport(document.getElementById("modalReport"));
     const box = document.getElementById("modalActions");
     if (typeof box.replaceChildren === "function") box.replaceChildren();
     else box.textContent = "";
@@ -2976,8 +3840,14 @@
       }
     });
     const levelList = document.getElementById("levelList");
-    Hud.renderSaveStrip(document.getElementById("saveStrip"), save, characters, levels);
-    Hud.renderLevelList(levelList, { levels, save, startLevel, formatTime });
+    Hud.renderSaveStrip(document.getElementById("saveStrip"), save, characters, levels, Progression);
+    Hud.renderLevelList(levelList, { levels, save, startLevel, formatTime, progression: Progression });
+    Hud.renderRecordScreen(document.getElementById("recordSummary"), document.getElementById("recordGroups"), {
+      progression: Progression,
+      save,
+      levels,
+      formatTime,
+    });
     document.getElementById("volumeRange").value = save.settings.volume;
     document.getElementById("bgmRange").value = save.settings.bgmVolume;
     document.getElementById("touchRange").value = save.settings.touch;
@@ -2985,6 +3855,7 @@
     document.getElementById("hudScaleRange").value = save.settings.hudScale;
     document.getElementById("fxToggle").checked = save.settings.fx;
     document.getElementById("shakeToggle").checked = save.settings.shake;
+    syncAssistControls();
     const continueIndex = Math.min(save.unlocked - 1, levels.length - 1);
     const continueButton = document.getElementById("continueAction");
     continueButton.textContent = `继续冒险 · 第 ${continueIndex + 1} 章`;
@@ -3000,6 +3871,7 @@
       if (action === "play") startLevel(Math.min(save.unlocked - 1, levels.length - 1));
       if (action === "levels") showScreen("levels");
       if (action === "characters") showScreen("characters");
+      if (action === "record") showScreen("record");
       if (action === "settings") showScreen("settings");
       if (action === "back") {
         flushPersist();
@@ -3066,9 +3938,48 @@
       if (!save.settings.shake) camera.shake = 0;
       persist();
     });
+    bindAssistControls();
     for (const range of document.querySelectorAll(".settings-list input[type='range']")) {
       range.addEventListener("change", flushPersist);
     }
+  }
+
+  const ASSIST_TOGGLES = [
+    ["assistToggle", "enabled"],
+    ["assistInvulnToggle", "invulnerable"],
+    ["assistSkillToggle", "infiniteSkill"],
+    ["assistJumpToggle", "extraJump"],
+  ];
+
+  function bindAssistControls() {
+    for (const [elementId, key] of ASSIST_TOGGLES) {
+      document.getElementById(elementId).addEventListener("change", (e) => {
+        save.settings.assist[key] = e.target.checked;
+        // Turning a helper on implies the player wants assist active.
+        if (key !== "enabled" && e.target.checked) save.settings.assist.enabled = true;
+        persist();
+        syncAssistControls();
+      });
+    }
+    document.getElementById("assistSpeedRange").addEventListener("input", (e) => {
+      save.settings.assist.speed = Number(e.target.value);
+      if (save.settings.assist.speed < 100) save.settings.assist.enabled = true;
+      updateSettingOutputs();
+      syncAssistControls();
+      schedulePersist();
+    });
+  }
+
+  function syncAssistControls() {
+    const assist = save.settings.assist;
+    for (const [elementId, key] of ASSIST_TOGGLES) {
+      const element = document.getElementById(elementId);
+      if (element && element.checked !== Boolean(assist[key])) element.checked = Boolean(assist[key]);
+    }
+    const speed = document.getElementById("assistSpeedRange");
+    if (speed && Number(speed.value) !== assist.speed) speed.value = String(assist.speed);
+    const group = document.querySelector(".settings-assist");
+    if (group) group.classList.toggle("assist-on", assist.enabled === true);
   }
 
   function applySettingsToDocument() {
@@ -3083,6 +3994,7 @@
     document.getElementById("touchValue").value = `${save.settings.touch} px`;
     document.getElementById("touchOpacityValue").value = `${save.settings.touchOpacity}%`;
     document.getElementById("hudScaleValue").value = `${save.settings.hudScale}%`;
+    document.getElementById("assistSpeedValue").value = `${save.settings.assist.speed}%`;
   }
 
   function bindControls() {
@@ -3249,6 +4161,33 @@
     else audioBus.resume();
   }
 
+  /** Records the hidden-letter easter egg and syncs any achievement it unlocks. */
+  function recordHiddenLetter() {
+    if (save.stats.letters > 0) return;
+    save.stats.letters = 1;
+    syncAchievements();
+  }
+
+  /**
+   * Recompute achievement predicates, record anything newly true, and announce it.
+   * Safe to call at any point: unlocking is idempotent.
+   */
+  function syncAchievements() {
+    const unlockedNow = Progression.newlyUnlocked(save, levels);
+    if (!unlockedNow.length) {
+      persist();
+      return [];
+    }
+    for (const id of unlockedNow) save.achievements[id] = 1;
+    persist();
+    const first = Progression.achievementById(unlockedNow[0]);
+    if (first) {
+      toastMsg(unlockedNow.length > 1 ? `星录 +${unlockedNow.length} · ${first.name}` : `星录 · ${first.name}`);
+    }
+    if (screen === "record" || screen === "menu") renderMenus();
+    return unlockedNow;
+  }
+
   function registerServiceWorker() {
     const localHost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
     if (!("serviceWorker" in navigator) || (location.protocol !== "https:" && !localHost)) return;
@@ -3273,7 +4212,10 @@
       return;
     }
     const hitstopBeforeFrame = GameFeel?.getHitstopRemaining?.() || 0;
-    const simulationDt = GameFeel?.consumeHitstop?.(frameDt) ?? frameDt;
+    // Assist slows the delivered frame, not the fixed step, so physics constants,
+    // coyote time, jump buffer, and step budgets stay exactly as authored.
+    const scaledFrameDt = frameDt * assistTimeScale();
+    const simulationDt = GameFeel?.consumeHitstop?.(scaledFrameDt) ?? scaledFrameDt;
     const hitstopAfterConsume = GameFeel?.getHitstopRemaining?.() || 0;
     if (simulationDt <= 0) {
       if (GameFeel?.shouldSyncPresentationAfterHitstop?.({
@@ -3313,6 +4255,7 @@
     resize();
     window.addEventListener("resize", resize);
     document.addEventListener("nini:dialog-change", syncDialogIsolation);
+    document.addEventListener("nini:letter", recordHiddenLetter);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", () => {
       pageHidden = true;

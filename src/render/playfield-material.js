@@ -172,6 +172,10 @@
     }
     drawSkyMotifs(ctx, { view, time, intensity });
     if (attract) return;
+    // v2.0.0 — every chapter authors four palette entries but only two reached
+    // the sky. The accent and glow now light the horizon, so each chapter's
+    // playfield carries its own hour of night instead of one shared dark.
+    drawHorizonWash(ctx, { view, palette, camY, intensity });
     drawObservatoryDisc(ctx, { view, camX, camY, time, intensity });
 
     for (let layer = 0; layer < 3; layer += 1) {
@@ -189,6 +193,15 @@
       ctx.closePath();
       ctx.fillStyle = SKY_RIDGE_FILLS[layer];
       ctx.fill();
+      if (layer === 0 && palette?.[2]) {
+        // Aerial perspective: the farthest ridge picks up the chapter accent so
+        // distance reads as haze rather than as a second black shape.
+        ctx.save();
+        ctx.globalAlpha = 0.06 * intensity;
+        ctx.fillStyle = palette[2];
+        ctx.fill();
+        ctx.restore();
+      }
       if (layer === 1) {
         ctx.globalAlpha = 0.14;
         ctx.strokeStyle = MATERIAL.agedGold;
@@ -202,7 +215,68 @@
         ctx.stroke();
         ctx.globalAlpha = 1;
       }
+      if (layer === 1) drawSkyDust(ctx, { view, camX, camY, time, palette, intensity });
     }
+    drawGroundHaze(ctx, { view, palette, intensity });
+  }
+
+  /**
+   * A single light source behind the mid ridge. Warm core from the chapter's
+   * glow entry, cooler falloff from its accent, so the horizon has a direction.
+   */
+  function drawHorizonWash(ctx, options) {
+    const { view, palette, camY = 0, intensity = 1 } = options;
+    const glow = palette?.[3] || MATERIAL.moonWhiteSoft;
+    const accent = palette?.[2] || MATERIAL.agedGold;
+    const horizonY = view.h * 0.62 - camY * 0.2;
+    ctx.save();
+    // Kept deliberately low: the playfield layer must stay the highest-contrast
+    // thing on screen, so the sky only suggests a light source.
+    ctx.globalAlpha = 0.13 * intensity;
+    const top = Math.max(0, horizonY - view.h * 0.2);
+    const wash = ctx.createLinearGradient(0, top, 0, horizonY + view.h * 0.08);
+    wash.addColorStop(0, "rgba(0,0,0,0)");
+    wash.addColorStop(0.7, accent);
+    wash.addColorStop(1, glow);
+    ctx.fillStyle = wash;
+    ctx.fillRect(0, top, view.w, horizonY + view.h * 0.08 - top);
+    ctx.restore();
+  }
+
+  /**
+   * Slow motes between the mid and near ridges. They travel at their own
+   * parallax rate, which is what actually sells the gap between layers.
+   */
+  function drawSkyDust(ctx, options) {
+    const { view, camX = 0, camY = 0, time = 0, palette, intensity = 1 } = options;
+    if (intensity < 0.6) return;
+    const depth = 0.32;
+    const drift = view.reducedMotion ? 0 : time * 9;
+    ctx.save();
+    ctx.fillStyle = palette?.[3] || MATERIAL.moonWhiteSoft;
+    for (let i = 0; i < 26; i += 1) {
+      const span = view.w + 220;
+      const x = ((i * 211 + drift * (1 + (i % 3) * 0.35) - camX * depth) % span + span) % span - 110;
+      const y = ((i * 137) % Math.max(140, view.h * 0.5)) + view.h * 0.26 - camY * depth * 0.5;
+      ctx.globalAlpha = (0.06 + (i % 4) * 0.028) * intensity;
+      ctx.beginPath();
+      ctx.arc(x, y, 1 + (i % 3) * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  /** Low atmosphere so solids sit in air rather than on a flat void. */
+  function drawGroundHaze(ctx, options) {
+    const { view, palette, intensity = 1 } = options;
+    ctx.save();
+    ctx.globalAlpha = 0.34 * intensity;
+    const haze = ctx.createLinearGradient(0, view.h * 0.66, 0, view.h);
+    haze.addColorStop(0, "rgba(0,0,0,0)");
+    haze.addColorStop(1, palette?.[0] || MATERIAL.lacquer);
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, view.h * 0.66, view.w, view.h * 0.34);
+    ctx.restore();
   }
 
   function drawPlatform(ctx, platform) {
@@ -210,6 +284,12 @@
     const color = platform.type === "phase"
       ? platform.phase === "b" ? PLATFORM_COLORS.phaseB : PLATFORM_COLORS.phaseA
       : PLATFORM_COLORS[platform.type] || PLATFORM_COLORS.ground;
+    // v2.0.0 — a short cast shadow under the lip. Without it a solid reads as a
+    // sticker on the sky; with it the same geometry reads as a body with mass.
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = MATERIAL.lacquer;
+    roundRect(ctx, platform.x + 2, platform.y + 5, platform.w, platform.h, 3, MATERIAL.lacquer);
+    ctx.globalAlpha = 1;
     const gradient = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platform.h);
     gradient.addColorStop(0, color[0]);
     gradient.addColorStop(1, color[1]);
@@ -411,10 +491,15 @@
 
   function drawGoal(ctx, goal, options = {}) {
     const time = Number(options.time) || 0;
+    // v2.0.0 — a warden-sealed gate desaturates to lacquer and stops breathing,
+    // so "not yet" reads before the player walks into it.
+    const sealed = options.sealed === true;
     ctx.save();
     ctx.translate(goal.x + goal.w / 2, goal.y + goal.h / 2);
     ctx.globalAlpha = 0.62;
-    const ringColors = [MATERIAL.agedGold, MATERIAL.carvedJade, MATERIAL.dustyRose];
+    const ringColors = sealed
+      ? [MATERIAL.agedGoldDeep, MATERIAL.indigoRaised, MATERIAL.agedGoldDeep]
+      : [MATERIAL.agedGold, MATERIAL.carvedJade, MATERIAL.dustyRose];
     for (let i = 0; i < ringColors.length; i += 1) {
       ctx.strokeStyle = ringColors[i];
       ctx.lineWidth = i === 0 ? 3 : 2;
@@ -425,14 +510,20 @@
     }
     ctx.globalAlpha = 1;
     const gradient = ctx.createRadialGradient(0, 0, 4, 0, 0, 58);
-    gradient.addColorStop(0, "rgba(238,231,213,.92)");
-    gradient.addColorStop(0.36, "rgba(195,164,104,.34)");
-    gradient.addColorStop(1, "rgba(195,164,104,0)");
+    if (sealed) {
+      gradient.addColorStop(0, "rgba(128,104,63,.42)");
+      gradient.addColorStop(0.36, "rgba(128,104,63,.16)");
+      gradient.addColorStop(1, "rgba(128,104,63,0)");
+    } else {
+      gradient.addColorStop(0, "rgba(238,231,213,.92)");
+      gradient.addColorStop(0.36, "rgba(195,164,104,.34)");
+      gradient.addColorStop(1, "rgba(195,164,104,0)");
+    }
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.arc(0, 0, 58, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillStyle = MATERIAL.agedGold;
+    ctx.fillStyle = sealed ? MATERIAL.agedGoldDeep : MATERIAL.agedGold;
     ctx.beginPath();
     for (let i = 0; i < 16; i += 1) {
       const angle = -Math.PI / 2 + (i * Math.PI) / 8;
@@ -441,6 +532,17 @@
     }
     ctx.closePath();
     ctx.fill();
+    if (sealed) {
+      ctx.strokeStyle = MATERIAL.moonWhiteSoft;
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-16, -16);
+      ctx.lineTo(16, 16);
+      ctx.moveTo(16, -16);
+      ctx.lineTo(-16, 16);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 

@@ -91,7 +91,7 @@ const buildEnd = source.indexOf("  function resize()");
 if (buildStart < 0 || buildEnd < 0) throw new Error("Could not extract buildLevels for enemy support validation");
 
 const levels = new Function(
-  `const TILE = 48; const ENEMY_WIDTH = ${enemyWidth}; const ENEMY_HEIGHT = ${enemyHeight}; const WISP_FLOAT_GAP = ${wispFloatGap}; const WISP_HOVER_RANGE = ${wispHoverRange}; ${source.slice(buildStart, buildEnd)}; return buildLevels();`
+  `const TILE = 48; const ENEMY_WIDTH = ${enemyWidth}; const ENEMY_HEIGHT = ${enemyHeight}; const WISP_FLOAT_GAP = ${wispFloatGap}; const WISP_HOVER_RANGE = ${wispHoverRange}; const MARROW_SIZE = 30; const SENTRY_COOLDOWN = 2.1; ${source.slice(buildStart, buildEnd)}; return buildLevels();`
 )();
 
 function overlapsX(a, b) {

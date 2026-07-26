@@ -66,18 +66,36 @@ assert.match(fontLicenseText, /SIL OPEN FONT LICENSE Version 1\.1/);
 const fontNoticeText = fs.readFileSync(fontNotice.replace(/^\.\//, ""), "utf8");
 assert.match(fontNoticeText, /LXGW WenKai v1\.522 release/);
 assert.match(fontNoticeText, /Medium subset to CSS weight 700/);
-for (const [fontPath, expectedHash] of [
-  ["assets/fonts/lxgw-wenkai-500.woff2", "25c8b344099eb47ee841d887b5f2a9a1c1d3451c440a7771792c2ee50206999b"],
-  ["assets/fonts/lxgw-wenkai-700.woff2", "79881da3e370ed94c75219482a6c4d13d702e656c8704b36a238cfe6d73e45fc"],
-]) {
-  const digest = crypto.createHash("sha256").update(fs.readFileSync(fontPath)).digest("hex");
-  assert.equal(digest, expectedHash, `${fontPath} should match the documented v1.522 subset`);
+// The provenance notice is the single source of truth for what shipped. Reading
+// the expected digests out of it means a rebuilt subset with a stale notice
+// fails here instead of shipping undocumented bytes.
+for (const fontFile of ["lxgw-wenkai-500.woff2", "lxgw-wenkai-700.woff2"]) {
+  const row = fontNoticeText.split("\n").find((line) => line.includes(`\`${fontFile}\``));
+  assert.ok(row, `${fontFile} should have a row in assets/fonts/NOTICE.md`);
+  const digests = row.match(/\b[0-9a-f]{64}\b/g) || [];
+  assert.equal(digests.length, 2, `${fontFile} row should record a source and a bundled digest`);
+  const documented = digests[1];
+  const actual = crypto.createHash("sha256").update(fs.readFileSync(`assets/fonts/${fontFile}`)).digest("hex");
+  assert.equal(actual, documented, `assets/fonts/${fontFile} should match the digest recorded in NOTICE.md`);
 }
 
 for (const audioAsset of ["./assets/audio/fairy-adventure.ogg", "./assets/audio/NOTICE.md"]) {
   assert.ok(fs.existsSync(audioAsset.replace(/^\.\//, "")), `Missing audio asset: ${audioAsset}`);
   assert.ok(serviceWorker.includes(audioAsset), `Service worker missing audio cache asset: ${audioAsset}`);
 }
+
+// The current cache key is read from the shipped worker, so this guard states the
+// invariant (retire our own old caches, never touch anyone else's) instead of
+// re-listing every historical key each release.
+const currentCacheKey = serviceWorker.match(/CACHE = "([^"]+)"/)?.[1];
+assert.ok(currentCacheKey, "the service worker must declare a cache key");
+const staleKeys = [
+  "nini-yuan-v1.6.3-forward-idle",
+  "nini-yuan-v1.7.0-experience-integrity-r1",
+  "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
+  "nini-yuan-v1.9.0-quiet-observatory-r1",
+  "nini-yuan-v1.9.0-ui-clarity-r2",
+].filter((key) => key !== currentCacheKey);
 
 async function verifyCacheIsolation() {
   const listeners = {};
@@ -86,15 +104,7 @@ async function verifyCacheIsolation() {
   const matched = [];
   const context = {
     caches: {
-      keys: async () => [
-        "nini-yuan-v1.6.3-forward-idle",
-        "nini-yuan-v1.7.0-experience-integrity-r1",
-        "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
-        "nini-yuan-v1.9.0-quiet-observatory-r1",
-        "nini-yuan-v1.9.0-ui-clarity-r2",
-        "other-game-offline-v8",
-        "shared-font-cache-v2",
-      ],
+      keys: async () => staleKeys.concat([currentCacheKey, "other-game-offline-v8", "shared-font-cache-v2"]),
       delete: async (key) => {
         deleted.push(key);
         return true;
@@ -121,18 +131,13 @@ async function verifyCacheIsolation() {
   let activation;
   listeners.activate({ waitUntil(promise) { activation = promise; } });
   await activation;
-  assert.deepEqual(deleted, [
-    "nini-yuan-v1.6.3-forward-idle",
-    "nini-yuan-v1.7.0-experience-integrity-r1",
-    "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
-    "nini-yuan-v1.9.0-quiet-observatory-r1",
-  ]);
+  assert.deepEqual(deleted, staleKeys, "every earlier app cache is retired and no foreign cache is touched");
 
   let response;
   const request = { method: "GET", url: "https://example.test/styles.css" };
   listeners.fetch({ request, respondWith(promise) { response = promise; } });
   assert.deepEqual(await response, { source: "current-app-cache" });
-  assert.deepEqual(opened, ["nini-yuan-v1.9.0-ui-clarity-r2"]);
+  assert.deepEqual(opened, [currentCacheKey]);
   assert.deepEqual(matched, [request.url]);
 }
 

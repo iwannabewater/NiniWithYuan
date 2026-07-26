@@ -1,5 +1,22 @@
 # Changelog
 
+## v2.0.0
+
+- Added **守望者 wardens** to the three world finales. Each guardian seals its arena and locks the gate until it falls, escalates through three stages of telegraphed volley, falling-shard, sweep, and summon patterns, and drops into player reach for a punishable recovery beat. One data-authored encounter model serves all three.
+- Added **星灯 star lanterns**. Every chapter derives two or three checkpoints from its authored main platforms, never over a hazard. Leaving the floor now costs one heart and returns the player to the last lit lantern instead of ending the attempt outright.
+- Added **星髓 star marrow**: one hidden collectible per chapter, placed off the forward route and recorded the moment it is touched.
+- Added **连星 chain scoring**. Defeats, gems, and warden hits extend a 2.4 s chain whose multiplier caps at five. The multiplier only ever adds star dew; the collection rating still reads the authored pickup value, so chain play cannot buy a star.
+- Added **章印 trial medals**. Every chapter declares a par time calibrated against measured route times; a recorded best earns 星章 at par, 月章 within 1.25x, and 露章 within 1.6x.
+- Added **星录**, a thirty-entry achievement record across journey, warden, collection, trial, mastery, and secret groups, with a dedicated screen and a completion report that names anything newly earned. Achievement state is evaluated from the save rather than incremented, so it cannot drift.
+- Added **星辉护佑 assist mode**: invulnerability, no skill cooldown, a bonus air jump, and a 60 to 100 percent game-speed control. Assist scales the delivered frame, never the fixed step, so physics constants, coyote time, jump buffer, and the step budget are untouched. Assisted runs unlock chapters and record stars and marrow but do not write best times or medals, and the settings group states that before the run.
+- Added two hostiles: **哨星**, a fixed emplacement that telegraphs before firing, and **石胄**, a shelled walker that deflects projectiles and must be answered with impact.
+- Rebuilt playfield depth. Each chapter's authored accent and glow now light a horizon wash, tint the farthest ridge for aerial perspective, drive a parallax dust layer, and fade the near ridge into ground haze; platforms cast a short shadow under the lip. The wash stays low so the gameplay layer remains the highest-contrast thing on screen.
+- Advanced the save to schema 4 with marrow, warden, flawless, achievement, per-character clear, and lifetime statistic records plus assist preferences. Schema 3 saves load unchanged. Flag records collapse to 1 and reject unknown ids, and assist toggles accept only a real boolean.
+- Rebuilt the chapter card footer so medal, marrow, and warden marks sit opposite the state line instead of overflowing the card, and reflowed the menu, settings, and record surfaces so all five action entries and five settings groups fit a 1280 by 720 desktop and a 568 by 320 landscape phone without truncation.
+- Rebuilt the local WenKai 500 and 700 subsets from the pinned v1.522 sources for 662 runtime code points, covering the 48 glyphs this release introduced, and added `npm run build:fonts` to make the rebuild reproducible.
+- Replaced per-release version allow-lists across the older regression guards with a shared release-floor helper, moved the bundled font digests into `assets/fonts/NOTICE.md` as the single source of truth, and made the service-worker cache-isolation guard read the current key from the shipped worker.
+- Bumped the web package to `2.0.0`, Android to `versionCode=21` and `versionName=2.0.0`, and the service-worker cache to `nini-yuan-v2.0.0-astral-echo-r1`.
+
 ## v1.9.0
 
 - Restored character silhouette clarity by removing canvas `shadowBlur` from sprite bitmaps, drawing a separate ground contact shadow, aligning destination rects to the device-pixel quantum, and raising desktop presentation scale within the existing 34% mobile height budget.

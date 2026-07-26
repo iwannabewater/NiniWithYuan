@@ -9,7 +9,7 @@ const buildEnd = source.indexOf("  function resize()");
 assert.ok(buildStart >= 0 && buildEnd > buildStart, "Could not extract buildLevels for readability validation");
 
 const levels = new Function(
-  `const TILE = 48; const ENEMY_WIDTH = 38; const ENEMY_HEIGHT = 34; const WISP_FLOAT_GAP = 24; const WISP_HOVER_RANGE = 6; ${source.slice(buildStart, buildEnd)}; return buildLevels();`
+  `const TILE = 48; const ENEMY_WIDTH = 38; const ENEMY_HEIGHT = 34; const WISP_FLOAT_GAP = 24; const WISP_HOVER_RANGE = 6; const MARROW_SIZE = 30; const SENTRY_COOLDOWN = 2.1; ${source.slice(buildStart, buildEnd)}; return buildLevels();`
 )();
 
 assert.ok(source.includes("remaining,"), "phaseTideState should return remaining time for player-readable timing");

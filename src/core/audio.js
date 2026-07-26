@@ -18,6 +18,22 @@
     break_crystal: { wave: "square", freq: [300, 220], attack: 2, release: 90, gain: 0.56, lowpass: 1800 },
     complete: { wave: "triangle", freq: [820, 1240], attack: 10, release: 240, gain: 0.66 },
     fail: { wave: "sine", freq: [220, 160], attack: 8, release: 280, gain: 0.58 },
+    // v2.0.0 — Astral Echo. Wardens sit low and wide; the chain sits bright and
+    // short so it never masks the movement layer.
+    warden_wake: { wave: "sine", freq: [140, 96], attack: 20, release: 420, gain: 0.72, lowpass: 900 },
+    warden_charge: { wave: "sine", freq: [240, 380], attack: 14, release: 200, gain: 0.44, osc2: { detune: 500, mix: 0.3 } },
+    warden_volley: { wave: "square", freq: [420, 300], attack: 3, release: 110, gain: 0.5, lowpass: 1600 },
+    warden_rain: { wave: "triangle", freq: [560, 260], attack: 4, release: 180, gain: 0.5 },
+    warden_sweep: { wave: "square", freq: [200, 120], attack: 4, release: 220, gain: 0.6, lowpass: 1000 },
+    warden_summon: { wave: "sine", freq: [360, 620], attack: 12, release: 220, gain: 0.46, osc2: { detune: 900, mix: 0.4 } },
+    warden_fall: { wave: "triangle", freq: [300, 980], attack: 16, release: 420, gain: 0.7, osc2: { detune: 1200, mix: 0.3 } },
+    sentry_fire: { wave: "square", freq: [340, 260], attack: 3, release: 90, gain: 0.42, lowpass: 1500 },
+    deflect: { wave: "square", freq: [900, 600], attack: 2, release: 70, gain: 0.4, lowpass: 2600 },
+    hit_enemy: { wave: "triangle", freq: [420, 300], attack: 3, release: 90, gain: 0.5 },
+    combo_up: { wave: "sine", freq: [880, 1320], attack: 5, release: 110, gain: 0.4, osc2: { detune: 700, mix: 0.28 } },
+    combo_end: { wave: "sine", freq: [520, 380], attack: 6, release: 130, gain: 0.26 },
+    marrow: { wave: "sine", freq: [660, 1480], attack: 12, release: 320, gain: 0.6, osc2: { detune: 1200, mix: 0.42 } },
+    lantern: { wave: "sine", freq: [520, 780], attack: 10, release: 240, gain: 0.44, osc2: { detune: 400, mix: 0.3 } },
   };
 
   function createAudioBus(options = {}) {

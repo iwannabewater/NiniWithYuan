@@ -10,7 +10,9 @@ const hud = fs.readFileSync("src/render/hud.js", "utf8");
 const storage = fs.readFileSync("src/core/storage.js", "utf8");
 const capture = fs.readFileSync("scripts/capture-store-assets.js", "utf8");
 
-assert.match(storage, /SAVE_SCHEMA_VERSION = 3/);
+// v1.8.0 introduced the touch/HUD/shake preferences. Later schemas keep them,
+// so this guard checks the fields survive rather than pinning the version number.
+assert.match(storage, /SAVE_SCHEMA_VERSION = (?!1\b|2\b)\d+/);
 for (const setting of ["touchOpacity", "hudScale", "shake"]) {
   assert.ok(storage.includes(setting), `v1.8 settings should persist ${setting}`);
 }

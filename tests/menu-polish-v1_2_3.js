@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { assertReleaseFloor } = require("./helpers/release.js");
 const fs = require("node:fs");
 
 const html = fs.readFileSync("index.html", "utf8");
@@ -12,23 +13,7 @@ const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
 const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
-assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(pkg.version), `package.json version should be 1.2.3 through 1.9.0 (got ${pkg.version})`);
-assert.ok(["1.2.3", "1.2.4", "1.3.0", "1.3.1", "1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(lock.version), `package-lock.json root version should be 1.2.3 through 1.9.0 (got ${lock.version})`);
-assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.9.0-ui-clarity-r2"') ||
-    sw.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
-    sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.0-song-atlas"') ||
-    /CACHE = "nini-yuan-v(1\.2\.(3-starlit-whispers-r3|4-aurora-cartography)|1\.3\.(0-world-2-star-gates|1-typography-copy-fix)|1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/.test(sw),
-  "service worker cache should be at a supported v1.2.3+ key"
-);
-assert.ok(sw.includes("./src/render/cursor-trail.js"), "service worker should cache cursor-trail.js");
-assert.ok(sw.includes("./src/render/easter-eggs.js"), "service worker should cache easter-eggs.js");
-assert.ok(/versionCode="(6|7|8|9|10|11|12|13|14|15|16|17|18|19|20)"/.test(androidManifest), "Android versionCode should be 6 through 19");
-assert.ok(/versionName="(1\.2\.(3|4)|1\.3\.(0|1)|1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/.test(androidManifest), "Android versionName should be 1.2.3 through 1.9.0");
+assertReleaseFloor(assert, { pkg, lock, serviceWorker: sw, html, androidManifest }, "1.2.3", 6);
 assert.ok(!manifest.description.includes("平台跳跃"), "PWA manifest description should drop the legacy platform-jump phrasing");
 assert.ok(manifest.description.includes("星图冒险"), "PWA manifest description should advertise the star-atlas adventure copy");
 
