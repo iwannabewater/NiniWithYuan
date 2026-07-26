@@ -5134,7 +5134,10 @@
       height: calc(100dvh - 130px);
       min-height: 0;
       overflow-x: auto;
-      scroll-snap-type: x mandatory;
+      /* Proximity rather than mandatory: the pager still settles on a world, but
+         a programmatic or assistive scroll to a specific chapter is not yanked
+         back to the nearest page mid-gesture. */
+      scroll-snap-type: x proximity;
     }
 
     .level-world-group {
@@ -5149,17 +5152,50 @@
       height: 100%;
     }
 
+    /* A grid item's automatic minimum is its content, so without `min-height: 0`
+       the track grows past the list whenever a card's copy renders taller than
+       it does on the authoring machine. Pinning the row to the track height
+       makes the horizontal chapter pager independent of font metrics. */
     .level-world-track {
-      grid-template-columns: repeat(5, minmax(112px, 1fr));
+      /* Five cards share the page width. A 112px floor overflowed the track and
+         clipped the fifth chapter of every world on a 844 by 390 phone. */
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: minmax(0, 1fr);
       overflow: visible;
       height: 100%;
+      min-height: 0;
+      min-width: 0;
     }
 
+    /* The card height is fixed by the viewport here, so its rows must flex rather
+       than reserve a minimum. Without this the copy block's intrinsic height
+       pushes the track past the list on platforms whose font metrics run taller
+       than the authoring machine's. */
     .level-item,
     .level-item.featured {
       min-height: 0;
       height: 100%;
       padding: 9px 10px;
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      gap: 6px;
+      /* Five cards, five columns. The featured card's two-column span belongs to
+         the desktop grid; here it would create a sixth slot and overlap its
+         neighbour. */
+      grid-column: auto;
+    }
+
+    .level-item .level-copy {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Marks sit above the state line on the narrow pager, so a wrapping lock
+       explanation can never push them out of the card. */
+    .level-footer {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 4px;
     }
 
     .settings-list {

@@ -58,7 +58,12 @@ assert.match(css, /font-size: calc\(10px \* var\(--hud-scale\)\)/);
 assert.doesNotMatch(css, /\.portrait-gated:has\(/, "orientation visibility must not depend on :has support");
 
 assert.ok(hud.includes('group.className = "level-world-group"'));
-assert.ok(hud.includes('state.textContent = locked ? "锁定 · 完成上一章后解锁"'));
+// The invariant is that a locked chapter explains itself, not the exact wording.
+assert.match(
+  hud,
+  /state\.textContent = locked \? "锁定[^"]*完成上一章[^"]*"/,
+  "a locked chapter card must state that the previous chapter unlocks it"
+);
 assert.ok(hud.includes('route.setAttribute("role", "progressbar")'));
 assert.ok(capture.includes("viewport: { width: 960, height: 540 }"), "landscape store captures should use a valid 16:9 viewport");
 assert.ok(capture.includes("captureStable"), "store captures should reject changing consecutive frames");

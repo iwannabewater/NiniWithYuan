@@ -307,7 +307,7 @@
 
       const state = document.createElement("span");
       state.className = "level-state";
-      state.textContent = locked ? "锁定 · 完成上一章后解锁" : i === featuredIndex ? "当前星路" : stars > 0 ? `已录 · ${stars} 星` : "可挑战";
+      state.textContent = locked ? "锁定 · 需完成上一章" : i === featuredIndex ? "当前星路" : stars > 0 ? `已录 · ${stars} 星` : "可挑战";
       if (locked) button.setAttribute("aria-label", `${level.name}，锁定，完成上一章后解锁`);
       if (i === featuredIndex && !locked) button.setAttribute("aria-current", "step");
       const footer = document.createElement("span");
