@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { assertReleaseFloor } = require("./helpers/release.js");
 const fs = require("node:fs");
 const zlib = require("node:zlib");
 
@@ -24,22 +25,7 @@ const WOFF2_KNOWN_TAGS = [
   "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"
 ];
 
-assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(pkg.version), "package.json should be v1.4.0 or later");
-assert.ok(["1.4.0", "1.5.0", "1.5.1", "1.6.0", "1.6.1", "1.6.2", "1.6.3", "1.7.0", "1.8.0", "1.9.0"].includes(lock.version), "package-lock.json root version should be v1.4.0 or later");
-assert.ok(
-  sw.includes('CACHE = "nini-yuan-v1.9.0-ui-clarity-r2"') ||
-  sw.includes('CACHE = "nini-yuan-v1.9.0-quiet-observatory-r1"') ||
-    sw.includes('CACHE = "nini-yuan-v1.8.0-song-atlas-overhaul-r1"') ||
-    sw.includes('CACHE = "nini-yuan-v1.7.0-experience-integrity-r1"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.3-forward-idle"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.2-directional-idle"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.1-responsive-motion"') ||
-    sw.includes('CACHE = "nini-yuan-v1.6.0-song-atlas"') ||
-    /CACHE = "nini-yuan-v(1\.4\.0-world-3-phase-tide|1\.5\.(0-(game-feel|canonical-url)|1-mobile-skill-control))"/.test(sw),
-  "service worker cache should use a v1.4.0+ key"
-);
-assert.ok(/versionCode="(10|11|12|13|14|15|16|17|18|19|20)"/.test(androidManifest), "Android versionCode should be 10 or later");
-assert.ok(/versionName="(1\.4\.0|1\.5\.(0|1)|1\.6\.(0|1|2|3)|1\.7\.0|1\.8\.0|1\.9\.0)"/.test(androidManifest), "Android versionName should be 1.4.0 or later");
+assertReleaseFloor(assert, { pkg, lock, serviceWorker: sw, html, androidManifest }, "1.4.0", 10);
 
 assert.ok(css.includes("--font-ui:"), "styles.css should define the shared UI font stack");
 assert.ok(css.includes("--font-canvas:"), "styles.css should define the shared Canvas font stack");
@@ -61,7 +47,8 @@ assert.ok(html.includes("多世界章节"), "visible menu metadata should use co
 assert.ok(manifest.description.includes("多世界章节"), "manifest description should use count-free chapter scope copy");
 assert.ok(!/(Yuan to Nini|Hidden Atlas|Constellation Found|Y · N · Y · N|Yuan ❤ Nini)/.test(eggs), "easter-egg overlays should avoid English-only labels inside Chinese UI copy");
 
-const runtimeText = [html, css, game, eggs, hud].join("\n");
+const progression = fs.readFileSync("src/core/progression.js", "utf8");
+const runtimeText = [html, css, game, eggs, hud, progression].join("\n");
 const cjkChars = [...new Set([...runtimeText].filter((ch) => isCjk(ch)))].sort();
 for (const fontPath of [
   "assets/fonts/lxgw-wenkai-500.woff2",

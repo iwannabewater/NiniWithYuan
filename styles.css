@@ -2282,6 +2282,11 @@
   .modal-card {
     position: relative;
     width: min(540px, calc(100vw - 32px));
+    /* v2.0.0 — the completion report can run long, so the card scrolls itself
+       instead of pushing its actions off short landscape viewports. */
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 32px;
     border-radius: var(--r-l);
     background:
@@ -2359,6 +2364,513 @@
     justify-content: flex-end;
     gap: 12px;
     margin-top: 22px;
+  }
+
+  /* ==========================================================================
+     v2.0.0 Astral Echo composition boundary
+
+     Four new surfaces, all built from the existing Night Observatory materials:
+     the 星录 record screen, the 星辉护佑 assist group, the in-play chain and
+     warden instruments, and the completion report. Nothing here introduces a
+     new radius, shadow, or accent family. Gold means recorded, jade means live,
+     rose means the hidden layer, and unearned states stay lacquer.
+     ========================================================================== */
+
+  /* ------- Shared marks: trial medal, star marrow, warden ----------------- */
+
+  .medal-badge,
+  .marrow-badge,
+  .warden-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: rgba(245, 242, 234, 0.26);
+    background: rgba(7, 11, 24, 0.5);
+    box-shadow: inset 0 0 0 1px rgba(245, 242, 234, 0.12);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .medal-badge.medal-star {
+    color: var(--c-lacquer);
+    background: var(--c-aged-gold);
+    box-shadow: inset 0 1px rgba(255, 250, 220, 0.6), 0 0 12px rgba(195, 164, 104, 0.34);
+    font-weight: 700;
+  }
+
+  .medal-badge.medal-moon {
+    color: var(--c-moon-white);
+    background: rgba(198, 191, 174, 0.24);
+    box-shadow: inset 0 0 0 1px rgba(238, 231, 213, 0.5);
+  }
+
+  .medal-badge.medal-dew {
+    color: var(--c-carved-jade);
+    box-shadow: inset 0 0 0 1px rgba(109, 168, 149, 0.52);
+  }
+
+  .marrow-badge.found {
+    color: var(--c-lacquer);
+    background: var(--c-dusty-rose);
+    box-shadow: inset 0 1px rgba(255, 224, 232, 0.55), 0 0 12px rgba(184, 123, 134, 0.36);
+    font-weight: 700;
+  }
+
+  .warden-badge.cleared {
+    color: var(--c-lacquer);
+    background: var(--c-carved-jade);
+    box-shadow: inset 0 1px rgba(220, 250, 238, 0.5), 0 0 12px rgba(109, 168, 149, 0.34);
+    font-weight: 700;
+  }
+
+  .level-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    align-self: end;
+  }
+
+  .level-footer .level-state {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .level-marks {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: 0 0 auto;
+  }
+
+  .level-item.locked .medal-badge,
+  .level-item.locked .marrow-badge,
+  .level-item.locked .warden-badge {
+    color: rgba(245, 242, 234, 0.2);
+    background: rgba(7, 11, 24, 0.42);
+    box-shadow: inset 0 0 0 1px rgba(245, 242, 234, 0.08);
+  }
+
+  /* ------- 星录 record screen -------------------------------------------- */
+
+  .record-body {
+    display: grid;
+    gap: 22px;
+    align-content: start;
+  }
+
+  /* Hairlines are drawn per cell rather than by a gap so a partly filled last
+     row leaves plain surface behind it instead of an exposed rule colour. */
+  .record-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    border-radius: var(--r-m);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--c-lacquer-raised);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.18);
+    overflow: hidden;
+  }
+
+  .record-stat {
+    display: grid;
+    gap: 4px;
+    padding: 14px 16px;
+    box-shadow: inset -1px 0 rgba(242, 211, 137, 0.14), inset 0 -1px rgba(242, 211, 137, 0.14);
+  }
+
+  .record-stat small {
+    color: var(--ink-muted);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+  }
+
+  .record-stat strong {
+    color: var(--ink-strong);
+    font-size: 19px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.02em;
+  }
+
+  .record-stat.primary strong {
+    color: var(--c-gold-200);
+    text-shadow: 0 1px 10px rgba(242, 211, 137, 0.3);
+  }
+
+  .record-groups {
+    display: grid;
+    gap: 20px;
+  }
+
+  .record-group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 8px;
+    box-shadow: inset 0 -1px rgba(242, 211, 137, 0.2);
+  }
+
+  .record-group-name {
+    margin: 0;
+    color: var(--c-gold-200);
+    font-size: 16px;
+    letter-spacing: 0.16em;
+  }
+
+  .record-group-desc {
+    flex: 1;
+    color: var(--ink-muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .record-group-count {
+    color: var(--ink-soft);
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.06em;
+  }
+
+  .record-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+    gap: 10px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .record-item {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 14px;
+    border-radius: var(--r-m);
+    background: rgba(255, 255, 255, 0.02);
+    box-shadow: inset 0 0 0 1px rgba(245, 242, 234, 0.07);
+  }
+
+  .record-item.unlocked {
+    background: linear-gradient(135deg, rgba(195, 164, 104, 0.12), transparent 56%), rgba(255, 255, 255, 0.035);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.3), inset 3px 0 var(--c-aged-gold);
+  }
+
+  .record-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    color: rgba(245, 242, 234, 0.28);
+    box-shadow: inset 0 0 0 1px rgba(245, 242, 234, 0.12);
+    font-size: 13px;
+  }
+
+  .record-item.unlocked .record-mark {
+    color: var(--c-lacquer);
+    background: var(--c-aged-gold);
+    box-shadow: inset 0 1px rgba(255, 250, 220, 0.6), 0 0 14px rgba(195, 164, 104, 0.3);
+  }
+
+  .record-copy {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .record-copy strong {
+    color: var(--ink-soft);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+
+  .record-item.unlocked .record-copy strong {
+    color: var(--ink-strong);
+  }
+
+  .record-copy span {
+    color: var(--ink-muted);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .record-item.sealed .record-copy strong,
+  .record-item.sealed .record-copy span {
+    color: var(--ink-subtle);
+    font-style: italic;
+  }
+
+  /* ------- 星辉护佑 assist group ----------------------------------------- */
+
+  .settings-note {
+    margin: 0 0 4px;
+    color: var(--ink-muted);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .settings-assist {
+    position: relative;
+  }
+
+  .settings-assist legend {
+    color: var(--ink-muted);
+  }
+
+  .settings-assist.assist-on legend {
+    color: var(--c-jade-400);
+  }
+
+  .settings-assist.assist-on legend::after {
+    content: "已启用";
+    margin-left: 10px;
+    padding: 2px 8px;
+    border-radius: var(--r-pill);
+    color: var(--c-lacquer);
+    background: var(--c-carved-jade);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+
+  .settings-assist.assist-on label {
+    box-shadow: inset 0 0 0 1px rgba(109, 168, 149, 0.24), inset 3px 0 rgba(109, 168, 149, 0.6);
+  }
+
+  /* ------- In-play instruments: chain and warden ------------------------- */
+
+  .hud-chain {
+    position: fixed;
+    top: calc(max(12px, env(safe-area-inset-top)) + 66px);
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: var(--r-control);
+    color: var(--ink);
+    background: rgba(11, 16, 22, 0.86);
+    box-shadow:
+      inset 0 0 0 1px rgba(242, 211, 137, 0.34),
+      inset 0 1px rgba(255, 255, 255, 0.1),
+      0 10px 24px rgba(0, 0, 0, 0.3);
+    font-size: calc(13px * var(--hud-scale));
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    transform: translateX(-50%);
+    z-index: 7;
+  }
+
+  .hud-chain[hidden] {
+    display: none;
+  }
+
+  .hud-chain-label {
+    color: var(--c-gold-300);
+    letter-spacing: 0.16em;
+  }
+
+  .hud-chain-count {
+    color: var(--c-gold-100);
+    font-size: calc(17px * var(--hud-scale));
+    letter-spacing: 0.02em;
+  }
+
+  .hud-chain-mult {
+    padding: 1px 7px;
+    border-radius: var(--r-pill);
+    color: var(--c-lacquer);
+    background: var(--c-aged-gold);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+  }
+
+  .hud-chain-track {
+    display: block;
+    width: 58px;
+    height: 3px;
+    border-radius: var(--r-pill);
+    background: rgba(245, 242, 234, 0.16);
+    overflow: hidden;
+  }
+
+  .hud-chain-track span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-gold-500), var(--c-gold-200));
+  }
+
+  .warden-bar {
+    position: fixed;
+    top: calc(max(12px, env(safe-area-inset-top)) + 66px);
+    left: 50%;
+    width: min(520px, calc(100vw - 40px));
+    display: grid;
+    gap: 6px;
+    transform: translateX(-50%);
+    z-index: 7;
+  }
+
+  .warden-bar[hidden] {
+    display: none;
+  }
+
+  /* When a guardian is awake the chain readout steps below its bar. */
+  .warden-bar:not([hidden]) ~ .hud-chain {
+    top: calc(max(12px, env(safe-area-inset-top)) + 118px);
+  }
+
+  .warden-bar-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .warden-bar-title {
+    color: var(--c-gold-200);
+    font-size: calc(14px * var(--hud-scale));
+    letter-spacing: 0.22em;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
+  }
+
+  .warden-bar-phase {
+    min-width: 3em;
+    color: var(--c-rose-300);
+    font-size: calc(12px * var(--hud-scale));
+    letter-spacing: 0.16em;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
+  }
+
+  .warden-bar-track {
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: rgba(7, 11, 24, 0.76);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.34);
+    overflow: hidden;
+  }
+
+  .warden-bar-track span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--c-rose-600), var(--c-rose-400) 62%, var(--c-gold-200));
+    transition: width var(--d-fast) var(--ease-out);
+  }
+
+  /* ------- Completion report --------------------------------------------- */
+
+  .modal-report {
+    display: grid;
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .modal-report[hidden] {
+    display: none;
+  }
+
+  .report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    border-radius: var(--r-m);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent), var(--c-lacquer-raised);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.2);
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .report-grid .record-stat {
+    padding: 11px 13px;
+  }
+
+  .report-grid .record-stat strong {
+    font-size: 17px;
+  }
+
+  .report-marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .report-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px;
+    border-radius: var(--r-pill);
+    color: var(--ink-subtle);
+    background: rgba(255, 255, 255, 0.025);
+    box-shadow: inset 0 0 0 1px rgba(245, 242, 234, 0.08);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+
+  .report-mark.achieved {
+    color: var(--ink-strong);
+    background: linear-gradient(135deg, rgba(195, 164, 104, 0.16), transparent 60%), rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.36);
+  }
+
+  .report-mark.medal-star,
+  .report-mark.medal-moon,
+  .report-mark.medal-dew {
+    color: var(--ink-strong);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.36);
+  }
+
+  .report-mark.assist {
+    color: var(--c-jade-400);
+    box-shadow: inset 0 0 0 1px rgba(109, 168, 149, 0.36);
+  }
+
+  .report-achievements {
+    display: grid;
+    gap: 8px;
+    padding: 14px 16px;
+    border-radius: var(--r-m);
+    background: linear-gradient(135deg, rgba(195, 164, 104, 0.1), transparent 62%), rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 0 0 1px rgba(242, 211, 137, 0.28);
+    text-align: left;
+  }
+
+  .report-achievements-kicker {
+    color: var(--c-gold-300);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+  }
+
+  .report-achievements ul {
+    display: grid;
+    gap: 7px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .report-achievements li {
+    display: grid;
+    gap: 2px;
+  }
+
+  .report-achievements li strong {
+    color: var(--ink-strong);
+    font-size: 14px;
+    letter-spacing: 0.03em;
+  }
+
+  .report-achievements li span {
+    color: var(--ink-muted);
+    font-size: 12px;
+    line-height: 1.55;
   }
 
   /* ------- Touch controls ------------------------------------------------ */
@@ -2943,6 +3455,37 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
+    /* v2.0.0 — record and report surfaces compact before they wrap awkwardly. */
+    .record-items {
+      grid-template-columns: 1fr;
+    }
+
+    /* Compact chapter marks so the card footer stays one line tall. */
+    .medal-badge,
+    .marrow-badge,
+    .warden-badge {
+      width: 17px;
+      height: 17px;
+      font-size: 10px;
+    }
+
+    .level-marks {
+      gap: 4px;
+    }
+
+    .record-summary,
+    .report-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .record-group-desc {
+      display: none;
+    }
+
+    .warden-bar {
+      width: min(420px, calc(100vw - 28px));
+    }
+
     .save-strip {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -3076,6 +3619,37 @@
     .ambient-strip {
       padding: 4px 10px;
       font-size: 10px;
+    }
+
+    /* v2.0.0 — on a short landscape phone the record summary must not eat the
+       whole screen before the achievement list starts. */
+    .record-summary {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .record-stat {
+      padding: 9px 11px;
+    }
+
+    .record-stat small {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+    }
+
+    .record-stat strong {
+      font-size: 16px;
+    }
+
+    .record-items {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .record-item {
+      padding: 10px 12px;
+    }
+
+    .record-body {
+      gap: 16px;
     }
 
     .screen {
@@ -3379,9 +3953,11 @@
       line-height: 1.05;
     }
 
+    /* v2.0.0 — the menu gained a fifth action, so on a 320 px-tall landscape
+       phone the decorative tagline yields to keep the journey strip on screen
+       without scrolling. Secondary readings go before essential controls. */
     #menu .brand p {
-      font-size: 12px;
-      line-height: 1.45;
+      display: none;
     }
 
     #menu .menu-actions {
@@ -3590,8 +4166,10 @@
     gap: 22px 28px;
   }
 
+  /* v2.0.0 — four secondary actions share one row so the fifth entry never sits
+     alone on a second row. */
   .menu-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 9px;
   }
 
@@ -3638,7 +4216,9 @@
   .save-strip {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(130px, 1fr) minmax(120px, 0.8fr);
+    /* v2.0.0 — the readings column carries four values now, so it takes the
+       larger share. The chapter title beside it ellipsises by design. */
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.3fr);
     grid-template-rows: auto auto;
     gap: 8px 18px;
     min-height: 82px;
@@ -3692,9 +4272,12 @@
     background: linear-gradient(90deg, var(--c-aged-gold-deep), var(--c-aged-gold), var(--c-carved-jade));
   }
 
+  /* One row for any reading count, so the strip height never depends on how
+     many stats the current save has earned. */
   .journey-stats {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
     align-items: end;
     gap: 8px;
   }
@@ -3958,11 +4541,20 @@
     color: var(--c-aged-gold-deep);
   }
 
+  /* v2.0.0 — five groups. Three columns on wide screens keeps the whole panel on
+     one screen at 1280 by 720; two columns take over below that. */
   .settings-list {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
     max-width: none;
+  }
+
+  @media (min-width: 1120px) and (pointer: fine) {
+    .settings-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
   }
 
   .settings-group {
@@ -4083,6 +4675,17 @@
     grid-template-columns: 1fr auto auto;
     align-items: center;
     gap: 12px;
+  }
+
+  /* With three columns the local-data group sits beside the assist group rather
+     than claiming a third row, which keeps the whole panel on one screen. */
+  @media (min-width: 1120px) and (pointer: fine) {
+    .settings-data {
+      grid-column: auto;
+      grid-template-columns: 1fr;
+      align-items: start;
+      justify-items: stretch;
+    }
   }
 
   .settings-data p,
@@ -4452,8 +5055,10 @@
       gap: 10px 18px;
     }
 
+    /* v2.0.0 — the menu carries five actions, so the four secondary entries share
+       one row on landscape phones and the whole panel stays two rows tall. */
     .menu-actions {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 6px;
     }
 
@@ -4529,7 +5134,10 @@
       height: calc(100dvh - 130px);
       min-height: 0;
       overflow-x: auto;
-      scroll-snap-type: x mandatory;
+      /* Proximity rather than mandatory: the pager still settles on a world, but
+         a programmatic or assistive scroll to a specific chapter is not yanked
+         back to the nearest page mid-gesture. */
+      scroll-snap-type: x proximity;
     }
 
     .level-world-group {
@@ -4544,17 +5152,50 @@
       height: 100%;
     }
 
+    /* A grid item's automatic minimum is its content, so without `min-height: 0`
+       the track grows past the list whenever a card's copy renders taller than
+       it does on the authoring machine. Pinning the row to the track height
+       makes the horizontal chapter pager independent of font metrics. */
     .level-world-track {
-      grid-template-columns: repeat(5, minmax(112px, 1fr));
+      /* Five cards share the page width. A 112px floor overflowed the track and
+         clipped the fifth chapter of every world on a 844 by 390 phone. */
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-rows: minmax(0, 1fr);
       overflow: visible;
       height: 100%;
+      min-height: 0;
+      min-width: 0;
     }
 
+    /* The card height is fixed by the viewport here, so its rows must flex rather
+       than reserve a minimum. Without this the copy block's intrinsic height
+       pushes the track past the list on platforms whose font metrics run taller
+       than the authoring machine's. */
     .level-item,
     .level-item.featured {
       min-height: 0;
       height: 100%;
       padding: 9px 10px;
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      gap: 6px;
+      /* Five cards, five columns. The featured card's two-column span belongs to
+         the desktop grid; here it would create a sixth slot and overlap its
+         neighbour. */
+      grid-column: auto;
+    }
+
+    .level-item .level-copy {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Marks sit above the state line on the narrow pager, so a wrapping lock
+       explanation can never push them out of the card. */
+    .level-footer {
+      flex-direction: column-reverse;
+      align-items: flex-start;
+      justify-content: flex-end;
+      gap: 4px;
     }
 
     .settings-list {
@@ -4652,6 +5293,35 @@
 
     .touch-right {
       gap: 6px;
+    }
+  }
+
+  /* v2.0.0 short landscape phones. Placed after the general coarse landscape
+     rules so the menu can trade composition width for one row of secondary
+     actions and journey readings that fit without truncation. */
+  @media (pointer: coarse) and (orientation: landscape) and (max-height: 340px) {
+    #menu.panel {
+      grid-template-columns: minmax(0, 1.3fr) minmax(140px, 0.42fr);
+    }
+
+    .menu-actions button:not(.primary) {
+      padding-inline: 4px;
+      font-size: 12px;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    #menu .save-strip {
+      grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
+      gap: 6px 12px;
+    }
+
+    .journey-stats {
+      gap: 6px;
+    }
+
+    .journey-stats strong {
+      font-size: 12px;
     }
   }
 

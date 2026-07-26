@@ -1,11 +1,17 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v1.9.0 continues the Song-atlas Night Observatory direction with sharper in-game character rendering, clearer character-select portraits, quieter ornament, multi-source input fairness, and simulation-timed motion with presentation pose blending. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch and display settings, PWA support, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.0.0, **星穹回响 / Astral Echo**, is the first major version: it adds three world-finale wardens, mid-chapter checkpoints, a hidden collectible per chapter, chain scoring, trial medals, a thirty-entry achievement record, and an assist mode, then deepens the Canvas playfield from each chapter's own palette. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch, display, and assist settings, PWA support, and a reproducible debug APK build path.
 
 ## Gameplay
 
 - Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes through the Xuanji Star Dial.
 - Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes through the Jade Gui Sword.
+- Each world finale is sealed by a 守望者 warden. Entering its arena locks the gate until the guardian falls. Attacks are telegraphed, the guardian descends into reach on its recovery beat, and three stages escalate as its star force drops.
+- Every chapter derives 星灯 lanterns from its own platforms. Leaving the floor costs one health and returns the player to the last lit lantern.
+- One 星髓 is hidden in each chapter, off the forward route and recorded the moment it is touched.
+- Defeats and gems build a 连星 chain whose multiplier raises star dew only. Collection ratings still read the authored pickup value.
+- Each chapter declares a par time. Recorded bests earn 星章, 月章, or 露章, and feed a thirty-entry 星录 achievement record.
+- 星辉护佑 assist mode offers invulnerability, a skill without cooldown, a bonus air jump, and a 60 to 100 percent game speed. Assisted runs unlock chapters and record ratings and marrow, but never best times or medals.
 - The game ships fifteen chapters across three worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, World 2 / 星门群岛 contains five star-gate chapters, and World 3 / 星潮镜域 contains five phase-tide chapters.
 - World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
 - World 3 introduces phase-tide bridges: platforms, pickups, and hazards can alternate between two readable star-tide phases without changing the base character physics.
@@ -14,7 +20,7 @@
 - The mobile web build pauses behind an orientation dialog in portrait. Players may continue in portrait or return to the menu.
 - Opposite directions use the latest active source, then fall back to an earlier direction that remains held. Aliases and multi-touch actions stay active until their final source releases.
 - Gameplay input never overrides focused menu buttons or settings controls. Menu, modal, focus, visibility, and orientation transitions clear transient input together.
-- Settings cover master and BGM volume, HUD scale, touch size, touch opacity, visual effects, and screen shake.
+- Settings cover master and BGM volume, HUD scale, visual effects, screen shake, touch size, touch opacity, and the assist group.
 - The bundled background track is a local CC0 Vorbis file with an independent volume control.
 
 ## Requirements
@@ -49,7 +55,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v1.9.0 adds checks for pure input edge math, presentation pose blending, the v1.9 composition CSS markers, and release metadata, in addition to the existing multi-source, layout, and capture guards.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.0.0 adds checks for save schema 4 sanitizing, trial-medal and chain math, achievement evaluation, warden encounter data, star-marrow and lantern placement against level geometry, assist record integrity, and the v2.0 interface contracts.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 
@@ -97,15 +103,15 @@ The capture set contains four 1080 by 1920 portrait screenshots, three 1920 by 1
 ├── styles.css                 # Interface, HUD, motion, and responsive styling
 ├── src/
 │   ├── game.js                # Canvas game loop and gameplay logic
-│   ├── core/                  # Storage, audio, input, game-rule, and frame-scheduling helpers
-│   └── render/                # DOM, character-motion, game-feel, and Canvas material helpers
+│   ├── core/                  # Storage, audio, input, game-rule, progression, and frame-scheduling helpers
+│   └── render/                # DOM, character-motion, game-feel, warden, and Canvas material helpers
 ├── assets/
 │   ├── characters/            # Character source art and production atlases
 │   ├── audio/                 # Bundled CC0 BGM and provenance notice
 │   ├── fonts/                 # Local LXGW WenKai subsets, provenance, and OFL
 │   └── icons/                 # PWA icons
 ├── android/app/src/main/      # Android wrapper source and resources
-├── scripts/                   # APK build and store asset capture scripts
+├── scripts/                   # APK build, font subset, and store asset capture scripts
 ├── docs/                      # Design, motion, GDD, atlas, and Android testing notes
 └── tests/                     # Unit, browser, E2E, and wrapper checks
 ```
@@ -129,5 +135,13 @@ The game is offline. Save data remains in localStorage on the player's device an
 Code is MIT © iwannabewater.
 
 The bundled BGM is CC0 1.0; see [assets/audio/NOTICE.md](assets/audio/NOTICE.md).
+
+Rebuild the bundled font subsets after adding new Chinese copy:
+
+```bash
+npm run build:fonts
+```
+
+The script downloads the pinned LXGW WenKai v1.522 sources, verifies their checksums against `assets/fonts/NOTICE.md`, subsets both weights over every runtime code point, and prints the new digests to record in the notice. `npm test` fails when a runtime glyph is missing from either subset.
 
 The bundled webfonts are application-specific subsets of the official LXGW WenKai v1.522 Regular and Medium release files. Medium is mapped to the application's 700 weight. The fonts remain under the SIL Open Font License 1.1; see [assets/fonts/NOTICE.md](assets/fonts/NOTICE.md) and [assets/fonts/OFL.txt](assets/fonts/OFL.txt).

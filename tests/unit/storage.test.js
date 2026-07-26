@@ -24,7 +24,7 @@ const expansionOptions = {
     levelOptions
   );
 
-  assert.equal(save.schemaVersion, 3);
+  assert.equal(save.schemaVersion, 4);
   assert.equal(save.selected, "nini");
   assert.equal(save.unlocked, 15);
   assert.equal(save.totalCoins, 12);
@@ -38,6 +38,7 @@ const expansionOptions = {
     shake: false,
     fx: true,
     bgmVolume: 0,
+    assist: { enabled: false, invulnerable: false, infiniteSkill: false, extraJump: false, speed: 100 },
   });
 }
 
@@ -65,7 +66,7 @@ const expansionOptions = {
   assert.equal(storage.persist({ ...loaded, unlocked: 900 }, { ...levelOptions, storage: stub }), true);
   const written = JSON.parse(stub.written);
   assert.equal(written.unlocked, 15);
-  assert.equal(written.schemaVersion, 3);
+  assert.equal(written.schemaVersion, 4);
 }
 
 {

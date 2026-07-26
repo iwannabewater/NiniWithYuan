@@ -114,6 +114,8 @@
         body.innerHTML = payload.body;
         sign.textContent = payload.sign;
         requestAnimationFrame(() => root.classList.add("show"));
+        // v2.0.0 — the runtime records this as the 星尘密语 hidden achievement.
+        document.dispatchEvent(new CustomEvent("nini:letter"));
         try { close.focus({ preventScroll: true }); } catch (_) {}
       },
       dismiss

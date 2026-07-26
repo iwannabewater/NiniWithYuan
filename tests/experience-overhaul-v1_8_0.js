@@ -10,7 +10,9 @@ const hud = fs.readFileSync("src/render/hud.js", "utf8");
 const storage = fs.readFileSync("src/core/storage.js", "utf8");
 const capture = fs.readFileSync("scripts/capture-store-assets.js", "utf8");
 
-assert.match(storage, /SAVE_SCHEMA_VERSION = 3/);
+// v1.8.0 introduced the touch/HUD/shake preferences. Later schemas keep them,
+// so this guard checks the fields survive rather than pinning the version number.
+assert.match(storage, /SAVE_SCHEMA_VERSION = (?!1\b|2\b)\d+/);
 for (const setting of ["touchOpacity", "hudScale", "shake"]) {
   assert.ok(storage.includes(setting), `v1.8 settings should persist ${setting}`);
 }
@@ -56,7 +58,12 @@ assert.match(css, /font-size: calc\(10px \* var\(--hud-scale\)\)/);
 assert.doesNotMatch(css, /\.portrait-gated:has\(/, "orientation visibility must not depend on :has support");
 
 assert.ok(hud.includes('group.className = "level-world-group"'));
-assert.ok(hud.includes('state.textContent = locked ? "锁定 · 完成上一章后解锁"'));
+// The invariant is that a locked chapter explains itself, not the exact wording.
+assert.match(
+  hud,
+  /state\.textContent = locked \? "锁定[^"]*完成上一章[^"]*"/,
+  "a locked chapter card must state that the previous chapter unlocks it"
+);
 assert.ok(hud.includes('route.setAttribute("role", "progressbar")'));
 assert.ok(capture.includes("viewport: { width: 960, height: 540 }"), "landscape store captures should use a valid 16:9 viewport");
 assert.ok(capture.includes("captureStable"), "store captures should reject changing consecutive frames");

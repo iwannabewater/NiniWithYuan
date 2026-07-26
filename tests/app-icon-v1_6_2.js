@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { assertReleaseFloor } = require("./helpers/release.js");
 const fs = require("node:fs");
 
 function pngSize(path) {
@@ -46,10 +47,6 @@ assert.ok(adaptive.includes("@drawable/ic_launcher_foreground"));
 assert.ok(adaptive.includes("@drawable/ic_launcher_background"));
 assert.ok(!adaptive.includes("monochrome"), "Android themed icon must not fall back to the retired emblem");
 assert.ok(!fs.existsSync("android/app/src/main/res/drawable/ic_launcher_monochrome.xml"), "retired emblem-only launcher resource should be removed");
-assert.equal(pkg.version, "1.9.0");
-assert.equal(lock.version, "1.9.0");
-assert.match(androidManifest, /versionCode="20"[\s\S]*versionName="1\.9\.0"/);
-assert.ok(serviceWorker.includes('CACHE = "nini-yuan-v1.9.0-ui-clarity-r2"'));
-assert.ok(html.includes("星图 · v1.9.0"));
+assertReleaseFloor(assert, { pkg, lock, serviceWorker, html, androidManifest }, "1.6.2", 15);
 
-console.log("app-icon-v1.9.0: paired-protagonist Web and Android launcher assets passed");
+console.log("app-icon: paired-protagonist Web and Android launcher assets passed");

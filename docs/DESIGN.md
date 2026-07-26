@@ -48,6 +48,33 @@ The user-selected type system keeps **LXGW WenKai Local** globally. Ancient char
 
 CJK display text does not receive negative tracking. English inscriptions may use restrained positive tracking. All visible Chinese copy remains covered by local font subsets.
 
+## 3.5 Astral Echo Surfaces (v2.0.0)
+
+Four surfaces arrived with v2.0.0. All are built from existing materials; none
+introduces a new radius, shadow, or accent family.
+
+One colour rule governs them: **aged gold means recorded, carved jade means live,
+dusty rose means the hidden layer, and anything unearned stays lacquer.** A
+player should be able to read earned from unearned without reading the label.
+
+| Surface | Construction |
+| --- | --- |
+| 星录 record screen | An instrument summary row of hairline-divided readings over six grouped achievement lists. Earned entries take a gold left rail and a filled mark; unearned entries keep a hollow mark on quiet lacquer; secret entries stay unnamed. |
+| Completion report | A reading grid, then a row of state marks, then any newly earned achievements. The card scrolls itself rather than pushing its actions off a short landscape viewport. |
+| In-play instruments | The chain readout exists only while a chain is live, never as a permanent gauge. The warden bar centres its name and current tell over a rose-to-gold track. |
+| 星辉护佑 group | A settings group whose legend lights jade while active and whose note states the record consequence before the run rather than after it. |
+
+Chapter marks share one 20 px circular form: 星 / 月 / 露 for the trial medal,
+髓 for star marrow, 守 for a felled warden, and 章 for an unearned medal. On
+coarse-pointer viewports they compact to 17 px so the card footer stays one line
+tall.
+
+Playfield depth follows aerial perspective rather than added ornament. Each
+chapter's authored accent and glow light a horizon wash, tint the farthest ridge,
+drive a parallax dust layer, and fade the near ridge into ground haze. The wash
+is deliberately held near 13 percent opacity: the gameplay layer must remain the
+highest-contrast thing on screen.
+
 ## 4. Component Styling
 
 ### Buttons

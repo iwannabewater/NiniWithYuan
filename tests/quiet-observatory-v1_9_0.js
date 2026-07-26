@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { assertReleaseFloor } = require("./helpers/release.js");
 const fs = require("node:fs");
 const InputState = require("../src/core/input-state.js");
 const Motion = require("../src/render/character-motion.js");
@@ -11,12 +12,7 @@ const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
 const sw = fs.readFileSync("service-worker.js", "utf8");
 const manifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
-assert.equal(pkg.version, "1.9.0");
-assert.equal(lock.version, "1.9.0");
-assert.match(sw, /nini-yuan-v1\.9\.0-ui-clarity-r2/);
-assert.match(manifest, /android:versionCode="20"/);
-assert.match(manifest, /android:versionName="1\.9\.0"/);
-assert.match(html, /星图 · v1\.9\.0/);
+assertReleaseFloor(assert, { pkg, lock, serviceWorker: sw, html, androidManifest: manifest }, "1.9.0", 20);
 
 assert.equal(typeof InputState.edgeFromActiveTransition, "function");
 assert.equal(typeof InputState.edgesFromActionCounts, "function");

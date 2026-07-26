@@ -172,6 +172,33 @@ async function runLandscapeChecks() {
       });
       check(state.verticalFit && state.horizontalPages && state.groups === 3, "landscape chapters should page horizontally without vertical overflow", state);
 
+      // v2.0.0 — every card on a page must be fully visible with its marks. A
+      // 112px column floor previously overflowed the track and clipped the fifth
+      // chapter of every world at this viewport.
+      const cards = await page.evaluate(() => {
+        const list = document.querySelector(".level-list");
+        const bounds = list.getBoundingClientRect();
+        const firstPage = document.querySelector(".level-world-group");
+        const items = [...firstPage.querySelectorAll(".level-item")];
+        const fits = (el) => {
+          const rect = el.getBoundingClientRect();
+          return rect.width > 0 && rect.height > 0 && rect.right <= bounds.right + 1 && rect.bottom <= bounds.bottom + 1;
+        };
+        return {
+          count: items.length,
+          visible: items.filter(fits).length,
+          marks: items.filter((item) => {
+            const group = item.querySelector(".level-marks");
+            return group && fits(group);
+          }).length,
+        };
+      });
+      check(
+        cards.count === 5 && cards.visible === 5 && cards.marks === 5,
+        "every chapter card on a landscape page must be fully visible with its marks",
+        cards
+      );
+
       await page.locator("#levelScreen [data-action=back]").tap();
       await page.getByRole("button", { name: "设置", exact: true }).tap();
       await page.locator("#hudScaleRange").fill("140");

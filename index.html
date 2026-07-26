@@ -72,7 +72,7 @@
     </div>
     <footer class="ambient-strip" aria-hidden="true">
       <span class="ambient-strip-mark">✦</span>
-      <span class="ambient-strip-text">星图 · v1.9.0 · 多世界章节 · 离线游玩</span>
+      <span class="ambient-strip-text">星图 · v2.0.0 · 星穹回响 · 离线游玩</span>
       <span class="ambient-strip-divider"></span>
       <span class="ambient-strip-quote" id="ambientQuote">愿每一次跳跃，都落在你想去的星上。</span>
       <span class="ambient-strip-divider"></span>
@@ -101,6 +101,7 @@
           <button id="continueAction" class="primary" data-action="play" aria-describedby="saveStrip">继续冒险</button>
           <button data-action="levels">选择关卡</button>
           <button data-action="characters">选择角色</button>
+          <button data-action="record">星录</button>
           <button data-action="settings">设置</button>
         </div>
         <div class="save-strip" id="saveStrip"></div>
@@ -169,6 +170,20 @@
         <div id="levelList" class="level-list"></div>
       </section>
 
+      <section id="recordScreen" class="panel screen">
+        <div class="screen-head">
+          <button class="icon" data-action="back" aria-label="返回">‹</button>
+          <div>
+            <span class="eyebrow">星录</span>
+            <h2>成就与记录</h2>
+          </div>
+        </div>
+        <div class="record-body">
+          <div class="record-summary" id="recordSummary"></div>
+          <div class="record-groups" id="recordGroups"></div>
+        </div>
+      </section>
+
       <section id="settingsScreen" class="panel screen">
         <div class="screen-head">
           <button class="icon" data-action="back" aria-label="返回">‹</button>
@@ -220,6 +235,31 @@
               <output id="touchOpacityValue" for="touchOpacityRange">68%</output>
             </label>
           </fieldset>
+          <fieldset class="settings-group settings-assist">
+            <legend>星辉护佑</legend>
+            <p class="settings-note">为想看完故事的旅人保留。开启后本章不写入最佳用时与章印，星髓与评级照常记录。</p>
+            <label class="toggle-row" data-rune="佑">
+              <span>启用星辉护佑</span>
+              <input id="assistToggle" type="checkbox" />
+            </label>
+            <label class="toggle-row" data-rune="护">
+              <span>免疫伤害</span>
+              <input id="assistInvulnToggle" type="checkbox" />
+            </label>
+            <label class="toggle-row" data-rune="技">
+              <span>技能不冷却</span>
+              <input id="assistSkillToggle" type="checkbox" />
+            </label>
+            <label class="toggle-row" data-rune="跃">
+              <span>额外一段跳</span>
+              <input id="assistJumpToggle" type="checkbox" />
+            </label>
+            <label data-rune="速">
+              <span>游戏速度</span>
+              <input id="assistSpeedRange" type="range" min="60" max="100" step="5" value="100" />
+              <output id="assistSpeedValue" for="assistSpeedRange">100%</output>
+            </label>
+          </fieldset>
           <fieldset class="settings-group settings-data">
             <legend>本机数据</legend>
             <p>进度只保存在当前设备。清除后无法恢复。</p>
@@ -245,6 +285,19 @@
           </div>
         </div>
         <div class="bossbar" id="chapterBar"><span></span></div>
+        <div class="warden-bar" id="wardenBar" hidden>
+          <div class="warden-bar-head">
+            <span class="warden-bar-title" id="wardenName">守望者</span>
+            <span class="warden-bar-phase" id="wardenPhase"></span>
+          </div>
+          <div class="warden-bar-track" id="wardenTrack" role="progressbar" aria-label="守望者残余星力" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span id="wardenFill"></span></div>
+        </div>
+        <div class="hud-chain" id="hudChain" hidden aria-hidden="true">
+          <span class="hud-chain-label">连星</span>
+          <strong class="hud-chain-count" id="hudChainCount">0</strong>
+          <span class="hud-chain-mult" id="hudChainMult">×1</span>
+          <span class="hud-chain-track"><span id="hudChainFill"></span></span>
+        </div>
         <div id="chapterIntro" class="chapter-intro" aria-live="polite">
           <span id="chapterIntroEyebrow">第一章</span>
           <strong id="chapterIntroTitle">星露花庭</strong>
@@ -280,6 +333,7 @@
         <span class="eyebrow" id="modalEyebrow">暂停</span>
         <h2 id="modalTitle">暂停</h2>
         <p id="modalText"></p>
+        <div class="modal-report" id="modalReport"></div>
         <div class="modal-actions" id="modalActions"></div>
       </div>
     </section>
@@ -303,10 +357,12 @@
     <script src="./src/core/audio.js"></script>
     <script src="./src/core/input-state.js"></script>
     <script src="./src/core/game-rules.js"></script>
+    <script src="./src/core/progression.js"></script>
     <script src="./src/core/fixed-step.js"></script>
     <script src="./src/render/hud.js"></script>
     <script src="./src/render/character-motion.js"></script>
     <script src="./src/render/playfield-material.js" defer></script>
+    <script src="./src/render/warden.js" defer></script>
     <script src="./src/render/game-feel.js" defer></script>
     <script src="./src/render/respawn-veil.js" defer></script>
     <script src="./src/render/cursor-trail.js" defer></script>
