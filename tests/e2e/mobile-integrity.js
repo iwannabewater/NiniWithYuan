@@ -118,6 +118,7 @@ async function runLandscapeChecks(name, port, pageOptions) {
           return {
             computedWidth: Number.parseFloat(style.width),
             computedHeight: Number.parseFloat(style.height),
+            fontSize: Number.parseFloat(style.fontSize),
             display: style.display,
             visibility: style.visibility,
             opacity: Number.parseFloat(style.opacity),
@@ -134,6 +135,29 @@ async function runLandscapeChecks(name, port, pageOptions) {
         const status = document.querySelector("#hudStatus.phase-critical");
         const touchControls = document.querySelector("#touchControls");
         const topHud = document.querySelector(".top-hud");
+        const toast = document.querySelector("#toast");
+        const wardenBar = document.querySelector("#wardenBar");
+        const wasWardenHidden = wardenBar.hidden;
+        toast.style.transition = "none";
+        wardenBar.hidden = false;
+        toast.textContent = "星莓：身体变大，生命上限提升";
+        toast.classList.add("show");
+        void toast.offsetWidth;
+        const gameplayToast = describe(toast).rect;
+        const wardenHud = {
+          rect: describe(wardenBar).rect,
+          title: describe(document.querySelector("#wardenName")),
+          phase: describe(document.querySelector("#wardenPhase")),
+        };
+        const hudType = [...document.querySelectorAll(
+          "#overlay.active .hud-pill, #overlay.active .hud-button, #overlay.active .hud-icon, #wardenBar:not([hidden]) .warden-bar-title, #wardenBar:not([hidden]) .warden-bar-phase",
+        )]
+          .map(describe)
+          .filter((item) => item.display !== "none" && item.visibility === "visible" && item.rect.width > 0 && item.rect.height > 0);
+        toast.classList.remove("show");
+        toast.textContent = "";
+        toast.style.removeProperty("transition");
+        wardenBar.hidden = wasWardenHidden;
         return {
           environment: {
             coarse: matchMedia("(pointer: coarse)").matches,
@@ -151,6 +175,9 @@ async function runLandscapeChecks(name, port, pageOptions) {
             clientWidth: topHud.clientWidth,
             scrollWidth: topHud.scrollWidth,
           },
+          hudType,
+          gameplayToast,
+          wardenHud,
           status: {
             text: status.textContent.trim(),
             className: status.className,
@@ -194,6 +221,26 @@ async function runLandscapeChecks(name, port, pageOptions) {
         state.topHud.scrollWidth <= state.topHud.clientWidth,
         "The compact HUD must not clip or horizontally overflow its instruments",
         state.topHud
+      );
+      check(
+        state.hudType.length > 0 && state.hudType.every((item) => item.fontSize >= 13),
+        "Visible coarse-pointer HUD type must preserve the 13-pixel design floor",
+        state.hudType
+      );
+      check(
+        state.gameplayToast.top >= 0 && state.gameplayToast.bottom <= state.environment.viewport.height * 0.31,
+        "Transient gameplay notices must remain in the upper safe rail above the protagonist",
+        state.gameplayToast
+      );
+      check(
+        state.gameplayToast.bottom <= state.wardenHud.rect.top || state.gameplayToast.top >= state.wardenHud.rect.bottom,
+        "A live gameplay notice must not cover the guardian title, phase, or health rail",
+        { toast: state.gameplayToast, warden: state.wardenHud }
+      );
+      check(
+        state.wardenHud.title.fontSize >= 13 && state.wardenHud.phase.fontSize >= 13,
+        "Guardian title and phase text must preserve the gameplay HUD type floor",
+        state.wardenHud
       );
       check(
         state.status.text.includes("星潮") &&
@@ -298,6 +345,50 @@ async function runPortraitChecks() {
       await page.locator("#menu.active").waitFor();
       await page.getByRole("button", { name: "继续冒险" }).tap();
       await rotatePrompt.waitFor({ state: "visible" });
+      await page.locator('#rotatePrompt [data-action="continue-portrait"]').tap();
+      await page.waitForFunction(() => document.querySelector("#overlay").classList.contains("active"));
+      const portraitRails = await page.evaluate(() => {
+        const rect = (selector) => {
+          const bounds = document.querySelector(selector).getBoundingClientRect();
+          return { top: bounds.top, right: bounds.right, bottom: bounds.bottom, left: bounds.left };
+        };
+        const toast = document.querySelector("#toast");
+        const wardenBar = document.querySelector("#wardenBar");
+        const chain = document.querySelector("#hudChain");
+        toast.style.transition = "none";
+        wardenBar.hidden = false;
+        const normalWarden = rect("#wardenBar");
+        toast.textContent = "守望者测试通知";
+        toast.classList.add("show");
+        chain.hidden = false;
+        void toast.offsetWidth;
+        const result = {
+          viewport: { width: innerWidth, height: innerHeight },
+          topHud: rect(".top-hud"),
+          progress: rect("#chapterBar"),
+          toast: rect("#toast"),
+          normalWarden,
+          stackedWarden: rect("#wardenBar"),
+          stackedChain: rect("#hudChain"),
+        };
+        toast.classList.remove("show");
+        toast.textContent = "";
+        toast.style.removeProperty("transition");
+        wardenBar.hidden = true;
+        chain.hidden = true;
+        return result;
+      });
+      const portraitInstrumentBottom = Math.max(portraitRails.topHud.bottom, portraitRails.progress.bottom);
+      check(
+        portraitRails.toast.top >= portraitInstrumentBottom &&
+          portraitRails.normalWarden.top >= portraitInstrumentBottom &&
+          portraitRails.stackedWarden.top >= portraitRails.toast.bottom &&
+          portraitRails.stackedChain.top >= portraitRails.stackedWarden.bottom &&
+          portraitRails.toast.left >= 0 &&
+          portraitRails.toast.right <= portraitRails.viewport.width,
+        "Continued portrait play must stack notices and guardian instruments below the top HUD",
+        portraitRails
+      );
       await page.keyboard.press("Escape");
       await page.locator("#modal.active").waitFor();
       await page.locator("#modal .modal-card").evaluate(async (card) => {
@@ -350,11 +441,42 @@ async function runPortraitChecks() {
   );
 }
 
+async function runMenuToastTransitionCheck() {
+  await withPage(
+    "mobile menu toast transition",
+    async (page) => {
+      await page.getByRole("button", { name: "选择角色" }).tap();
+      await page.locator('[data-pick="yuan"]').tap();
+      const menuToast = await page.evaluate(() => ({
+        visible: document.querySelector("#toast").classList.contains("show"),
+        text: document.querySelector("#toast").textContent.trim(),
+      }));
+      check(menuToast.visible && menuToast.text.includes("已选择"), "Character selection should expose its menu feedback", menuToast);
+
+      await page.locator('#characterScreen [data-action="back"]').tap();
+      await page.getByRole("button", { name: "继续冒险" }).tap();
+      await page.waitForFunction(() => document.querySelector("#chapterIntro").classList.contains("active"));
+      const gameplayState = await page.evaluate(() => ({
+        introActive: document.querySelector("#chapterIntro").classList.contains("active"),
+        toastVisible: document.querySelector("#toast").classList.contains("show"),
+        toastText: document.querySelector("#toast").textContent,
+      }));
+      check(
+        gameplayState.introActive && !gameplayState.toastVisible && gameplayState.toastText === "",
+        "Menu feedback must be cleared before the chapter intro enters gameplay",
+        gameplayState
+      );
+    },
+    { port: 43174, page: LANDSCAPE_PAGE }
+  );
+}
+
 async function run() {
   await runLandscapeChecks("mobile landscape integrity", 43171, LANDSCAPE_PAGE);
   await runLandscapeChecks("compact mobile landscape integrity", 43173, COMPACT_LANDSCAPE_PAGE);
   await runPortraitChecks();
-  console.log("mobile-integrity-e2e: landscape controls, phase HUD, portrait escape, modal, and settings passed");
+  await runMenuToastTransitionCheck();
+  console.log("mobile-integrity-e2e: landscape controls, phase HUD, portrait escape, toast transition, modal, and settings passed");
 }
 
 run().catch((error) => {

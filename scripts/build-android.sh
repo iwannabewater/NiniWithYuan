@@ -73,24 +73,35 @@ cd "$ROOT"
 
 "$BUILD_TOOLS/zipalign" -f 4 "$BUILD_DIR/unsigned.apk" "$BUILD_DIR/aligned.apk"
 
-KEYSTORE="$ROOT/android/debug.keystore"
+KEYSTORE="${NINI_ANDROID_KEYSTORE:-$ROOT/android/debug.keystore}"
+KEY_ALIAS="${NINI_ANDROID_KEY_ALIAS:-androiddebugkey}"
+KEYSTORE_PASSWORD="${NINI_ANDROID_KEYSTORE_PASSWORD:-android}"
+KEY_PASSWORD="${NINI_ANDROID_KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
 if [ ! -f "$KEYSTORE" ]; then
+  if [ -n "${NINI_ANDROID_KEYSTORE:-}" ]; then
+    echo "Configured Android signing keystore is missing: $KEYSTORE" >&2
+    exit 1
+  fi
   keytool -genkeypair \
     -keystore "$KEYSTORE" \
-    -storepass android \
-    -keypass android \
-    -alias androiddebugkey \
+    -storepass "$KEYSTORE_PASSWORD" \
+    -keypass "$KEY_PASSWORD" \
+    -alias "$KEY_ALIAS" \
     -keyalg RSA \
     -keysize 2048 \
     -validity 10000 \
     -dname "CN=iwannabewater, OU=NiniYuan, O=iwannabewater, L=Shanghai, S=Shanghai, C=CN" >/dev/null
 fi
 
+NINI_ANDROID_KEYSTORE_PASSWORD="$KEYSTORE_PASSWORD"
+NINI_ANDROID_KEY_PASSWORD="$KEY_PASSWORD"
+export NINI_ANDROID_KEYSTORE_PASSWORD NINI_ANDROID_KEY_PASSWORD
+
 "$BUILD_TOOLS/apksigner" sign \
   --ks "$KEYSTORE" \
-  --ks-key-alias androiddebugkey \
-  --ks-pass pass:android \
-  --key-pass pass:android \
+  --ks-key-alias "$KEY_ALIAS" \
+  --ks-pass env:NINI_ANDROID_KEYSTORE_PASSWORD \
+  --key-pass env:NINI_ANDROID_KEY_PASSWORD \
   --out "$OUT_DIR/NiniYuan.apk" \
   "$BUILD_DIR/aligned.apk"
 

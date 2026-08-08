@@ -11,6 +11,7 @@ test-results/
 # Android generated output and local signing material
 android/app/src/main/assets/
 android/debug.keystore
+android/release.keystore
 *.idsig
 
 # Downloaded local compiler fallback

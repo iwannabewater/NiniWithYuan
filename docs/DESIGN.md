@@ -75,6 +75,42 @@ drive a parallax dust layer, and fade the near ridge into ground haze. The wash
 is deliberately held near 13 percent opacity: the gameplay layer must remain the
 highest-contrast thing on screen.
 
+## 3.6 Starfield Cadence Surfaces (v2.1.0)
+
+Starfield Cadence adds event-shaped presentation around the existing authored
+poses. Landing uses a short contact ring and rays; projectile release uses a
+rotated star seal; Nini's skill uses an orbiting dial; Yuan's skill uses a
+gui-sword cut. Run and skill trails reuse the crisp current atlas frame at low
+opacity. Reduced-motion play removes the trails and freezes decorative rotation
+while retaining the action mark that communicates contact, cast, or skill use.
+
+Creature art is isolated in a stateless, DOM-free renderer. Slimes and embers
+use a 1.36 presentation scale, while wisps, sentries, and warders use at least
+1.28. Feet, shadows, and tethers anchor the larger silhouette to the same entity
+coordinates. Drawing scale never changes a collision rectangle, patrol limit,
+health value, or projectile interaction.
+
+Each world owns one deterministic prop grammar derived from the level id and
+authored platforms:
+
+| World | Prop | Silhouette language |
+| --- | --- | --- |
+| 第一星域 破碎星图 | Star bloom | A jade stem, rose or gold diamond bloom, and two quiet leaves |
+| 第二星域 星门群岛 | Gate beacon | A gilt mast, crossed silk rings, and a phase-blue pennant |
+| 第三星域 星潮镜域 | Mirror reed | Three phase-blue reeds capped by a faceted mirror tile |
+
+Props render behind authored solids and never join gameplay simulation. The
+particle material supports orb, shard, streak, ring, petal, and glow forms.
+Current movement and combat events select rings for takeoff or impact, streaks
+for velocity, and shards for fracture; particle lifetime remains unchanged.
+
+The three guardians retain one encounter renderer but no longer share one
+silhouette. Aurora carries a six-ray crown, Core carries four squared
+satellites, and Tide carries three crescent arcs. Telegraphs close across the
+core, recovery spreads the rings and exposes a moon-white center, and low star
+force adds restrained fracture lines. These marks report existing encounter
+state and do not alter the arena or hitbox.
+
 ## 4. Component Styling
 
 ### Buttons
@@ -103,7 +139,7 @@ Web/PWA and Android launchers use the same close paired portrait of Nini and Yua
 
 ### HUD
 
-Gameplay follows **四角仪轨**. Character, health, and status share a grouped instrument at the upper left. Star dew, ammunition, time, skill, and pause share a second instrument at the upper right. Each reading exposes a concise accessible group label, and updates only when its value changes. The chapter progress line stays narrow along the top meridian. Responsive layouts remove secondary readings before skill, pause, health, resources, or the World 3 phase status.
+Gameplay follows **四角仪轨**. Character, health, and status share a grouped instrument at the upper left. Star dew, ammunition, time, skill, and pause share a second instrument at the upper right. Each reading exposes a concise accessible group label, and updates only when its value changes. All visible gameplay readings keep a 13 px default floor, including compact landscape and the World 3 phase status. The chapter progress line stays narrow along the top meridian. Responsive layouts remove secondary readings before skill, pause, health, resources, or the World 3 phase status. Gameplay toasts sit on a top-center safe rail below the progress instruments; menu toasts retain their lower placement.
 
 ### Touch controls
 
@@ -121,8 +157,8 @@ The playfield uses the same material hierarchy as the DOM instead of a separate 
 - Parallax scenery is drawn as continuous ink-scroll bands with sparse aged-gold chart lines, not repeated triangle mountains or bright cloud ovals.
 - Platforms use indigo, carved-jade, stone, or muted artifact bodies with a thin gilt top incision and shallow engraved ticks.
 - Coins and gems read as small star seals; power-ups keep distinct silhouettes with restrained local glow.
-- Character atlases render as crisp bitmaps without canvas `shadowBlur` on the sprite itself. Contact shadow is a separate ground ellipse under the feet. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while enemies render at roughly 11 percent or more without changing collision boxes.
-- Character poses and atlas frames use simulation time. The renderer interpolates player and camera samples between 120 Hz updates, then synchronizes those samples after portals, respawns, lifecycle resets, and hit-stop recovery.
+- Character atlases render as crisp bitmaps without canvas `shadowBlur` on the sprite itself. Contact shadow is a separate ground ellipse under the feet. In 844 by 390 landscape, a normal player stays at or below 34 percent of the playfield height while creature silhouettes clear the compact visual scale floor without changing collision boxes.
+- Character poses and atlas frames use simulation time. The renderer interpolates player and camera samples between 120 Hz updates, then synchronizes those samples after portals, respawns, lifecycle resets, and hit-stop recovery. Continuous pose fields use elapsed-time damping, so display refresh rate does not change their settling time.
 - Hazards retain the strongest warm-danger contrast. Goals and portals use gold, jade, rose, and phase blue as semantic rings rather than a rainbow bloom.
 
 ## 5. Layout Principles

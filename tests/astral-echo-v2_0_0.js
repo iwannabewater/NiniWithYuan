@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
 
+const { assertReleaseFloor } = require("./helpers/release.js");
 const Progression = require("../src/core/progression.js");
 const Storage = require("../src/core/storage.js");
 const WardenArt = require("../src/render/warden.js");
@@ -28,14 +29,23 @@ const levels = new Function(
 const TILE = 48;
 const overlaps = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
 
+function extractRuntimeFunction(name) {
+  const start = game.indexOf(`  function ${name}(`);
+  assert.ok(start >= 0, `runtime function ${name} must exist`);
+  const bodyStart = game.indexOf("{", start);
+  let depth = 0;
+  for (let index = bodyStart; index < game.length; index += 1) {
+    if (game[index] === "{") depth += 1;
+    if (game[index] !== "}") continue;
+    depth -= 1;
+    if (depth === 0) return game.slice(start, index + 1);
+  }
+  throw new Error(`runtime function ${name} is not balanced`);
+}
+
 /* -- release metadata ------------------------------------------------------ */
 
-assert.equal(pkg.version, "2.0.0");
-assert.equal(lock.version, "2.0.0");
-assert.match(sw, /nini-yuan-v2\.0\.0-astral-echo-r1/);
-assert.match(androidManifest, /android:versionCode="21"/);
-assert.match(androidManifest, /android:versionName="2\.0\.0"/);
-assert.match(html, /星图 · v2\.0\.0/);
+assertReleaseFloor(assert, { pkg, lock, serviceWorker: sw, html, androidManifest }, "2.0.0", 21);
 assert.ok(sw.includes("./src/core/progression.js"), "the offline cache must ship the progression module");
 assert.ok(sw.includes("./src/render/warden.js"), "the offline cache must ship the warden renderer");
 assert.ok(
@@ -303,6 +313,31 @@ for (const level of wardenLevels) {
   assert.ok(warden.stages[2].patterns.length > warden.stages[0].patterns.length, "later stages widen the attack pool");
 }
 
+const wardenProfiles = Object.fromEntries(
+  wardenLevels.map((level) => [level.warden.profile, level.warden.stages])
+);
+assert.deepEqual(Object.keys(wardenProfiles).sort(), ["aurora", "core", "tide"]);
+assert.deepEqual(
+  wardenProfiles.aurora.map((stage) => stage.patterns),
+  [["volley", "sweep"], ["volley", "rain", "sweep"], ["rain", "sweep", "volley", "summon"]],
+  "the aurora guardian should retain the readable baseline sequence"
+);
+assert.deepEqual(
+  wardenProfiles.core.map((stage) => stage.patterns),
+  [["sweep", "volley"], ["sweep", "summon", "volley"], ["volley", "summon", "sweep", "rain"]],
+  "the core guardian should lead with pressure and introduce summons earlier"
+);
+assert.deepEqual(
+  wardenProfiles.tide.map((stage) => stage.patterns),
+  [["rain", "volley"], ["rain", "sweep", "volley"], ["rain", "volley", "summon", "sweep"]],
+  "the tide guardian should lead with falling-shard route control"
+);
+assert.equal(
+  new Set(Object.values(wardenProfiles).map((stages) => stages.map((stage) => stage.cadence).join(","))).size,
+  3,
+  "each guardian should own a distinct cadence curve"
+);
+
 /* -- runtime contracts ----------------------------------------------------- */
 
 assert.ok(game.includes("function updateWarden("), "the runtime owns warden simulation");
@@ -313,7 +348,6 @@ assert.match(
   /reachedGoal: !player\.completed && !goalIsSealed\(\)/,
   "completion must check the seal before the goal rect"
 );
-assert.ok(game.includes("function wardenIsOpen("), "the guardian needs a punishable recovery window");
 assert.ok(game.includes("function lightLanterns("), "checkpoints must be reachable from the update path");
 assert.match(game, /if \(player\.y > activeLevel\.height \+ 260\) hurt\(1, true\)/, "a fall costs one heart, not the run");
 assert.ok(game.includes("function assistTimeScale("), "assist owns the delivered frame, not the fixed step");
@@ -336,6 +370,117 @@ assert.ok(game.includes("Progression.newlyUnlocked(save, levels)"), "completion 
 assert.ok(game.includes("function enemyResistsProjectiles("), "the shelled walker must deflect projectiles");
 assert.match(game, /assistOn\("infiniteSkill"\) \? 0 :/, "assist skill relief goes through the cooldown, not the physics");
 assert.ok(game.includes("function airJumpBudget("), "the assist bonus jump must flow through one budget helper");
+
+const wardenCombatRuntime = [
+  "wardenIsOpen",
+  "resolveWardenContact",
+  "damageWarden",
+  "updateProjectiles",
+].map(extractRuntimeFunction).join("\n");
+
+function exerciseWardenCombat({ phase, damageSource, pierce = 0 }) {
+  return new Function("phase", "damageSource", "pierce", `
+    "use strict";
+    const WARDEN_CONTACT_COOLDOWN = 0.5;
+    const WARDEN_HIT_FLASH = 0.16;
+    const PROJECTILE_CULL_RADIUS = 1400;
+    const CANVAS_MATERIAL = { moonWhite: "moon", agedGold: "gold" };
+    const events = { bursts: 0, chains: 0, cues: [], floats: [], hitstops: 0, hurts: [] };
+    const GameFeel = { requestHitstop() { events.hitstops += 1; } };
+    const save = { selected: "nini" };
+    const player = {
+      x: 0, y: 0, w: 12, h: 12, vx: 0, vy: 0,
+      superInvuln: 0, skillTimer: 0, settledOutcome: null,
+    };
+    let warden = {
+      x: 0, y: 0, w: 24, h: 24, active: true, defeated: false,
+      phase, health: 10, hitTimer: 0, hurtCount: 0, contactCd: 0,
+    };
+    let projectiles = [];
+    const activeLevel = { enemies: [] };
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    const lerp = (from, to, amount) => from + (to - from) * amount;
+    const rectsOverlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const bodyRect = (body) => ({ x: body.x + 3, y: body.y + 3, w: body.w - 6, h: body.h - 3 });
+    const allSolids = () => [];
+    const activeWarden = () => warden && !warden.defeated ? warden : null;
+    const nearestEnemy = () => null;
+    const enemyResistsProjectiles = () => false;
+    const enemyHitPoints = () => 2;
+    const burst = () => { events.bursts += 1; };
+    const chainReward = () => { events.chains += 1; };
+    const cue = (name) => { events.cues.push(name); };
+    const floatText = (text) => { events.floats.push(text); };
+    const shake = () => {};
+    const defeatWarden = () => { warden.defeated = true; };
+    const hurt = (amount) => { events.hurts.push(amount); };
+
+    ${wardenCombatRuntime}
+
+    if (damageSource === "bolt") {
+      projectiles.push({
+        x: 4, y: 4, w: 8, h: 8, vx: 0, vy: 0, life: 1,
+        owner: "yuan", pierce, damage: 2, color: "jade",
+      });
+      updateProjectiles(1 / 120);
+    } else if (damageSource === "stomp") {
+      player.vy = 200;
+      resolveWardenContact();
+    } else if (damageSource === "impact") {
+      save.selected = "yuan";
+      player.skillTimer = 0.1;
+      resolveWardenContact();
+    } else if (damageSource === "contact") {
+      resolveWardenContact();
+    } else {
+      throw new Error("unknown damage source");
+    }
+
+    return {
+      health: warden.health,
+      hurtCount: warden.hurtCount,
+      contactCd: warden.contactCd,
+      playerVy: player.vy,
+      projectileCount: projectiles.length,
+      projectilePierce: projectiles[0]?.pierce ?? null,
+      events,
+    };
+  `)(phase, damageSource, pierce);
+}
+
+for (const phase of ["wait", "telegraph", "act", "recover"]) {
+  for (const damageSource of ["bolt", "stomp", "impact"]) {
+    const result = exerciseWardenCombat({ phase, damageSource });
+    const open = phase === "recover";
+    assert.equal(result.health, open ? 8 : 10, `${damageSource} health result in ${phase}`);
+    assert.equal(result.hurtCount, open ? 1 : 0, `${damageSource} hurt count in ${phase}`);
+    assert.equal(result.events.chains, open ? 1 : 0, `${damageSource} chain result in ${phase}`);
+    assert.equal(result.events.hitstops, open ? 1 : 0, `${damageSource} hit-stop result in ${phase}`);
+    if (open) {
+      assert.deepEqual(result.events.floats, [], `${damageSource} should not show armour feedback in recovery`);
+      assert.deepEqual(result.events.cues, [damageSource === "stomp" ? "stomp" : "hit_enemy"]);
+    } else {
+      assert.deepEqual(result.events.floats, ["护甲"], `${damageSource} should show armour feedback in ${phase}`);
+      assert.deepEqual(result.events.cues, ["deflect"], `${damageSource} should use the deflect cue in ${phase}`);
+    }
+    assert.deepEqual(result.events.hurts, [], `${damageSource} contact consequence should stay non-damaging to the player`);
+    if (damageSource === "bolt") assert.equal(result.projectileCount, 0, `a spent bolt should expire in ${phase}`);
+    if (damageSource === "stomp") assert.equal(result.playerVy, -640, `a stomp should retain its bounce in ${phase}`);
+    if (damageSource === "impact") assert.equal(result.contactCd, 0.5, `impact cooldown in ${phase}`);
+  }
+}
+
+for (const phase of ["act", "recover"]) {
+  const contact = exerciseWardenCombat({ phase, damageSource: "contact" });
+  assert.deepEqual(contact.events.hurts, [1], `ordinary body contact should still hurt the player in ${phase}`);
+  assert.equal(contact.health, 10, `ordinary body contact should not damage the guardian in ${phase}`);
+}
+
+for (const phase of ["telegraph", "recover"]) {
+  const piercing = exerciseWardenCombat({ phase, damageSource: "bolt", pierce: 1 });
+  assert.equal(piercing.projectileCount, 1, `piercing bolt lifetime should be preserved in ${phase}`);
+  assert.equal(piercing.projectilePierce, 0, `piercing bolt should spend one pierce in ${phase}`);
+}
 
 // A chapter must play identically on a phone and a wide desktop, so entity
 // simulation reads world-space constants only. Camera framing may read `view`.

@@ -62,6 +62,22 @@ if (!buildScript.includes('while IFS= read -r class_file; do')) {
   throw new Error("Android build should collect class files with a portable read loop");
 }
 
+for (const signingGuard of [
+  'KEYSTORE="${NINI_ANDROID_KEYSTORE:-$ROOT/android/debug.keystore}"',
+  'KEY_ALIAS="${NINI_ANDROID_KEY_ALIAS:-androiddebugkey}"',
+  '--ks-pass env:NINI_ANDROID_KEYSTORE_PASSWORD',
+  '--key-pass env:NINI_ANDROID_KEY_PASSWORD',
+  "Configured Android signing keystore is missing",
+]) {
+  if (!buildScript.includes(signingGuard)) {
+    throw new Error(`Android build missing protected-signing guard: ${signingGuard}`);
+  }
+}
+
+if (buildScript.includes("--ks-pass pass:android") || buildScript.includes("--key-pass pass:android")) {
+  throw new Error("Android build must not put signing passwords in process arguments");
+}
+
 for (const forbidden of [
   "setAllowFileAccessFromFileURLs(true)",
   "setAllowUniversalAccessFromFileURLs(true)",

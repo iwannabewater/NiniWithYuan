@@ -279,6 +279,121 @@
     ctx.restore();
   }
 
+  function sceneryKind(worldId) {
+    if (worldId === "world2") return "gate-beacon";
+    if (worldId === "world3") return "mirror-reed";
+    return "star-bloom";
+  }
+
+  function stringSeed(value = "") {
+    let seed = 0;
+    for (let index = 0; index < value.length; index += 1) seed = (seed * 31 + value.charCodeAt(index)) % 997;
+    return seed;
+  }
+
+  function drawStarBloom(ctx, x, y, variant, sway) {
+    const height = 18 + variant * 4;
+    ctx.strokeStyle = "rgba(109,168,149,.48)";
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(x + sway, y - height * 0.5, x + sway * 0.4, y - height);
+    ctx.stroke();
+    ctx.fillStyle = variant % 2 ? "rgba(184,123,134,.72)" : "rgba(195,164,104,.7)";
+    ctx.save();
+    ctx.translate(x + sway * 0.4, y - height);
+    ctx.rotate(Math.PI / 4 + sway * 0.01);
+    ctx.fillRect(-3.5, -3.5, 7, 7);
+    ctx.restore();
+    ctx.globalAlpha *= 0.72;
+    ctx.fillStyle = "rgba(238,231,213,.68)";
+    ellipse(ctx, x + 4 + sway * 0.3, y - height * 0.58, 4.5, 1.8, -0.45);
+    ellipse(ctx, x - 4 + sway * 0.2, y - height * 0.4, 4.5, 1.8, 0.45);
+  }
+
+  function drawGateBeacon(ctx, x, y, variant, sway) {
+    const height = 24 + variant * 5;
+    ctx.strokeStyle = "rgba(195,164,104,.54)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + sway * 0.22, y - height);
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(x + sway * 0.22, y - height * 0.72);
+    ctx.rotate(sway * 0.012);
+    ctx.strokeStyle = "rgba(120,147,164,.68)";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 8 + variant * 1.5, 3.5, 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 6, 2.5, -0.45, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = "rgba(195,164,104,.72)";
+    ellipse(ctx, x + sway * 0.22, y - height, 2.4, 2.4, 0);
+    ctx.globalAlpha *= 0.72;
+    ctx.fillStyle = "rgba(120,147,164,.5)";
+    ctx.beginPath();
+    ctx.moveTo(x + 1, y - height * 0.9);
+    ctx.quadraticCurveTo(x + 13 + sway, y - height * 0.76, x + 18 + sway, y - height * 0.58);
+    ctx.quadraticCurveTo(x + 10 + sway, y - height * 0.62, x + 1, y - height * 0.7);
+    ctx.fill();
+  }
+
+  function drawMirrorReed(ctx, x, y, variant, sway) {
+    const height = 22 + variant * 5;
+    ctx.strokeStyle = "rgba(120,147,164,.52)";
+    ctx.lineWidth = 1.2;
+    for (let reed = -1; reed <= 1; reed += 1) {
+      const offset = reed * 6;
+      const localHeight = height - Math.abs(reed) * 5;
+      ctx.beginPath();
+      ctx.moveTo(x + offset, y);
+      ctx.quadraticCurveTo(x + offset + sway * (0.45 + reed * 0.08), y - localHeight * 0.55, x + offset + sway, y - localHeight);
+      ctx.stroke();
+    }
+    ctx.save();
+    ctx.translate(x + sway, y - height);
+    ctx.rotate(Math.PI / 4 + sway * 0.008);
+    ctx.fillStyle = variant % 2 ? "rgba(109,168,149,.42)" : "rgba(120,147,164,.5)";
+    ctx.fillRect(-5, -5, 10, 10);
+    ctx.strokeStyle = "rgba(238,231,213,.42)";
+    ctx.strokeRect(-5, -5, 10, 10);
+    ctx.restore();
+  }
+
+  /**
+   * Deterministic, non-colliding world props. They sit behind authored solids,
+   * giving each star domain a repeatable silhouette language without adding
+   * simulation entities or changing a route.
+   */
+  function drawScenery(ctx, level, options = {}) {
+    const platforms = Array.isArray(level?.platforms) ? level.platforms : [];
+    const worldId = level?.world?.id || "world1";
+    const kind = sceneryKind(worldId);
+    const seed = stringSeed(level?.id || worldId);
+    const time = Number(options.time) || 0;
+    const still = options.reducedMotion === true;
+    ctx.save();
+    ctx.globalAlpha = options.fx === false ? 0.24 : 0.48;
+    for (let index = 0; index < platforms.length; index += 1) {
+      const platform = platforms[index];
+      if (!platform || platform.broken || platform.phase || platform.type === "breakable" || platform.w < 96) continue;
+      if ((index + seed) % 3 !== 0) continue;
+      const variant = (seed + index) % 3;
+      const x = platform.x + 22 + ((seed + index * 37) % Math.max(24, Math.floor(platform.w - 44)));
+      const sway = still ? 0 : Math.sin(time * 1.2 + index * 1.7) * (1.5 + variant * 0.55);
+      ctx.save();
+      if (kind === "gate-beacon") drawGateBeacon(ctx, x, platform.y, variant, sway);
+      else if (kind === "mirror-reed") drawMirrorReed(ctx, x, platform.y, variant, sway);
+      else drawStarBloom(ctx, x, platform.y, variant, sway);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   function drawPlatform(ctx, platform) {
     ctx.save();
     const color = platform.type === "phase"
@@ -642,11 +757,71 @@
     ctx.restore();
   }
 
+  function drawParticle(ctx, particle, options = {}) {
+    if (!particle) return;
+    const alpha = Math.max(0, Math.min(1, Number(options.alpha) || 0));
+    const progress = 1 - alpha;
+    const radius = Math.max(0.5, Number(particle.r) || 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    if (particle.glow) {
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(particle.x, particle.y, 2, particle.x, particle.y, radius * 1.6);
+      glow.addColorStop(0, particle.color);
+      glow.addColorStop(0.55, "rgba(255,247,213,.45)");
+      glow.addColorStop(1, "rgba(255,247,213,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(particle.x, particle.y, radius * 1.6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      return;
+    }
+
+    ctx.translate(particle.x, particle.y);
+    ctx.rotate(Number(particle.rotation) || 0);
+    ctx.fillStyle = particle.color;
+    ctx.strokeStyle = particle.color;
+    if (particle.shape === "shard") {
+      ctx.beginPath();
+      ctx.moveTo(0, -radius * 1.8);
+      ctx.lineTo(radius * 0.72, 0);
+      ctx.lineTo(0, radius * 1.8);
+      ctx.lineTo(-radius * 0.72, 0);
+      ctx.closePath();
+      ctx.fill();
+    } else if (particle.shape === "streak") {
+      ctx.lineWidth = Math.max(1, radius * 0.58);
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(-radius * 2.4, 0);
+      ctx.lineTo(radius * 1.15, 0);
+      ctx.stroke();
+    } else if (particle.shape === "ring") {
+      ctx.globalAlpha = alpha * 0.72;
+      ctx.lineWidth = Math.max(1, radius * 0.14);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius * (0.7 + progress * 1.5), radius * (0.22 + progress * 0.45), 0, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (particle.shape === "petal") {
+      ctx.beginPath();
+      ctx.ellipse(0, 0, radius * 1.35, radius * 0.55, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
   const api = {
     MATERIAL,
     phaseColor,
     powerupColor,
     drawBackground,
+    sceneryKind,
+    drawScenery,
     drawPlatform,
     drawHazard,
     drawSpring,
@@ -656,6 +831,7 @@
     drawWind,
     portalColor,
     drawPortal,
+    drawParticle,
   };
 
   root.NiniYuanPlayfieldMaterial = api;

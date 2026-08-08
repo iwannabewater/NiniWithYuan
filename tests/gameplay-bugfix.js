@@ -2,6 +2,8 @@ const fs = require("node:fs");
 
 const source = fs.readFileSync("src/game.js", "utf8");
 const playfieldSource = fs.readFileSync("src/render/playfield-material.js", "utf8");
+const creatureSource = fs.readFileSync("src/render/creature-material.js", "utf8");
+const CreatureMaterial = require("../src/render/creature-material.js");
 
 function constant(name) {
   const match = source.match(new RegExp(`const ${name} = ([0-9.]+);`));
@@ -138,15 +140,27 @@ if (!source.includes('if (e.type === "wisp")') || !source.includes("e.y = e.base
   throw new Error("Wisp enemies should keep bounded hovering separate from ground enemy walking");
 }
 
-if (!source.includes("function drawGroundEnemy(e)") || !source.includes("footY + 1")) {
+const groundPose = CreatureMaterial.resolveCreaturePose({ type: "slime", phase: 0.5, vx: 90 });
+if (groundPose.scale < 1.28 || !creatureSource.includes("footY + 1")) {
   throw new Error("Ground enemies need a visible contact shadow/foot treatment to avoid floating visuals");
 }
 
+const raisedShadow = CreatureMaterial.wispShadowGeometry(
+  { x: 80, y: 90, baseY: 120, w: enemyWidth, h: enemyHeight },
+  { floatGap: wispFloatGap },
+  { scale: 1.28 },
+);
+const loweredShadow = CreatureMaterial.wispShadowGeometry(
+  { x: 80, y: 102, baseY: 120, w: enemyWidth, h: enemyHeight },
+  { floatGap: wispFloatGap },
+  { scale: 1.28 },
+);
 if (
-  !source.includes("function drawWispEnemy(e)") ||
-  !source.includes("WISP_FLOAT_GAP - hoverOffset") ||
-  !source.includes("wingLift") ||
-  !source.includes("ctx.createRadialGradient")
+  !creatureSource.includes("function drawWisp(") ||
+  !creatureSource.includes("function wispShadowGeometry(") ||
+  raisedShadow.y !== loweredShadow.y ||
+  !creatureSource.includes("const wing =") ||
+  !creatureSource.includes("ctx.createRadialGradient")
 ) {
   throw new Error("Wisp enemies need a distinct flying silhouette with a distant shadow, wings, and glow core");
 }

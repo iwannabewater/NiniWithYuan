@@ -1,6 +1,8 @@
 # Android Testing
 
-The Android app is a landscape WebView wrapper around the same local assets used by the browser build. A v1.9.0 release is ready only after the repository checks, APK inspection, and device review below have passed on the release commit.
+The Android app is a landscape WebView wrapper around the same local assets used by the browser build. A release candidate is ready only after the repository checks, APK inspection, and device review below have passed on the exact release commit.
+
+The repository currently reports web and Android version `2.1.0` with Android `versionCode=22`. These values remain a release candidate until the final tag, CI run, GitHub Release, and downloaded APK all point to the same commit.
 
 ## Build Prerequisites
 
@@ -17,15 +19,53 @@ npm run capture:store
 npm run build:android
 ```
 
-The build writes `dist/NiniYuan.apk`. Build output, packaged WebView assets, and store captures remain ignored and must not be committed.
+The local build writes `dist/NiniYuan.apk`. Without explicit signing variables it uses an ignored local debug keystore, so it is suitable for smoke and device testing only. It is not a GitHub Release candidate and must not be published. Record and verify its checksum from the output directory:
+
+```bash
+(
+  cd dist
+  shasum -a 256 NiniYuan.apk > NiniYuan.apk.sha256
+  shasum -a 256 -c NiniYuan.apk.sha256
+)
+```
+
+Build output, checksum sidecars, packaged WebView assets, signing material, and store captures remain ignored and must not be committed.
+
+On a main-branch push, `Android Build Smoke` restores the protected historical APK signer from `ANDROID_SIGNING_KEYSTORE_BASE64`, `ANDROID_SIGNING_STORE_PASSWORD`, and `ANDROID_SIGNING_KEY_PASSWORD`, using alias `androiddebugkey`. The workflow removes the restored file immediately after packaging. Pull requests receive an ephemeral smoke signer and never upload a release candidate.
+
+The main-branch workflow verifies package badging, v1/v2/v3 signatures, required runtime assets, the certificate identity, and the SHA-256 checksum. The required signer certificate SHA-256 is:
+
+```text
+23fe694d4adfb093a752c6a90f23086c6744bc520c89656079d78414979457e7
+```
+
+CI then creates a GitHub build-provenance attestation and publishes the APK, checksum sidecar, and three inspection records as `NiniYuan-<commit-sha>` for 14 days. Download only the artifact whose full commit SHA equals the intended release commit:
+
+```bash
+gh run view <run-id> --repo iwannabewater/NiniWithYuan \
+  --json headSha --jq .headSha
+gh run download <run-id> --name "NiniYuan-<commit-sha>" --dir dist/ci
+(
+  cd dist/ci
+  shasum -a 256 -c NiniYuan.apk.sha256
+)
+gh attestation verify dist/ci/NiniYuan.apk \
+  --repo iwannabewater/NiniWithYuan \
+  --signer-workflow iwannabewater/NiniWithYuan/.github/workflows/android-build-smoke.yml \
+  --source-ref refs/heads/main \
+  --source-digest <commit-sha> \
+  --deny-self-hosted-runners
+```
+
+The attestation subject digest, artifact checksum, workflow run `headSha`, and intended release commit must all agree. A checksum sidecar alone does not establish source provenance.
 
 ## Install and Launch
 
-Start a phone emulator or connect a test device, then install the current artifact:
+Start a phone emulator or connect a test device, then install the downloaded CI candidate. Use the local path only for pre-release smoke testing:
 
 ```bash
 adb uninstall com.iwannabewater.niniyuan || true
-adb install -r dist/NiniYuan.apk
+adb install -r dist/ci/NiniYuan.apk
 adb shell am start -n com.iwannabewater.niniyuan/.MainActivity
 ```
 
@@ -60,26 +100,39 @@ Set the build-tools path once:
 BUILD_TOOLS="${ANDROID_HOME:-$HOME/Android}/build-tools/36.0.0"
 ```
 
-Badging for v1.9.0 must report package `com.iwannabewater.niniyuan`, `versionCode=19`, `versionName=1.9.0`, `minSdkVersion=23`, and `targetSdkVersion=36`:
+Read the expected version from `package.json` and `android/app/src/main/AndroidManifest.xml` on the release commit. Badging must report package `com.iwannabewater.niniyuan`, `versionName=2.1.0`, `versionCode=22`, `minSdkVersion=23`, and `targetSdkVersion=36`.
 
 ```bash
-"$BUILD_TOOLS/aapt" dump badging dist/NiniYuan.apk
+"$BUILD_TOOLS/aapt" dump badging dist/ci/NiniYuan.apk
 ```
 
-Verify the signature and record the output. Schemes v1, v2, and v3 must report `true`:
+Verify the signature and record the output. Schemes v1, v2, and v3 must report `true`, and the signer digest must equal the required value above:
 
 ```bash
-"$BUILD_TOOLS/apksigner" verify --verbose --print-certs dist/NiniYuan.apk
+"$BUILD_TOOLS/apksigner" verify --verbose --print-certs dist/ci/NiniYuan.apk
 ```
 
 Inspect the package for the current runtime, local fonts, and bundled font license:
 
 ```bash
-unzip -l dist/NiniYuan.apk | rg "assets/(index.html|styles.css|service-worker.js|src/game.js|src/core/input-state.js|src/render/character-motion.js|assets/fonts/.+woff2|assets/fonts/NOTICE.md|assets/fonts/OFL.txt)"
-shasum -a 256 dist/NiniYuan.apk
+unzip -l dist/ci/NiniYuan.apk | rg "assets/(index.html|styles.css|service-worker.js|src/game.js|src/core/(input-state|progression|fixed-step).js|src/render/(character-motion|character-effects|creature-material|playfield-material|warden).js|assets/fonts/.+woff2|assets/fonts/NOTICE.md|assets/fonts/OFL.txt)"
+(
+  cd dist/ci
+  shasum -a 256 -c NiniYuan.apk.sha256
+)
 ```
 
-Keep the SHA-256 value with the release record. After GitHub release upload, download the published asset and compare its hash and badging with the local artifact.
+Only the exact downloaded main-branch CI bytes may become GitHub Release assets. Create the tag at the verified workflow `headSha`, confirm `git rev-parse v2.1.0^{commit}` returns the same commit, create a draft Release, and upload `NiniYuan.apk` with `NiniYuan.apk.sha256`. Repository release immutability is enabled and must remain enabled through publication; verify the repository endpoint reports `"enabled": true`. Never substitute a local or pull-request APK, even if its filename and version match.
+
+After publishing, download both locked assets to `dist/release`, repeat the build-attestation, checksum, badging, signer, and archive-content checks, then verify GitHub's immutable-release attestation and each published asset:
+
+```bash
+gh release verify v2.1.0 --repo iwannabewater/NiniWithYuan
+gh release verify-asset v2.1.0 dist/release/NiniYuan.apk \
+  --repo iwannabewater/NiniWithYuan
+gh release verify-asset v2.1.0 dist/release/NiniYuan.apk.sha256 \
+  --repo iwannabewater/NiniWithYuan
+```
 
 ## Device Matrix
 

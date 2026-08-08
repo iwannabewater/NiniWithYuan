@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-v2.0.0 keeps the fifteen-chapter structure and core physics under **宋式星图器物幻想 / Song-atlas Night Observatory**. The release adds a meta-progression layer, three world-finale guardians, mid-chapter checkpoints, chain scoring, and an assist mode without changing routes, abilities, or movement tuning. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
+v2.1.0, **星野律动 / Starfield Cadence**, keeps the fifteen-chapter structure, schema 4 save, and core physics under **宋式星图器物幻想 / Song-atlas Night Observatory**. It improves temporal presentation, compact-screen creature readability, world-specific scenery, guardian encounter clarity, HUD legibility, and release-candidate artifact handling. The meta-progression, checkpoints, chain scoring, assist rules, routes, abilities, and movement tuning remain unchanged. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
 
 ## Fiction
 
@@ -27,7 +27,7 @@ Playable characters:
 - Every chapter begins with the player bottom-aligned to the authored opening platform, grounded, and eligible for a buffered first jump on the next fixed step.
 - The main loop clears accumulated time and all transient input after background or foreground transitions.
 - Rendering interpolates the previous and current fixed-step samples for the player and camera, then quantizes the result to the device-pixel grid. Portals, respawns, lifecycle resets, and hit-stop recovery synchronize those samples so presentation never rewinds across a discontinuity.
-- Character poses and atlas frames use simulation time. Animation state belongs to the presentation layer and does not alter player entities, collision, or fixed-step rules.
+- Character poses and atlas frames use simulation time. Continuous pose fields converge from the displayed pose by elapsed-time damping rather than a fixed amount per rendered frame, so 30, 60, and 120 Hz displays settle on the same timeline. Animation state belongs to the presentation layer and does not alter player entities, collision, or fixed-step rules.
 - Presentation-only hit-stop, camera lookahead, landing dust, shake clamping, and respawn veil polish do not change jump height, gravity, dash distance, coyote time, jump buffer, or level solvability.
 
 ### Wind Fields
@@ -36,7 +36,9 @@ Wind fields appear in chapter 3 and chapter 5. They are directional horizontal c
 
 ### Enemies
 
-Slimes and embers are ground enemies across all chapters. Two hostiles arrive in v2.0.0. 哨星 sentries are fixed emplacements: they face the player, telegraph, and fire one slow bolt, so the answer is position rather than reaction speed. 石胄 warders are shelled walkers that deflect projectiles and must be answered with a stomp, a dash, or invulnerability. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, use their current supporting platform as the patrol boundary, and show a quiet ground intent rail so the player can read their path before contact. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow, no feet, and a dashed hover tether. Projectile hits add a short ivory flash on the enemy body without changing enemy health, patrol, or collision rules.
+Slimes and embers are ground enemies across all chapters. 哨星 sentries are fixed emplacements: they face the player, telegraph, and fire one slow bolt, so the answer is position rather than reaction speed. 石胄 warders are shelled walkers that deflect projectiles and must be answered with a stomp, a dash, or invulnerability. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, use their current supporting platform as the patrol boundary, and show a quiet ground intent rail so the player can read their path before contact. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow, no feet, and a dashed hover tether. Projectile hits add a short ivory flash on the enemy body without changing enemy health, patrol, or collision rules.
+
+All common creature drawing now passes through a stateless material renderer. Ground creatures use a 1.36 presentation scale; wisps, sentries, and warders use at least 1.28. These scales enlarge only the drawn silhouette around its contact anchor. Entity coordinates, collision boxes, patrol boundaries, health, and physics stay authoritative in `src/game.js`.
 
 ### Skills
 
@@ -46,6 +48,8 @@ Slimes and embers are ground enemies across all chapters. Two hostiles arrive in
 | Yuan | 青衡破风 | Provides fast horizontal movement, breaks crystals, and defeats enemies on contact. |
 
 An eligible Nini skill press preserves 120 ms of glide intent. A short tap during takeoff or airborne play therefore starts a readable glide instead of disappearing between fixed steps. The skill cooldown begins only when the glide starts.
+
+Landing, projectile release, and skill states receive presentation-only action envelopes. A landing draws a brief contact mark, a shot draws a cast seal, Nini's skill opens a star-dial orbit, and Yuan's skill draws a gui-sword cut. Run and skill states may reuse the current crisp atlas frame as a restrained trail. Reduced-motion play removes those trails while retaining the contact, cast, orbit, and cut marks. These effects do not extend an action, move the player, or alter a collision box.
 
 ### Projectiles
 
@@ -88,20 +92,35 @@ arena wakes it, seals the arena's left edge, and locks the gate until it falls.
 
 | Chapter | Warden | Star force | Arena |
 | --- | --- | --- | --- |
-| 5 Aurora Citadel | 极光守望者 | 16 | 22 tiles |
-| 10 Island Star Core | 群岛守望者 | 20 | 13 tiles |
-| 15 Phase Tide Court | 星潮守望者 | 24 | 24 tiles |
+| 5 Aurora Citadel | 极光守望者 | 16 | 20 tiles |
+| 10 Island Star Core | 群岛守望者 | 20 | 12 tiles |
+| 15 Phase Tide Court | 星潮守望者 | 24 | 22 tiles |
 
-One data-authored encounter model serves all three. Three stages escalate as star
-force drops: each widens the attack pool and shortens the cadence. Attacks are
-`volley` (an aimed fan of bolts), `rain` (falling shards over telegraphed ground
-marks), `sweep` (a grounded charge across the arena), and `summon` (two wisps).
+One data-authored encounter model serves all three. Each guardian owns a
+deterministic three-stage profile. Stages advance as star force crosses 66 and
+33 percent.
+
+| Profile | Stage 1 | Stage 2 | Stage 3 |
+| --- | --- | --- | --- |
+| Aurora | 2.4 s: `volley`, `sweep` | 2.0 s: `volley`, `rain`, `sweep` | 1.65 s: `rain`, `sweep`, `volley`, `summon` |
+| Core | 2.5 s: `sweep`, `volley` | 2.05 s: `sweep`, `summon`, `volley` | 1.7 s: `volley`, `summon`, `sweep`, `rain` |
+| Tide | 2.3 s: `rain`, `volley` | 1.9 s: `rain`, `sweep`, `volley` | 1.55 s: `rain`, `volley`, `summon`, `sweep` |
+
+`volley` is an aimed fan of bolts, `rain` drops shards over telegraphed ground
+marks, `sweep` charges across the arena, and `summon` creates two wisps. Aurora
+uses a radial crown, Core uses squared satellites, and Tide uses crescent arcs.
+The recovery core opens visibly; low star force adds fracture marks without
+changing encounter geometry.
 
 Every attack opens with a 0.55 second telegraph. The guardian then descends into
-player reach for its recovery beat, which is the only window where projectiles,
-stomps, and dashes land, and also the only window where its body can hurt the
-player at ground level. Defeating a guardian without taking damage is recorded
-separately.
+player reach for its recovery beat. `damageWarden` is the sole damage arbitration
+entry, and only `recover` accepts projectile, stomp, or impact damage. A hit on a
+closed shell shows the existing moon-white armour flash, `护甲` label, and deflect
+cue; it does not reduce star force, increment the hurt count, award a chain link,
+or request hit-stop. Projectile consumption and pierce expenditure remain the
+same, stomps still bounce, impact attacks still spend their contact cooldown, and
+ordinary body contact still hurts the player. Defeating a guardian without taking
+damage is recorded separately.
 
 ### Power-Ups
 
@@ -120,6 +139,12 @@ World 2 introduces paired star gates. A gate activates only when the player's bo
 ### Phase-Tide Bridges
 
 World 3 introduces phase-tide bridges. A level-local tide clock alternates between phase `a` and phase `b`. Phase-tagged platforms, moving platforms, hazards, coins, and gems participate only when their phase is active. Inactive phase objects render as ghosted mirror silhouettes so the player can read the next route before committing, and the HUD reports the active phase with a one-decimal remaining-time countdown. The mechanic does not change fixed-step physics, character jump/dash/glide tuning, or input handling.
+
+### World Presentation Grammar
+
+Each world derives non-colliding props from its level id and authored platform list. World 1 places star blooms, World 2 places silk-ring gate beacons, and World 3 places mirror reeds. The selection and placement are deterministic, props draw behind authored solids, and reduced-motion play freezes their sway. They never enter the entity list or add collision geometry.
+
+Gameplay particles use a stateless shape renderer instead of treating every event as the same circle. Jumps and stomps can use rings, dashes and wind use streaks, and crystal or guardian impacts use shards; orb, petal, and glow materials remain available to the same particle system. Shape, gravity, drag, rotation, and spin are presentation fields. Particle lifetime remains the simulation-owned limit.
 
 ### Star Marrow
 
@@ -203,7 +228,7 @@ The Astral Record screen opens with an instrument summary of achievements, star 
 
 Character selection uses horizontal artifact sheets with portrait, ability copy, and an explicit selected state. On narrow portrait screens, the sheets become a swipeable row. Chapter selection groups five chapters into each named world track, marks the current step, and states why locked chapters are unavailable. Each card carries a trial medal, a star-marrow mark, and, on the three finales, a warden mark, placed on the card footer opposite the state line. Settings use separate Audio, Display, Touch, Assist, and Local Data groups with live values for every range.
 
-The HUD separates character, health, and status on the left from resources, time, skill, and pause on the right. A narrow route line shows chapter progress. A chain readout appears only while a chain is live. A warden bar replaces the route line's role during a guardian encounter, carrying the guardian's name, its current tell, and remaining star force. Responsive rules remove secondary readings before essential controls, while the World 3 phase status remains visible. Touch play uses a sliding direction rail on the left and separate jump, skill, and projectile seals on the right; saved size and opacity settings apply without reducing the minimum touch target.
+The HUD separates character, health, and status on the left from resources, time, skill, and pause on the right. Every visible gameplay instrument keeps a 13 px default type floor, including compact landscape and the phase status. A narrow route line shows chapter progress. A chain readout appears only while a chain is live. A warden bar replaces the route line's role during a guardian encounter, carrying the guardian's name, its current tell, and remaining star force. Responsive rules remove secondary readings before essential controls, while the World 3 phase status remains visible. During play, transient notices use the top-center safe rail so they do not cover either character or nearby pickups; menu notices retain their lower placement. Touch play uses a sliding direction rail on the left and separate jump, skill, and projectile seals on the right; saved size and opacity settings apply without reducing the minimum touch target.
 
 On a coarse-pointer portrait viewport, gameplay pauses behind an orientation dialog. The player may continue in portrait or return to the menu, and rotating the device resumes the normal layout. Pause, outcome, orientation, and easter-egg dialogs isolate the inactive surfaces, contain keyboard focus, clear gameplay input, and freeze simulation where required.
 
@@ -263,6 +288,12 @@ Loading applies schema validation, type clamping, and chapter ID allow-listing. 
 
 Record maps collapse to exactly 1 and reject any key that is not an allow-listed chapter or achievement id, so a hand-edited save cannot smuggle arbitrary numbers into a count. Assist toggles accept only a real boolean `true`, and assist speed clamps to 60 through 100. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
+## Release Candidate Artifacts
+
+The v2.1.0 candidate aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.1.0`; Android uses `versionCode=22`. The offline asset list includes the character-effects and creature-material render helpers.
+
+The Android build workflow writes and verifies `NiniYuan.apk.sha256` before upload. It uploads the APK and checksum together as `NiniYuan-<commit-sha>`, retains the artifact for 14 days without recompression, and fails when either candidate file is missing. A final release still requires CI on the intended release commit, downloaded-artifact checksum and package readback, device review, and live web readback.
+
 ## Planned Scope
 
 - v1.1.0: security, technical foundation, visual system, BGM, release documentation, and Android landscape support.
@@ -282,4 +313,5 @@ Record maps collapse to exactly 1 and reject any key that is not an allow-listed
 - v1.8.0: unified multi-source input, 120 ms glide intent, simulation-time character motion, fixed-step presentation interpolation, responsive journey and selection layouts, grouped HUD instruments, adjustable touch and display settings, and a choice-based portrait orientation dialog. Chapters, abilities, and base movement tuning remain unchanged; the save schema advances to 3 for the new preferences.
 - v1.9.0: presentation pose blending, pure input edge helpers, quieter ambient and brand ornament, calmer structural motion, and clearer touch press seals. Physics, chapters, and save schema remain unchanged.
 - v2.0.0: three world-finale wardens, star lanterns, star marrow, chain scoring, trial medals, a thirty-entry astral record, assist mode, two hostile types, and a deeper Canvas playfield. The fifteen chapters, character movement tuning, and fixed-step physics are unchanged; the save schema advances to 4.
+- v2.1.0: elapsed-time pose damping, action contact and cast effects, stateless creature materials, three deterministic world prop grammars, shaped particles, a 13 px HUD floor, recover-only guardian damage, distinct guardian profiles and silhouettes, and checksum-backed Android release candidates. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
 - Future release: local replay or ghost racing, subject to a separate scope review.

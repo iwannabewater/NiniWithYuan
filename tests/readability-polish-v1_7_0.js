@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 
 const source = fs.readFileSync("src/game.js", "utf8");
+const creatureSource = fs.readFileSync("src/render/creature-material.js", "utf8");
 const accessibility = fs.readFileSync("tests/e2e/accessibility.js", "utf8");
 
 const buildStart = source.indexOf("  function buildLevels()");
@@ -26,11 +27,11 @@ for (const level of world3) {
 assert.ok(source.includes("ENEMY_HIT_FLASH_DURATION"), "enemy hit feedback should use a named duration");
 assert.ok(source.includes("e.hitTimer = ENEMY_HIT_FLASH_DURATION"), "projectile impacts should mark enemies as visibly hit");
 assert.ok(source.includes("e.hitTimer = Math.max(0, (e.hitTimer || 0) - dt)"), "enemy hit feedback should decay in the enemy update loop");
-assert.ok(source.includes("function drawEnemyIntent"), "enemy rendering should include a low-noise intent cue");
-assert.ok(source.includes("function drawEnemyHitFlash"), "enemy rendering should include a visible impact halo");
-assert.ok(source.includes("function enemyPalette"), "ground enemies should use type-specific visual palettes");
-assert.ok(source.includes("enemySupportPlatform(e)") && source.includes("arrowX"), "ground enemy intent should be tied to real patrol support");
-assert.ok(source.includes("ctx.setLineDash([4, 7])"), "wisp intent should use a distinct tether rather than ground feet");
+assert.ok(creatureSource.includes("function drawPatrolIntent"), "enemy rendering should include a low-noise intent cue");
+assert.ok(creatureSource.includes("function drawHitContour"), "enemy rendering should include a visible impact halo");
+assert.ok(creatureSource.includes("function paletteFor"), "ground enemies should use type-specific visual palettes");
+assert.ok(source.includes("support: e.type === \"wisp\" ? null : enemySupportPlatform(e)") && creatureSource.includes("arrowX"), "ground enemy intent should be tied to real patrol support");
+assert.ok(creatureSource.includes("ctx.setLineDash([4, 7])"), "wisp intent should use a distinct tether rather than ground feet");
 
 assert.ok(accessibility.includes("function clickActiveBack"), "accessibility e2e should click back through a stable helper");
 assert.ok(accessibility.includes(".getAnimations()"), "accessibility e2e should wait for the active screen transition");

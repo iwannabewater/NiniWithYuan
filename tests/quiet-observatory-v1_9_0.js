@@ -113,7 +113,10 @@ for (const marker of [
 }
 assert.doesNotMatch(css, /transition:\s*all\b/);
 assert.doesNotMatch(css, /backdrop-filter\s*:/);
-assert.match(css, /font-size: calc\(10px \* var\(--hud-scale\)\)|font-size: calc\(12\.5px \* var\(--hud-scale\)\)/);
+const hudFloorRules = css.match(/font-size: calc\(13px \* var\(--hud-scale\)\);/g) || [];
+assert.ok(hudFloorRules.length >= 5, "default, phase-critical, icon, landscape, and portrait HUD type should share the 13px floor");
+assert.doesNotMatch(css, /font-size: calc\((?:10|12\.5)px \* var\(--hud-scale\)\)/);
+assert.ok((css.match(/#overlay\.active \+ \.toast/g) || []).length >= 3, "gameplay toast should keep a scoped safe-rail position across viewport modes");
 assert.ok(game.includes('shadowColor = "transparent"'), "character sprites must not soft-blur through canvas shadow");
 assert.ok(game.includes("never apply canvas shadowBlur to the sprite bitmap"), "sprite draw path should keep the crisp-bitmap rule");
 assert.ok(!/ctx\.shadowBlur = 6 \* scale/.test(game), "sprite draw must not reintroduce soft shadow blur on the bitmap");

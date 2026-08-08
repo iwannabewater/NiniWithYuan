@@ -2246,6 +2246,23 @@
     transform: translateX(-50%) translateY(0);
   }
 
+  /* Keep gameplay notices in the clear top-center rail instead of over the
+     protagonist and nearby pickups. Menu notices retain the lower position. */
+  #overlay.active + .toast {
+    top: calc(max(12px, env(safe-area-inset-top)) + 52px);
+  }
+
+  /* The guaranteed guardian wake notice and the encounter bar share the
+     center rail. Stack the guardian below a live notice, then return it to its
+     compact resting position when the notice clears. */
+  body:has(#toast.show) .warden-bar:not([hidden]) {
+    top: calc(max(12px, env(safe-area-inset-top)) + 104px);
+  }
+
+  body:has(#toast.show) .warden-bar:not([hidden]) ~ .hud-chain {
+    top: calc(max(12px, env(safe-area-inset-top)) + 152px);
+  }
+
   /* ------- Modal --------------------------------------------------------- */
 
   .modal {
@@ -2744,7 +2761,7 @@
   .warden-bar-phase {
     min-width: 3em;
     color: var(--c-rose-300);
-    font-size: calc(12px * var(--hud-scale));
+    font-size: calc(13px * var(--hud-scale));
     letter-spacing: 0.16em;
     text-shadow: 0 1px 12px rgba(0, 0, 0, 0.8);
   }
@@ -3338,11 +3355,11 @@
   @keyframes tips-rise {
     from {
       opacity: 0;
-      transform: translateY(-4px);
+      translate: 0 -4px;
     }
     to {
       opacity: 1;
-      transform: translateY(0);
+      translate: 0 0;
     }
   }
 
@@ -3595,10 +3612,12 @@
 
     .control-tips {
       top: auto;
-      right: max(18px, env(safe-area-inset-right));
-      bottom: calc(max(18px, env(safe-area-inset-bottom)) + min(var(--touch-size), 20vw) + 16px);
-      left: max(18px, env(safe-area-inset-left));
+      right: auto;
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: 50%;
+      width: min(720px, calc(100vw - 36px));
       justify-content: center;
+      transform: translateX(-50%);
     }
 
     .control-tips span {
@@ -3608,6 +3627,10 @@
 
     .toast {
       top: calc(max(12px, env(safe-area-inset-top)) + 304px);
+    }
+
+    #overlay.active + .toast {
+      top: calc(max(12px, env(safe-area-inset-top)) + 52px);
     }
 
     .settings-list label {
@@ -3841,7 +3864,7 @@
       display: inline-flex;
       min-width: 112px;
       padding-inline: 8px;
-      font-size: 11px;
+      font-size: calc(13px * var(--hud-scale));
     }
 
     .hud-pill.skill-state {
@@ -3903,6 +3926,18 @@
     .toast {
       top: calc(max(8px, env(safe-area-inset-top)) + 110px);
       padding: 10px 14px;
+    }
+
+    #overlay.active + .toast {
+      top: calc(max(8px, env(safe-area-inset-top)) + 48px);
+    }
+
+    body:has(#toast.show) .warden-bar:not([hidden]) {
+      top: calc(max(8px, env(safe-area-inset-top)) + 92px);
+    }
+
+    body:has(#toast.show) .warden-bar:not([hidden]) ~ .hud-chain {
+      top: calc(max(8px, env(safe-area-inset-top)) + 136px);
     }
   }
 
@@ -4771,7 +4806,7 @@
     place-items: center;
     border: 1px solid rgba(195, 164, 104, 0.28);
     color: var(--c-gold-200);
-    font-size: 10px;
+    font-size: calc(13px * var(--hud-scale));
   }
 
   .bossbar {
@@ -5248,7 +5283,7 @@
       min-height: calc(30px * var(--hud-scale));
       padding: calc(4px * var(--hud-scale)) calc(7px * var(--hud-scale));
       border-radius: 0;
-      font-size: calc(10px * var(--hud-scale));
+      font-size: calc(13px * var(--hud-scale));
     }
 
     .hud-pill.character {
@@ -5462,7 +5497,7 @@
     .hud-button {
       min-height: calc(32px * var(--hud-scale));
       padding: calc(5px * var(--hud-scale)) calc(7px * var(--hud-scale));
-      font-size: calc(10px * var(--hud-scale));
+      font-size: calc(13px * var(--hud-scale));
     }
 
     .hud-pill.character,
@@ -5481,6 +5516,27 @@
     .bossbar {
       top: calc(max(12px, env(safe-area-inset-top)) + 72px);
       width: min(320px, calc(100vw - 32px));
+    }
+
+    #overlay.active + .toast {
+      top: calc(max(12px, env(safe-area-inset-top)) + 92px);
+    }
+
+    .warden-bar {
+      top: calc(max(12px, env(safe-area-inset-top)) + 104px);
+      width: min(420px, calc(100vw - 32px));
+    }
+
+    .warden-bar:not([hidden]) ~ .hud-chain {
+      top: calc(max(12px, env(safe-area-inset-top)) + 153px);
+    }
+
+    body:has(#toast.show) .warden-bar:not([hidden]) {
+      top: calc(max(12px, env(safe-area-inset-top)) + 145px);
+    }
+
+    body:has(#toast.show) .warden-bar:not([hidden]) ~ .hud-chain {
+      top: calc(max(12px, env(safe-area-inset-top)) + 194px);
     }
 
     .control-tips {
@@ -5792,7 +5848,7 @@
   .hud-button {
     min-height: calc(32px * var(--hud-scale));
     padding: calc(5px * var(--hud-scale)) calc(9px * var(--hud-scale));
-    font-size: calc(12.5px * var(--hud-scale));
+    font-size: calc(13px * var(--hud-scale));
   }
 
   .hud-pill.character {

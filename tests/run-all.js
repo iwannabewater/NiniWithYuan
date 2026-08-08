@@ -1,6 +1,8 @@
 const { spawnSync } = require("node:child_process");
 
 const checks = [
+  ["bash", ["-n", "scripts/build-android.sh"]],
+  ["bash", ["-n", "scripts/inspect-android.sh"]],
   ["node", ["--check", "src/core/storage.js"]],
   ["node", ["--check", "src/core/audio.js"]],
   ["node", ["--check", "src/core/input-state.js"]],
@@ -8,7 +10,10 @@ const checks = [
   ["node", ["--check", "src/core/progression.js"]],
   ["node", ["--check", "src/core/fixed-step.js"]],
   ["node", ["--check", "src/render/hud.js"]],
+  ["node", ["--check", "src/render/character-motion.js"]],
+  ["node", ["--check", "src/render/character-effects.js"]],
   ["node", ["--check", "src/render/playfield-material.js"]],
+  ["node", ["--check", "src/render/creature-material.js"]],
   ["node", ["--check", "src/render/warden.js"]],
   ["node", ["--check", "src/game.js"]],
   ["node", ["--check", "service-worker.js"]],
@@ -23,6 +28,8 @@ const checks = [
   ["node", ["tests/character-atlas.js"]],
   ["node", ["tests/character-motion.js"]],
   ["node", ["tests/playfield-material.js"]],
+  ["node", ["tests/presentation-materials.js"]],
+  ["node", ["tests/starfield-cadence-v2_1_0.js"]],
   ["node", ["tests/song-atlas-ui.js"]],
   ["node", ["tests/docs-links.js"]],
   ["node", ["tests/render-touch-polish.js"]],

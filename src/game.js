@@ -49,7 +49,9 @@
   const FixedStep = window.NiniFixedStep;
   const Hud = window.NiniYuanHud;
   const CharacterMotion = window.NiniYuanCharacterMotion;
+  const CharacterEffects = window.NiniYuanCharacterEffects;
   const Playfield = window.NiniYuanPlayfieldMaterial;
+  const CreatureArt = window.NiniYuanCreatureMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
   const WardenArt = window.NiniYuanWarden;
@@ -124,6 +126,7 @@
     motionState: { name: "idle", enteredAt: 0 },
     resolvedMotionPose: null,
     displayMotionPose: null,
+    motionRenderedAt: 0,
     snapMotionPose: true,
   };
   let renderAlpha = 1;
@@ -901,6 +904,7 @@
           id: "aurorawarden",
           name: "极光守望者",
           title: "第一星域 · 守望",
+          profile: "aurora",
           palette: "aurora",
           health: 16,
           arena: { x: 118 * TILE, w: 20 * TILE },
@@ -921,6 +925,7 @@
           id: "corewarden",
           name: "群岛守望者",
           title: "第二星域 · 守望",
+          profile: "core",
           palette: "core",
           health: 20,
           arena: { x: 134 * TILE, w: 12 * TILE },
@@ -941,6 +946,7 @@
           id: "tidewarden",
           name: "星潮守望者",
           title: "第三星域 · 守望",
+          profile: "tide",
           palette: "tide",
           health: 24,
           arena: { x: 132 * TILE, w: 22 * TILE },
@@ -954,11 +960,23 @@
     // Warden difficulty ramps by remaining health: each stage speeds the cadence
     // and widens the attack pool. Patterns stay data-driven so the three
     // encounters share one simulation path.
-    const WARDEN_STAGES = [
-      { above: 0.66, cadence: 2.4, patterns: ["volley", "sweep"] },
-      { above: 0.33, cadence: 2.0, patterns: ["volley", "rain", "sweep"] },
-      { above: 0, cadence: 1.65, patterns: ["rain", "sweep", "volley", "summon"] },
-    ];
+    const WARDEN_STAGE_PROFILES = {
+      aurora: [
+        { above: 0.66, cadence: 2.4, patterns: ["volley", "sweep"] },
+        { above: 0.33, cadence: 2.0, patterns: ["volley", "rain", "sweep"] },
+        { above: 0, cadence: 1.65, patterns: ["rain", "sweep", "volley", "summon"] },
+      ],
+      core: [
+        { above: 0.66, cadence: 2.5, patterns: ["sweep", "volley"] },
+        { above: 0.33, cadence: 2.05, patterns: ["sweep", "summon", "volley"] },
+        { above: 0, cadence: 1.7, patterns: ["volley", "summon", "sweep", "rain"] },
+      ],
+      tide: [
+        { above: 0.66, cadence: 2.3, patterns: ["rain", "volley"] },
+        { above: 0.33, cadence: 1.9, patterns: ["rain", "sweep", "volley"] },
+        { above: 0, cadence: 1.55, patterns: ["rain", "volley", "summon", "sweep"] },
+      ],
+    };
 
     for (const level of chapters) {
       const tuning = TUNING[level.id];
@@ -1004,11 +1022,12 @@
       }
       level.lanterns = lanterns;
       if (tuning.warden) {
+        const stages = WARDEN_STAGE_PROFILES[tuning.warden.profile];
         level.warden = {
           ...tuning.warden,
           w: 104,
           h: 96,
-          stages: WARDEN_STAGES,
+          stages: stages.map((stage) => ({ ...stage, patterns: [...stage.patterns] })),
         };
       }
     }
@@ -1185,6 +1204,7 @@
     camera.y = initialCamera.y;
     syncPresentationState();
     resetControlState();
+    clearToast();
     hudState = { character: null, cooling: null, phaseCritical: null, values: Object.create(null) };
     GameFeel?.resetHitstop?.();
     mode = "play";
@@ -1548,16 +1568,30 @@
   }
 
   function damageWarden(amount, source) {
-    if (!warden || warden.defeated) return;
+    if (!warden || warden.defeated) return false;
+    if (!wardenIsOpen()) {
+      // The shell uses the same established deflection language as 石胄: a
+      // moon-white flash, armour label, and the shared deflect cue. Contact and
+      // projectile callers keep their own bounce, cooldown, and pierce rules.
+      warden.hitTimer = WARDEN_HIT_FLASH;
+      burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.moonWhite, 8);
+      floatText("护甲", warden.x, warden.y, CANVAS_MATERIAL.moonWhite);
+      cue("deflect");
+      return false;
+    }
     warden.health = Math.max(0, warden.health - amount);
     warden.hitTimer = WARDEN_HIT_FLASH;
     warden.hurtCount += 1;
     GameFeel?.requestHitstop?.(source === "stomp" ? 60 : 40);
     shake(source === "stomp" ? 9 : 6);
-    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, source === "stomp" ? 22 : 14);
+    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, source === "stomp" ? 22 : 14, {
+      shape: source === "stomp" ? "ring" : "shard",
+      gravity: source === "stomp" ? 120 : 520,
+    });
     chainReward(3, warden.x + warden.w / 2, warden.y, CANVAS_MATERIAL.agedGold);
     cue(source === "stomp" ? "stomp" : "hit_enemy");
     if (warden.health <= 0) defeatWarden();
+    return true;
   }
 
   function defeatWarden() {
@@ -1566,7 +1600,7 @@
     wardenBolts = [];
     for (const enemy of activeLevel.enemies) if (enemy.summoned) enemy.alive = false;
     shake(18);
-    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, 90);
+    burst(warden.x + warden.w / 2, warden.y + warden.h / 2, CANVAS_MATERIAL.agedGold, 90, { shape: "shard", gravity: 620 });
     floatText(`${warden.data.name} 归位`, warden.x, warden.y, CANVAS_MATERIAL.agedGold);
     cue("warden_fall");
     toastMsg(`${warden.data.name} 已归位 · 星门开启`);
@@ -1750,7 +1784,7 @@
       player.vx = player.dashDir * YUAN_DASH_SPEED;
       player.vy *= 0.45;
       shake(7);
-      burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22);
+      burst(player.x + player.w / 2, player.y + player.h / 2, ch.accent, 22, { shape: "streak", gravity: 180, drag: 2.4 });
       cue("dash");
       toastMsg("青衡破风");
     }
@@ -1759,7 +1793,7 @@
       if (dashShouldStopAtEdge()) {
         player.skillTimer = 0;
         player.vx = moveToward(player.vx, 0, 5200 * dt);
-        burst(player.x + player.w / 2, player.y + player.h, CANVAS_MATERIAL.carvedJade, 8);
+        burst(player.x + player.w / 2, player.y + player.h, CANVAS_MATERIAL.carvedJade, 8, { shape: "shard" });
       } else {
         const dashSpeed = YUAN_DASH_SPEED * (player.boostTimer > 0 ? 1.08 : 1);
         player.vx = player.dashDir * Math.max(Math.abs(player.vx), dashSpeed);
@@ -1775,7 +1809,7 @@
       player.coyote = 0;
       player.jumpBuffer = 0;
       if (usedAir) player.airJumps -= 1;
-      burst(player.x + player.w / 2, player.y + player.h, ch.accent2, 12);
+      burst(player.x + player.w / 2, player.y + player.h, ch.accent2, 12, { shape: "ring", gravity: 0, drag: 4 });
       cue("jump");
     }
     if (inputs.jumpReleased && player.vy < -160) player.vy *= 0.56;
@@ -1793,7 +1827,7 @@
         player.onGround = false;
         player.coyote = 0;
         shake(5);
-        burst(spring.x + spring.w / 2, spring.y, "#fff070", 24);
+        burst(spring.x + spring.w / 2, spring.y, CANVAS_MATERIAL.agedGold, 24, { shape: "ring", gravity: 120, drag: 3 });
         cue("spring");
       }
     }
@@ -1818,16 +1852,16 @@
         player.vy = -620;
         run.stomps += 1;
         GameFeel?.requestHitstop?.(50);
-        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.agedGold, 20);
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.agedGold, 20, { shape: "shard" });
         chainReward(enemyReward(e), e.x, e.y, CANVAS_MATERIAL.agedGold);
         cue("stomp");
       } else if (player.superInvuln > 0) {
         e.alive = false;
-        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.moonWhite, 28);
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.moonWhite, 28, { shape: "ring", gravity: 90, drag: 2 });
         chainReward(enemyReward(e), e.x, e.y, CANVAS_MATERIAL.moonWhite);
       } else if (player.skillTimer > 0 && save.selected === "yuan") {
         e.alive = false;
-        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.carvedJade, 24);
+        burst(e.x + e.w / 2, e.y + e.h / 2, CANVAS_MATERIAL.carvedJade, 24, { shape: "streak", gravity: 220, drag: 2 });
         chainReward(enemyReward(e) + 1, e.x, e.y, CANVAS_MATERIAL.carvedJade);
       } else {
         hurt(1);
@@ -1846,7 +1880,7 @@
           player.skillTimer = Math.min(player.skillTimer, 0.06);
           GameFeel?.requestHitstop?.(35);
           shake(11);
-          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 30);
+          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 30, { shape: "shard", gravity: 760 });
           floatText("碎晶", p.x, p.y, CANVAS_MATERIAL.agedGold);
           cue("break_crystal");
         }
@@ -2173,7 +2207,7 @@
           p.broken = true;
           pr.life = 0;
           GameFeel?.requestHitstop?.(35);
-          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 22);
+          burst(p.x + p.w / 2, p.y + p.h / 2, CANVAS_MATERIAL.agedGold, 22, { shape: "shard", gravity: 760 });
           floatText("碎晶", p.x, p.y, CANVAS_MATERIAL.agedGold);
           cue("break_crystal");
         } else {
@@ -2194,7 +2228,7 @@
         e.hp = (e.hp || enemyHitPoints(e)) - pr.damage;
         e.hitTimer = ENEMY_HIT_FLASH_DURATION;
         GameFeel?.requestHitstop?.(35);
-        burst(e.x + e.w / 2, e.y + e.h / 2, pr.color, 14);
+        burst(e.x + e.w / 2, e.y + e.h / 2, pr.color, 14, { shape: e.hp <= 0 ? "shard" : "orb" });
         cue("hit_take");
         if (e.hp <= 0) {
           e.alive = false;
@@ -2608,6 +2642,7 @@
     presentation.motionState = { name: "idle", enteredAt: player?.elapsed || 0 };
     presentation.resolvedMotionPose = null;
     presentation.displayMotionPose = null;
+    presentation.motionRenderedAt = player?.elapsed || 0;
     presentation.snapMotionPose = true;
     renderAlpha = 1;
   }
@@ -2662,6 +2697,11 @@
 
   function renderWorld(level) {
     const tide = phaseTideState(level);
+    Playfield.drawScenery?.(ctx, level, {
+      time: sceneTime(),
+      reducedMotion: view.reducedMotion,
+      fx: save.settings.fx,
+    });
     drawPhaseTide(level, tide);
     for (const w of level.wind || []) drawWind(w);
     drawGoal(level.goal);
@@ -2719,6 +2759,11 @@
       telegraph: warden.phase === "telegraph" ? 1 - clamp(warden.phaseTimer / WARDEN_TELEGRAPH, 0, 1) : 0,
       flash: warden.hitTimer,
       sigil: warden.data.sigil,
+      phase: warden.phase,
+      attack: warden.attack,
+      open: wardenIsOpen(),
+      healthRatio: warden.health / Math.max(1, warden.maxHealth),
+      reducedMotion: view.reducedMotion,
       fontFamily: CANVAS_FONT_FAMILY,
     });
   }
@@ -2843,228 +2888,29 @@
         time: sceneTime(),
         charge: clamp(1 - e.fireTimer / Math.max(0.01, SENTRY_TELEGRAPH), 0, 1),
         flash: e.hitTimer || 0,
+        reducedMotion: view.reducedMotion,
       });
       return;
     }
     if (e.type === "warder") {
-      WardenArt?.drawWarder?.(ctx, e, { time: sceneTime(), flash: e.hitTimer || 0 });
+      WardenArt?.drawWarder?.(ctx, e, {
+        time: sceneTime(),
+        flash: e.hitTimer || 0,
+        reducedMotion: view.reducedMotion,
+      });
       return;
     }
-    drawEnemyIntent(e);
-    if (e.hitTimer > 0) drawEnemyHitFlash(e);
-    if (e.type === "wisp") {
-      drawWispEnemy(e);
-      return;
-    }
-    drawGroundEnemy(e);
-  }
-
-  function enemyPalette(type) {
-    if (type === "ember") {
-      return {
-        body: "#ad6859",
-        bodyDark: "#673b38",
-        foot: "#4c2f32",
-        eye: CANVAS_MATERIAL.lacquer,
-        intent: CANVAS_MATERIAL.agedGold,
-        core: "#d9b987",
-      };
-    }
-    return {
-      body: CANVAS_MATERIAL.carvedJade,
-      bodyDark: "#365b51",
-      foot: "#29463e",
-      eye: CANVAS_MATERIAL.lacquer,
-      intent: "#9bbcad",
-      core: "#b6cec4",
-    };
-  }
-
-  function drawEnemyIntent(e) {
-    const dir = Math.sign(e.vx) || 1;
-    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
-    ctx.save();
-    if (e.type === "wisp") {
-      const color = CANVAS_MATERIAL.phaseBlue;
-      const centerX = e.x + e.w / 2;
-      const centerY = e.y + e.h * 0.72;
-      const tetherY = e.baseY + e.h + WISP_FLOAT_GAP + 2;
-      ctx.globalAlpha = 0.18 + hit * 0.18;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4, 7]);
-      ctx.beginPath();
-      ctx.moveTo(centerX, centerY);
-      ctx.quadraticCurveTo(centerX - dir * 18, tetherY - 18, centerX - dir * 30, tetherY);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = color;
-      ellipse(centerX - dir * 30, tetherY, 5, 2.5, 0);
-      ctx.restore();
-      return;
-    }
-
-    const support = enemySupportPlatform(e);
-    const palette = enemyPalette(e.type);
-    const y = support ? support.y - 4 : e.y + e.h + 3;
-    const minX = support ? support.x + 10 : e.x - 28;
-    const maxX = support ? support.x + support.w - 10 : e.x + e.w + 28;
-    const arrowX = clamp(e.x + e.w / 2 + dir * 21, minX + 10, maxX - 10);
-    ctx.globalAlpha = 0.16 + hit * 0.18;
-    ctx.strokeStyle = palette.intent;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(minX, y);
-    ctx.lineTo(maxX, y);
-    ctx.stroke();
-    ctx.globalAlpha = 0.36 + hit * 0.22;
-    ctx.beginPath();
-    ctx.moveTo(minX, y - 4);
-    ctx.lineTo(minX, y + 4);
-    ctx.moveTo(maxX, y - 4);
-    ctx.lineTo(maxX, y + 4);
-    ctx.stroke();
-    ctx.fillStyle = palette.intent;
-    ctx.beginPath();
-    ctx.moveTo(arrowX + dir * 8, y - 8);
-    ctx.lineTo(arrowX - dir * 5, y - 13);
-    ctx.lineTo(arrowX - dir * 2, y - 3);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-  }
-
-  function drawEnemyHitFlash(e) {
-    const t = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
-    ctx.save();
-    ctx.globalAlpha = 0.56 * t;
-    ctx.strokeStyle = "#fff7d1";
-    ctx.lineWidth = 2 + t * 2;
-    ctx.beginPath();
-    ctx.ellipse(e.x + e.w / 2, e.y + e.h / 2, e.w * (0.62 + t * 0.16), e.h * (0.54 + t * 0.12), 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawGroundEnemy(e) {
-    const palette = enemyPalette(e.type);
-    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
-    ctx.save();
-    ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
-    ctx.translate(0, e.h / 2);
-    ctx.scale(1.28, 1.28);
-    ctx.translate(0, -e.h / 2);
-    const footY = e.h / 2;
-    ctx.fillStyle = "rgba(0,0,0,.26)";
-    ellipse(0, footY + 1, e.w * 0.46, 4, 0);
-    ctx.fillStyle = palette.foot;
-    ellipse(-9, footY - 1, 6, 4, 0);
-    ellipse(9, footY - 1, 6, 4, 0);
-    const body = ctx.createRadialGradient(-6, -7, 3, 0, 3, e.w * 0.58);
-    body.addColorStop(0, hit > 0 ? "#fff7d1" : palette.core);
-    body.addColorStop(0.36, palette.body);
-    body.addColorStop(1, palette.bodyDark);
-    ctx.fillStyle = body;
-    ellipse(0, 2, e.w * 0.55, e.h * 0.45, 0);
-    if (e.type === "ember") {
-      ctx.fillStyle = CANVAS_MATERIAL.agedGold;
-      ctx.beginPath();
-      ctx.moveTo(-7, -11);
-      ctx.quadraticCurveTo(-3, -23, 2, -11);
-      ctx.quadraticCurveTo(8, -20, 10, -7);
-      ctx.quadraticCurveTo(2, -11, -7, -11);
-      ctx.fill();
-    } else {
-      ctx.strokeStyle = "rgba(182,206,196,.72)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(-13, -9);
-      ctx.quadraticCurveTo(0, -17, 13, -9);
-      ctx.stroke();
-    }
-    ctx.fillStyle = "rgba(238,231,213,.86)";
-    ellipse(-7, -4, 3.4, 4.5, 0);
-    ellipse(7, -4, 3.4, 4.5, 0);
-    ctx.fillStyle = palette.eye;
-    ellipse(-7 + Math.sign(e.vx), -3, 1.3, 2.2, 0);
-    ellipse(7 + Math.sign(e.vx), -3, 1.3, 2.2, 0);
-    ctx.globalAlpha = 0.56;
-    ctx.strokeStyle = CANVAS_MATERIAL.agedGold;
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(0, -14);
-    ctx.lineTo(4, -10);
-    ctx.lineTo(0, -6);
-    ctx.lineTo(-4, -10);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
-  }
-
-  function drawWispEnemy(e) {
-    const phase = e.phase || 0;
-    const dir = Math.sign(e.vx) || 1;
-    const hit = clamp((e.hitTimer || 0) / ENEMY_HIT_FLASH_DURATION, 0, 1);
-    const footY = e.h / 2;
-    const hoverOffset = Math.sin(phase * 4) * WISP_HOVER_RANGE;
-    const wingLift = Math.sin(phase * 11) * 3;
-    ctx.save();
-    ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
-    ctx.scale(1.18, 1.18);
-
-    ctx.globalAlpha = 0.24;
-    ctx.fillStyle = CANVAS_MATERIAL.phaseBlue;
-    ellipse(0, footY + WISP_FLOAT_GAP - hoverOffset + 2, e.w * 0.34, 3.5, 0);
-    ctx.globalAlpha = 1;
-
-    ctx.strokeStyle = "rgba(120,147,164,.52)";
-    ctx.lineWidth = 2;
-    ctx.lineCap = "round";
-    for (let i = 0; i < 3; i += 1) {
-      const y = 8 + i * 4;
-      ctx.globalAlpha = 0.42 - i * 0.08;
-      ctx.beginPath();
-      ctx.moveTo(-dir * 4, y - i);
-      ctx.quadraticCurveTo(-dir * (14 + i * 5), y + Math.sin(phase * 6 + i) * 4, -dir * (24 + i * 4), y - 5);
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 0.48;
-    ctx.fillStyle = "rgba(120,147,164,.72)";
-    ellipse(-15, -2 - wingLift, 10, 17, -0.7);
-    ellipse(15, -2 + wingLift, 10, 17, 0.7);
-    ctx.globalAlpha = 0.28;
-    ctx.fillStyle = "rgba(255,255,255,.9)";
-    ellipse(-12, -7 - wingLift * 0.5, 3, 8, -0.7);
-    ellipse(12, -7 + wingLift * 0.5, 3, 8, 0.7);
-
-    ctx.globalAlpha = 1;
-    ctx.shadowColor = CANVAS_MATERIAL.phaseBlue;
-    ctx.shadowBlur = 8 + hit * 6;
-    const core = ctx.createRadialGradient(-4, -6, 2, 0, 0, 20);
-    core.addColorStop(0, hit > 0 ? CANVAS_MATERIAL.moonWhite : "#d7e0dc");
-    core.addColorStop(0.45, CANVAS_MATERIAL.phaseBlue);
-    core.addColorStop(1, "#355364");
-    ctx.fillStyle = core;
-    ellipse(0, 0, e.w * 0.38, e.h * 0.44, 0);
-    ctx.shadowBlur = 0;
-
-    ctx.fillStyle = "rgba(255,255,255,.82)";
-    ellipse(-5, -6, 3, 4, 0);
-    ellipse(5, -6, 3, 4, 0);
-    ctx.fillStyle = "#143047";
-    ellipse(-5 + dir, -5, 1.4, 2.2, 0);
-    ellipse(5 + dir, -5, 1.4, 2.2, 0);
-    ctx.strokeStyle = "rgba(246,254,255,.72)";
-    ctx.lineWidth = 1.3;
-    ctx.beginPath();
-    ctx.moveTo(0, -14);
-    ctx.lineTo(5, -3);
-    ctx.lineTo(0, 11);
-    ctx.lineTo(-5, -3);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.restore();
+    const playerCenter = player ? player.x + player.w / 2 : e.x;
+    const focus = clamp(1 - Math.abs(playerCenter - (e.x + e.w / 2)) / 360, 0, 1);
+    CreatureArt.drawEnemy(ctx, e, {
+      time: sceneTime(),
+      hitDuration: ENEMY_HIT_FLASH_DURATION,
+      floatGap: WISP_FLOAT_GAP,
+      hoverRange: WISP_HOVER_RANGE,
+      reducedMotion: view.reducedMotion,
+      focus,
+      support: e.type === "wisp" ? null : enemySupportPlatform(e),
+    });
   }
 
   function drawGoal(g) {
@@ -3149,20 +2995,24 @@
       simulationTime,
     ) || presentation.motionState;
     const motionElapsed = CharacterMotion?.animationElapsed?.(presentation.motionState, simulationTime) || 0;
+    const motionDelta = clamp(simulationTime - (Number(presentation.motionRenderedAt) || simulationTime), 0, 0.1);
     const discretePoseJump =
       previousAnimation !== animationName &&
       (/^hurt_|^skill_|^land_/.test(animationName) || /^hurt_|^skill_/.test(previousAnimation || ""));
-    if (presentation.snapMotionPose || discretePoseJump || !presentation.resolvedMotionPose) {
+    if (presentation.snapMotionPose || discretePoseJump || !presentation.displayMotionPose) {
       presentation.displayMotionPose = resolvedMotion || CharacterMotion?.emptyMotionPose?.() || null;
       presentation.snapMotionPose = false;
     } else {
+      const blendAlpha = CharacterMotion?.dampedBlendAlpha?.(motionDelta, 22) ?? 1;
       presentation.displayMotionPose = CharacterMotion?.blendMotionPose?.(
-        presentation.resolvedMotionPose,
+        presentation.displayMotionPose,
         resolvedMotion,
-        0.72,
+        blendAlpha,
+        { linear: true },
       ) || resolvedMotion;
     }
     presentation.resolvedMotionPose = resolvedMotion || null;
+    presentation.motionRenderedAt = simulationTime;
     const motion = {
       ...(resolvedMotion || {}),
       ...(presentation.displayMotionPose || {}),
@@ -3315,6 +3165,17 @@
     const lift = targetH * (id === "nini" ? 0.03 : 0.02) + (motion?.lift || 0) * scale;
     const quantum = 1 / Math.max(1, view.dpr || 1);
     const align = (value) => Math.round(Number(value) / quantum) * quantum;
+    const destW = align(targetW);
+    const destH = align(targetH);
+    const effectPlan = CharacterEffects?.resolveEffectPlan?.({
+      id,
+      animation: animName,
+      elapsed: motionElapsed,
+      stride: motion?.stride,
+      reducedMotion: view.reducedMotion || !save.settings.fx,
+    });
+    const effectStill = view.reducedMotion || !save.settings.fx;
+    const localDirection = facing * orientation.frameScaleX;
     ctx.save();
     ctx.translate(align(x), align(y + lift + bob));
     ctx.scale(orientation.frameScaleX, 1);
@@ -3325,10 +3186,31 @@
     ctx.shadowBlur = 0;
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = "high";
+    CharacterEffects?.drawUnderlay?.(ctx, {
+      id,
+      plan: effectPlan,
+      width: destW,
+      height: destH,
+      time: simulationTime,
+      direction: localDirection,
+      reducedMotion: effectStill,
+    });
     drawMovementTrace(id, motion, targetW, targetH, scale);
-    drawMotionArtifact(id, motion?.artifact, targetW, targetH, scale, orientation.artifactScale, simulationTime, motionElapsed);
-    const destW = align(targetW);
-    const destH = align(targetH);
+    CharacterEffects?.drawAfterimages?.(ctx, image, sourceFrame, {
+      id,
+      plan: effectPlan,
+      width: destW,
+      height: destH,
+      direction: facing,
+      frameScaleX: orientation.frameScaleX,
+    });
+    const signatureArtifact = effectPlan?.orbit > 0 || effectPlan?.slash > 0 ? "rest" : motion?.artifact;
+    drawMotionArtifact(id, signatureArtifact, targetW, targetH, scale, {
+      directionScale: orientation.artifactScale,
+      time: simulationTime,
+      motionElapsed,
+      reducedMotion: effectStill,
+    });
     ctx.drawImage(
       image,
       sourceFrame.sx,
@@ -3340,13 +3222,20 @@
       destW,
       destH
     );
+    CharacterEffects?.drawOverlay?.(ctx, {
+      id,
+      plan: effectPlan,
+      width: destW,
+      height: destH,
+      direction: localDirection,
+    });
     ctx.restore();
     return true;
   }
 
   function drawMovementTrace(id, motion, targetW, targetH, scale) {
     const stride = Number(motion?.stride) || 0;
-    if (stride < 0.28 || view.reducedMotion) return;
+    if (stride < 0.28 || motion?.artifact === "gui-sword-cut" || view.reducedMotion || !save.settings.fx) return;
     ctx.save();
     ctx.globalAlpha = Math.min(0.22, 0.08 + stride * 0.09);
     ctx.strokeStyle = id === "nini" ? "rgba(184,123,134,.72)" : "rgba(109,168,149,.72)";
@@ -3363,8 +3252,12 @@
     ctx.restore();
   }
 
-  function drawMotionArtifact(id, artifact, targetW, targetH, scale, directionScale = 1, time = 0, motionElapsed = 0) {
+  function drawMotionArtifact(id, artifact, targetW, targetH, scale, options = {}) {
     if (!artifact || artifact === "rest") return;
+    const directionScale = options.directionScale < 0 ? -1 : 1;
+    const time = Math.max(0, Number(options.time) || 0);
+    const motionElapsed = Math.max(0, Number(options.motionElapsed) || 0);
+    const artifactTime = options.reducedMotion === true ? 0 : time;
     ctx.save();
     ctx.shadowBlur = 0;
     ctx.lineCap = "round";
@@ -3372,7 +3265,7 @@
       const open = artifact === "star-dial-open" ? 1 : 0.72;
       const radius = targetW * (0.42 + open * 0.08);
       ctx.translate(targetW * 0.18 * directionScale, -targetH * 0.58);
-      ctx.rotate((time / 0.9) * directionScale);
+      ctx.rotate((artifactTime / 0.9) * directionScale);
       ctx.strokeStyle = "rgba(195,164,104,.72)";
       ctx.lineWidth = Math.max(1, 1.4 * scale);
       for (let ring = 0; ring < 3; ring += 1) {
@@ -3467,12 +3360,26 @@
     ctx.fillRect(0, 0, view.w, view.h);
   }
 
-  function burst(x, y, color, count) {
+  function burst(x, y, color, count, options = {}) {
     if (!save.settings.fx) count = Math.ceil(count * 0.45);
     for (let i = 0; i < count; i++) {
       const a = Math.random() * Math.PI * 2;
       const s = 80 + Math.random() * 420;
-      particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: 2 + Math.random() * 4, life: 0.35 + Math.random() * 0.55, max: 0.9, color });
+      particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * s,
+        vy: Math.sin(a) * s,
+        r: 2 + Math.random() * 4,
+        life: 0.35 + Math.random() * 0.55,
+        max: 0.9,
+        color,
+        shape: options.shape || "orb",
+        gravity: Number.isFinite(options.gravity) ? options.gravity : 520,
+        drag: Math.max(0, Number(options.drag) || 0),
+        rotation: a,
+        spin: (Math.random() - 0.5) * 9,
+      });
     }
     // v1.2.4 — single composite-add glow ring on warm pickup bursts so coins feel collected.
     if (save.settings.fx && [CANVAS_MATERIAL.agedGold, CANVAS_MATERIAL.carvedJade, CANVAS_MATERIAL.moonWhite].includes(color)) {
@@ -3481,12 +3388,36 @@
   }
 
   function spawnSpark(x, y, color, count) {
-    for (let i = 0; i < count; i++) particles.push({ x, y, vx: -player.facing * (50 + Math.random() * 120), vy: 80 + Math.random() * 70, r: 2, life: 0.28, max: 0.28, color });
+    for (let i = 0; i < count; i++) particles.push({
+      x,
+      y,
+      vx: -player.facing * (50 + Math.random() * 120),
+      vy: 80 + Math.random() * 70,
+      r: 2,
+      life: 0.28,
+      max: 0.28,
+      color,
+      shape: "streak",
+      gravity: 420,
+      rotation: player.facing > 0 ? Math.PI : 0,
+    });
   }
 
   function spawnWind(x, y, dir) {
     if (!save.settings.fx || Math.random() > 0.28) return;
-    particles.push({ x, y, vx: -dir * (70 + Math.random() * 70), vy: -20 + Math.random() * 40, r: 1.5, life: 0.35, max: 0.35, color: CANVAS_MATERIAL.moonWhiteSoft });
+    particles.push({
+      x,
+      y,
+      vx: -dir * (70 + Math.random() * 70),
+      vy: -20 + Math.random() * 40,
+      r: 1.5,
+      life: 0.35,
+      max: 0.35,
+      color: CANVAS_MATERIAL.moonWhiteSoft,
+      shape: "streak",
+      gravity: 0,
+      rotation: dir > 0 ? Math.PI : 0,
+    });
   }
 
   function updateParticles(dt) {
@@ -3494,7 +3425,13 @@
       p.life -= dt;
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vy += 520 * dt;
+      p.vy += (Number.isFinite(p.gravity) ? p.gravity : 520) * dt;
+      if (p.drag > 0) {
+        const damping = Math.exp(-p.drag * dt);
+        p.vx *= damping;
+        p.vy *= damping;
+      }
+      p.rotation = (Number(p.rotation) || 0) + (Number(p.spin) || 0) * dt;
     }
     particles = particles.filter((p) => p.life > 0);
     for (const f of floatTexts) {
@@ -3507,26 +3444,7 @@
   function renderParticles() {
     ctx.save();
     for (const p of particles) {
-      ctx.globalAlpha = clamp(p.life / p.max, 0, 1);
-      if (p.glow) {
-        // v1.2.4 — soft additive halo ring for warm pickup bursts.
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        const grd = ctx.createRadialGradient(p.x, p.y, 2, p.x, p.y, p.r * 1.6);
-        grd.addColorStop(0, p.color);
-        grd.addColorStop(0.55, "rgba(255, 247, 213, 0.45)");
-        grd.addColorStop(1, "rgba(255, 247, 213, 0)");
-        ctx.fillStyle = grd;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 1.6, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-        continue;
-      }
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fill();
+      Playfield.drawParticle(ctx, p, { alpha: clamp(p.life / p.max, 0, 1) });
     }
     ctx.restore();
   }
@@ -3732,11 +3650,19 @@
     return `${m}:${s}`;
   }
 
+  function clearToast() {
+    clearTimeout(toastTimer);
+    toastTimer = 0;
+    toast.classList.remove("show");
+    toast.textContent = "";
+  }
+
   function toastMsg(text) {
     toast.textContent = text;
     toast.classList.add("show");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
+      toastTimer = 0;
       toast.classList.remove("show");
       toast.textContent = "";
     }, 2400);

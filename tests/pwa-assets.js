@@ -33,7 +33,9 @@ for (const asset of [
   "./src/core/fixed-step.js",
   "./src/render/hud.js",
   "./src/render/character-motion.js",
+  "./src/render/character-effects.js",
   "./src/render/playfield-material.js",
+  "./src/render/creature-material.js",
   "./src/render/game-feel.js",
   "./src/render/respawn-veil.js",
   "./src/game.js",
@@ -95,6 +97,7 @@ const staleKeys = [
   "nini-yuan-v1.8.0-song-atlas-overhaul-r1",
   "nini-yuan-v1.9.0-quiet-observatory-r1",
   "nini-yuan-v1.9.0-ui-clarity-r2",
+  "nini-yuan-v2.0.0-astral-echo-r1",
 ].filter((key) => key !== currentCacheKey);
 
 async function verifyCacheIsolation() {

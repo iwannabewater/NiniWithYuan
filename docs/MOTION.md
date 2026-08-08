@@ -44,15 +44,29 @@ Before each fixed step, `beginPresentationStep()` stores the previous player and
 
 Atlas frames use time elapsed since the current state began. Looping states wrap through their frame list. A state with `loop: false` starts on its first authored frame and holds its final frame after the sequence finishes.
 
+The current Nini and Yuan atlas manifests assign one raster frame to each state. v2.1.0 therefore improves temporal presentation through pose damping, action envelopes, artifacts, and event effects; it does not claim newly authored frame-by-frame raster animation. Multi-frame idle, run, land, shoot, and skill cycles remain a follow-up art task.
+
 Ground gait follows accumulated horizontal travel rather than wall time. Starts, stops, wall contacts, and reversals therefore keep the pose attached to actual movement.
 
 ## Presentation Pose Sampling
 
-Rendering may blend bob, lean, stretch, and lift between consecutive resolved poses so gait and turn edges read cleanly at variable display rates. Blend math lives in `blendMotionPose` and uses a smoothstep alpha. Discrete entries for hurt, skill, and land snap immediately. Animation name, artifact identity, gait wave, stride, and direction always come from the latest resolved pose. Display pose fields live only on the presentation object.
+Rendering damps bob, lean, stretch, and lift from the displayed pose toward the latest resolved pose so gait and turn edges read cleanly at variable display rates. `dampedBlendAlpha` computes `1 - exp(-response * dt)` with a response of 22 and a presentation delta capped at 0.1 s. `blendMotionPose` applies that alpha linearly to the continuous fields. Equal elapsed time therefore produces equal convergence at 30, 60, and 120 Hz instead of making high-refresh displays settle more slowly. Discrete entries for hurt, skill, and land snap immediately. Animation name, artifact identity, gait wave, stride, and direction always come from the latest resolved pose. Display pose fields live only on the presentation object.
 
 Character sprites draw without canvas `shadowBlur` on the bitmap. Ground contact shadow is a separate ellipse. Destination rectangles align to the device-pixel quantum used by player and camera samples.
 
 Landing readability is pure: a land pose holds while `landingTimer > 0.11` or stride remains under `0.62`. Faster landings hand back to run after the impact beat.
+
+## Action Envelopes
+
+`src/render/character-effects.js` derives presentation from character id, animation name, state-local elapsed time, stride, and the reduced-motion preference. It never reads or writes gameplay state.
+
+- Landing contact decays over 0.2 s through a ground ellipse and five short rays.
+- Projectile cast decays over 0.18 s through nested rotated seals near the facing side.
+- Skill release decays over 0.24 s. Nini receives the Xuanji orbit; Yuan receives the gui-sword cut.
+- Run trails start only at readable stride, and skill trails remain sparse. They reuse the current atlas frame rather than inventing intermediate poses.
+- Reduced-motion play sets trail count to zero. It retains a static orbit or cut and the short contact or cast mark, because those cues communicate action state.
+
+Shaped particles remain event-bound. Ring, streak, shard, orb, petal, and glow drawing lives in the stateless playfield material helper; gameplay chooses a shape plus gravity, drag, rotation, and spin. The particle's existing `life` field remains its authoritative lifetime.
 
 ## Character State Selection
 
@@ -94,6 +108,10 @@ DOM animation is limited to `transform` and `opacity` on small surfaces. The int
 
 State changes, rather than render frequency, trigger HUD pulses. Canvas feedback uses short event-bound effects: landing dust, enemy hit flash, respawn veil, portal rings, collectible seals, and phase-tide silhouettes. Decorative field motion stops when the game is not on a menu surface.
 
+World props use level-id and platform-index seeds, not random placement. Star blooms, gate beacons, and mirror reeds may sway with simulation time. Reduced-motion play fixes their sway at zero. They render behind solids and never enter collision or update loops.
+
+Guardian attack order advances deterministically through the active stage's data-authored pattern list. Aurora, Core, and Tide use separate orders and cadence curves. The renderer maps wait, telegraph, act, recover, and low-health state to distinct silhouette marks. Only `recover` opens the damage gate; this presentation signal reflects the centralized gameplay rule rather than creating a second timing source.
+
 ## Reduced Motion
 
 Under `prefers-reduced-motion: reduce`:
@@ -102,8 +120,9 @@ Under `prefers-reduced-motion: reduce`:
 - Hero parallax, pointer stardust, atlas-ring rotation, touch breathing, ambient drift, bossbar shimmer, and modal seal breathing stop.
 - Hit-stop is disabled and camera lookahead contributes 0 px.
 - Ink-scroll parallax and star-chart drift become static.
+- Character afterimages and movement traces are removed. Creature gait, world-prop sway, and guardian rotation become static.
 - The respawn veil becomes a single 40 ms flash.
-- Gameplay timing, platform state, hazards, phase silhouettes, contact shadows, and essential event cues remain visible.
+- Gameplay timing, platform state, hazards, phase silhouettes, contact shadows, and essential contact, cast, skill, and guardian-opening cues remain visible.
 - Optional pickup bursts still follow the high-frame-rate visual-effects setting.
 
 ## Runtime Budgets
@@ -111,7 +130,7 @@ Under `prefers-reduced-motion: reduce`:
 - HUD text, classes, and ARIA labels are written only when their rendered values change. Chapter progress is quantized to quarter-percent increments.
 - Settings sliders preview immediately, persist after a 150 ms trailing delay, and flush on `change`, `visibilitychange`, or `pagehide`.
 - Pointer stardust is limited to fine pointers, interpolates gaps at about 18 px, and caps the live particle count at 56.
-- Canvas material helpers remain stateless. Collision geometry, render order, and gameplay state remain in `src/game.js`.
+- Character-effect, creature, warden, and playfield material helpers remain stateless. Collision geometry, render order, and gameplay state remain in `src/game.js`.
 
 ## Audio Timing
 

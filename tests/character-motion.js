@@ -109,4 +109,24 @@ assert.ok(blended.bob > 0 && blended.bob < 4);
 assert.equal(blended.animation, "run");
 assert.equal(Motion.blendMotionPose(null, { bob: 3, lean: 0.1, scaleX: 1.02, scaleY: 0.98, lift: 0 }, 0, { snap: true }).bob, 3);
 
+function dampedPoseAt(frameRate, duration = 0.24) {
+  const step = 1 / frameRate;
+  let elapsed = 0;
+  let pose = { bob: 0, lean: 0, scaleX: 1, scaleY: 1, lift: 0, stride: 0, forward: 0 };
+  const target = { bob: 6, lean: 0.18, scaleX: 1.08, scaleY: 0.94, lift: -4, stride: 1, forward: 1 };
+  while (elapsed < duration - 1e-9) {
+    const dt = Math.min(step, duration - elapsed);
+    pose = Motion.blendMotionPose(pose, target, Motion.dampedBlendAlpha(dt, 22), { linear: true });
+    elapsed += dt;
+  }
+  return pose;
+}
+
+const poseAt30 = dampedPoseAt(30);
+const poseAt60 = dampedPoseAt(60);
+const poseAt120 = dampedPoseAt(120);
+assert.ok(Math.abs(poseAt30.bob - poseAt60.bob) < 1e-8, "pose damping should converge by elapsed time, not display frames");
+assert.ok(Math.abs(poseAt60.bob - poseAt120.bob) < 1e-8, "high-refresh rendering should not change pose timing");
+assert.ok(poseAt60.bob > 5.9 && poseAt60.bob < 6, "the response should settle quickly without snapping");
+
 console.log("character-motion: directional states and expressive pose profiles passed");

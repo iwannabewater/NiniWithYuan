@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v2.0.0-astral-echo-r1";
+const CACHE = "nini-yuan-v2.1.0-starfield-cadence-r1";
 const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",
@@ -12,7 +12,9 @@ const ASSETS = [
   "./src/core/fixed-step.js",
   "./src/render/hud.js",
   "./src/render/character-motion.js",
+  "./src/render/character-effects.js",
   "./src/render/playfield-material.js",
+  "./src/render/creature-material.js",
   "./src/render/game-feel.js",
   "./src/render/warden.js",
   "./src/render/respawn-veil.js",

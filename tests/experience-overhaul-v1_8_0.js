@@ -54,7 +54,7 @@ for (const marker of [
 ]) {
   assert.ok(css.includes(marker), `experience composition should include ${marker}`);
 }
-assert.match(css, /font-size: calc\(10px \* var\(--hud-scale\)\)/);
+assert.match(css, /font-size: calc\(13px \* var\(--hud-scale\)\)/);
 assert.doesNotMatch(css, /\.portrait-gated:has\(/, "orientation visibility must not depend on :has support");
 
 assert.ok(hud.includes('group.className = "level-world-group"'));

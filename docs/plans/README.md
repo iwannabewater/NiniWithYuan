@@ -24,6 +24,8 @@ This folder keeps release planning and completion records out of the repository 
 - [v1.9.0 release review notes](REVIEW_v1.9.0.md)
 - [v2.0.0 Astral Echo release plan](OPTIMIZATION_PLAN_v2.0.0.md)
 - [v2.0.0 release review notes](REVIEW_v2.0.0.md)
+- [v2.1.0 Starfield Cadence release plan](OPTIMIZATION_PLAN_v2.1.0.md)
+- [v2.1.0 release candidate review notes](REVIEW_v2.1.0.md)
 
 ## Design Specs
 

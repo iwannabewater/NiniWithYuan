@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.0.0, **星穹回响 / Astral Echo**, is the first major version: it adds three world-finale wardens, mid-chapter checkpoints, a hidden collectible per chapter, chain scoring, trial medals, a thirty-entry achievement record, and an assist mode, then deepens the Canvas playfield from each chapter's own palette. The game is offline and local-only, with two playable characters, fifteen handcrafted chapters, schema-validated saves, adjustable touch, display, and assist settings, PWA support, and a reproducible debug APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.1.0, **星野律动 / Starfield Cadence**, makes the existing fifteen-chapter journey more legible and alive: character poses settle by elapsed time, signature actions gain restrained contact and trail effects, every star domain carries its own prop language, enemies and wardens read at compact-phone scale, and guardian recovery windows now match their stated combat rule. The game remains offline and local-only, with two playable characters, schema-validated saves, adjustable touch, display, and assist settings, PWA support, and a reproducible APK build path.
 
 ## Gameplay
 
@@ -55,7 +55,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.0.0 adds checks for save schema 4 sanitizing, trial-medal and chain math, achievement evaluation, warden encounter data, star-marrow and lantern placement against level geometry, assist record integrity, and the v2.0 interface contracts.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.1.0 adds elapsed-time pose convergence, action-effect and reduced-motion contracts, world scenery grammar, compact enemy scale, guardian phase-by-damage-source behavior, HUD type-floor and toast-clearance checks, plus Android signer, checksum, provenance, and immutable-action coverage.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 
@@ -75,7 +75,7 @@ The build output is:
 dist/NiniYuan.apk
 ```
 
-The build script creates a local debug keystore when one is not present. The keystore is ignored by git and is valid only for local testing. Store releases require a production signing key and an App Bundle or release package prepared through the target store workflow.
+The build script creates an ignored debug keystore when no signing configuration is supplied. That fallback is only a local or pull-request smoke package and must not be uploaded to a GitHub Release. Main-branch CI restores the protected signer used by the latest public APK line, verifies certificate SHA-256 `23fe694d4adfb093a752c6a90f23086c6744bc520c89656079d78414979457e7`, and attaches build provenance before retaining a release candidate. Store releases remain a separate production-signing and App Bundle workflow. See [Android Testing](docs/ANDROID_TESTING.md) for the exact-candidate gate.
 
 The Android entry point uses `sensorLandscape`, so phones start in landscape and may rotate between the two landscape orientations.
 
@@ -104,7 +104,7 @@ The capture set contains four 1080 by 1920 portrait screenshots, three 1920 by 1
 ├── src/
 │   ├── game.js                # Canvas game loop and gameplay logic
 │   ├── core/                  # Storage, audio, input, game-rule, progression, and frame-scheduling helpers
-│   └── render/                # DOM, character-motion, game-feel, warden, and Canvas material helpers
+│   └── render/                # DOM, character/effect, creature, game-feel, warden, and Canvas material helpers
 ├── assets/
 │   ├── characters/            # Character source art and production atlases
 │   ├── audio/                 # Bundled CC0 BGM and provenance notice

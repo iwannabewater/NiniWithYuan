@@ -69,6 +69,16 @@ for (const [index, kind] of ["berry", "moon", "core", "bell", "heart"].entries()
 Playfield.drawGoal(ctx, { x: 300, y: 100, w: 70, h: 120 }, { time: 1.5 });
 Playfield.drawWind(ctx, { x: 0, y: 0, w: 240, h: 390, force: 320 }, { time: 1.5 });
 Playfield.drawPortal(ctx, { x: 400, y: 100, w: 42, h: 76, palette: "jade" }, { time: 1.5 });
+for (const [index, shape] of ["orb", "shard", "streak", "ring", "petal"].entries()) {
+  Playfield.drawParticle(ctx, {
+    x: 30 + index * 12,
+    y: 40,
+    r: 3,
+    color: Playfield.MATERIAL.agedGold,
+    shape,
+    rotation: 0.2,
+  }, { alpha: 0.8 });
+}
 
 assert.ok(ctx.calls.filter(([name]) => name === "fillRect").length >= 2, "background and wind fields should paint real surfaces");
 assert.ok(ctx.calls.filter(([name]) => name === "ellipse").length >= 6, "material renderers should draw visible seals, rings, and glyphs");

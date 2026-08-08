@@ -44,7 +44,7 @@
       };
     }
     const t = clamp(Number(alpha) || 0, 0, 1);
-    const ease = t * t * (3 - 2 * t);
+    const ease = options.linear === true ? t : t * t * (3 - 2 * t);
     return {
       bob: lerp(Number(from.bob) || 0, Number(to.bob) || 0, ease),
       lean: lerp(Number(from.lean) || 0, Number(to.lean) || 0, ease),
@@ -66,6 +66,13 @@
       direction: to.direction,
       gaitWave: Number(to.gaitWave) || 0,
     };
+  }
+
+  /** Frame-rate-independent damping for presentation pose convergence. */
+  function dampedBlendAlpha(deltaSeconds = 0, response = 22) {
+    const dt = clamp(Number(deltaSeconds) || 0, 0, 0.1);
+    const rate = Math.max(0.001, Number(response) || 22);
+    return clamp(1 - Math.exp(-rate * dt), 0, 1);
   }
 
   function advanceAnimationState(previous, animation, simulationTime = 0) {
@@ -222,6 +229,7 @@
     resolveMotionFacing,
     shouldHoldLandingPose,
     blendMotionPose,
+    dampedBlendAlpha,
     emptyMotionPose,
     advanceAnimationState,
     animationElapsed,

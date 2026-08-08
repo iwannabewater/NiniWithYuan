@@ -17,6 +17,35 @@ async function runFinePointerChecks() {
       }));
       check(state.touch === "none" && state.rotate === "none" && state.hud === "visible", "800 by 600 desktop must not inherit touch UI", state);
 
+      await page.setViewportSize({ width: 844, height: 390 });
+      await page.waitForTimeout(120);
+      state = await page.evaluate(() => {
+        const tips = document.querySelector("#controlTips");
+        const bounds = tips.getBoundingClientRect();
+        const items = [...tips.children].map((item) => {
+          const rect = item.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, width: rect.width };
+        });
+        return {
+          viewportWidth: innerWidth,
+          viewportHeight: innerHeight,
+          display: getComputedStyle(tips).display,
+          bounds: { top: bounds.top, bottom: bounds.bottom, left: bounds.left, right: bounds.right, width: bounds.width },
+          items,
+        };
+      });
+      check(
+        state.display !== "none" &&
+          state.bounds.left >= 0 &&
+          state.bounds.right <= state.viewportWidth &&
+          Math.abs((state.bounds.left + state.bounds.right) / 2 - state.viewportWidth / 2) <= 1 &&
+          state.bounds.bottom <= state.viewportHeight &&
+          state.bounds.bottom >= state.viewportHeight - 20 &&
+          state.items.every((item) => item.left >= 0 && item.right <= state.viewportWidth),
+        "844 by 390 fine-pointer gameplay tips must stay centered on the bottom safe rail",
+        state
+      );
+
       await page.setViewportSize({ width: 600, height: 900 });
       await page.waitForTimeout(120);
       state = await page.evaluate(() => ({

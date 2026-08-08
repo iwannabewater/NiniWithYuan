@@ -17,6 +17,10 @@
     return WARDEN_PALETTES[name] || WARDEN_PALETTES.aurora;
   }
 
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, Number(value) || 0));
+  }
+
   function ellipse(ctx, x, y, rx, ry, rotation = 0) {
     ctx.beginPath();
     ctx.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rotation, 0, Math.PI * 2);
@@ -30,6 +34,57 @@
     ctx.beginPath();
     ctx.arc(x, y, Math.max(0.5, radius), 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawWardenIdentity(ctx, name, radius, palette, options = {}) {
+    const time = Number(options.time) || 0;
+    const open = options.open === true;
+    const still = options.reducedMotion === true;
+    const motion = still ? 0 : time;
+    ctx.save();
+    ctx.strokeStyle = palette.trim;
+    ctx.fillStyle = palette.shell;
+    ctx.lineWidth = 1.4;
+
+    if (name === "core") {
+      ctx.globalAlpha = open ? 0.42 : 0.72;
+      for (let side = 0; side < 4; side += 1) {
+        ctx.save();
+        ctx.rotate(side * Math.PI / 2 + motion * 0.08);
+        const distance = radius * (open ? 1.1 : 0.86);
+        ctx.translate(distance, 0);
+        ctx.rotate(Math.PI / 4);
+        ctx.strokeRect(-radius * 0.15, -radius * 0.15, radius * 0.3, radius * 0.3);
+        ctx.restore();
+      }
+    } else if (name === "tide") {
+      ctx.globalAlpha = open ? 0.46 : 0.7;
+      for (let arc = 0; arc < 3; arc += 1) {
+        ctx.save();
+        ctx.rotate(arc * Math.PI * 2 / 3 - motion * 0.11);
+        ctx.beginPath();
+        ctx.arc(radius * (open ? 0.76 : 0.64), 0, radius * 0.34, -1.1, 1.1);
+        ctx.stroke();
+        ctx.restore();
+      }
+    } else {
+      ctx.globalAlpha = open ? 0.44 : 0.74;
+      for (let ray = 0; ray < 6; ray += 1) {
+        ctx.save();
+        ctx.rotate(ray * Math.PI / 3 + motion * 0.09);
+        const inner = radius * (open ? 0.9 : 0.68);
+        const outer = radius * (open ? 1.22 : 1.02);
+        ctx.beginPath();
+        ctx.moveTo(inner, 0);
+        ctx.lineTo(outer, -radius * 0.11);
+        ctx.lineTo(outer * 0.93, radius * 0.11);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
     ctx.restore();
   }
 
@@ -67,12 +122,23 @@
    */
   function drawWarden(ctx, warden, options = {}) {
     if (!warden) return;
-    const { time = 0, telegraph = 0, flash = 0, sigil = "" } = options;
+    const {
+      time = 0,
+      telegraph = 0,
+      flash = 0,
+      sigil = "",
+      phase = "wait",
+      attack = "",
+      reducedMotion = false,
+    } = options;
     const palette = wardenPalette(warden.palette);
     const cx = warden.x + warden.w / 2;
     const cy = warden.y + warden.h / 2;
     const radius = Math.min(warden.w, warden.h) / 2;
     const charge = Math.max(0, Math.min(1, telegraph));
+    const open = options.open === true || phase === "recover";
+    const healthRatio = clamp(options.healthRatio ?? 1, 0, 1);
+    const motionTime = reducedMotion ? 0 : time;
 
     ctx.save();
     // Grounded reference shadow keeps the silhouette anchored during sweeps.
@@ -83,18 +149,24 @@
     ctx.globalAlpha = 1;
 
     ctx.translate(cx, cy);
-    ctx.rotate(Math.sin(time * 0.7) * 0.05);
+    ctx.rotate(Math.sin(motionTime * 0.7) * 0.05);
+
+    drawWardenIdentity(ctx, warden.palette, radius, palette, {
+      time: motionTime,
+      open,
+      reducedMotion,
+    });
 
     // Outer armillary rings.
-    ring(ctx, 0, 0, radius * 0.98, 2, palette.trim, 0.55);
+    ring(ctx, 0, 0, radius * (open ? 1.12 : 0.98), 2, palette.trim, open ? 0.36 : 0.55);
     ctx.save();
-    ctx.rotate(time * 0.55);
-    ring(ctx, 0, 0, radius * 0.8, 1.4, palette.core, 0.7);
+    ctx.rotate(motionTime * 0.55 + (open ? 0.42 : 0));
+    ring(ctx, 0, 0, radius * (open ? 0.96 : 0.8), 1.4, palette.core, open ? 0.48 : 0.7);
     ctx.restore();
     ctx.save();
-    ctx.rotate(-time * 0.38);
-    ctx.scale(1, 0.42);
-    ring(ctx, 0, 0, radius * 0.9, 1.6, palette.trim, 0.5);
+    ctx.rotate(-motionTime * 0.38 - (open ? 0.34 : 0));
+    ctx.scale(1, open ? 0.58 : 0.42);
+    ring(ctx, 0, 0, radius * (open ? 1.04 : 0.9), 1.6, palette.trim, open ? 0.36 : 0.5);
     ctx.restore();
 
     // Shell.
@@ -109,14 +181,54 @@
     ctx.stroke();
 
     // Core. Charge and hit flash both read on this one element.
-    const coreRadius = radius * (0.24 + charge * 0.12);
+    const coreRadius = radius * (0.24 + charge * 0.12 + (open ? 0.08 : 0));
     ctx.globalAlpha = 0.9;
-    ctx.fillStyle = flash > 0 ? "#eee7d5" : palette.core;
+    ctx.fillStyle = flash > 0 || open ? "#eee7d5" : palette.core;
     ellipse(ctx, 0, 0, coreRadius, coreRadius);
     ctx.fill();
-    ctx.globalAlpha = 0.34 + charge * 0.4;
-    ring(ctx, 0, 0, coreRadius + 6 + charge * 10, 2, palette.core, 0.7);
+    ctx.globalAlpha = 0.34 + charge * 0.4 + (open ? 0.18 : 0);
+    ring(ctx, 0, 0, coreRadius + 6 + charge * 10 + (open ? 7 : 0), open ? 2.6 : 2, palette.core, 0.7);
     ctx.globalAlpha = 1;
+
+    if (open) {
+      ctx.strokeStyle = palette.core;
+      ctx.lineWidth = 1.6;
+      ctx.globalAlpha = 0.62;
+      for (let ray = 0; ray < 8; ray += 1) {
+        const angle = ray * Math.PI / 4;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * radius * 0.56, Math.sin(angle) * radius * 0.56);
+        ctx.lineTo(Math.cos(angle) * radius * 0.72, Math.sin(angle) * radius * 0.72);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    } else if (phase === "telegraph") {
+      ctx.strokeStyle = attack === "sweep" ? "#c96978" : palette.trim;
+      ctx.lineWidth = 1.4 + charge * 1.2;
+      ctx.globalAlpha = 0.34 + charge * 0.4;
+      ctx.beginPath();
+      ctx.moveTo(-radius * 0.42, -radius * 0.42);
+      ctx.lineTo(radius * 0.42, radius * 0.42);
+      ctx.moveTo(radius * 0.42, -radius * 0.42);
+      ctx.lineTo(-radius * 0.42, radius * 0.42);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    if (healthRatio < 0.36) {
+      ctx.globalAlpha = 0.44 + (0.36 - healthRatio) * 0.8;
+      ctx.strokeStyle = "#eee7d5";
+      ctx.lineWidth = 1.1;
+      ctx.beginPath();
+      ctx.moveTo(-radius * 0.24, -radius * 0.5);
+      ctx.lineTo(-radius * 0.05, -radius * 0.18);
+      ctx.lineTo(-radius * 0.18, radius * 0.08);
+      ctx.moveTo(radius * 0.28, -radius * 0.4);
+      ctx.lineTo(radius * 0.08, -radius * 0.12);
+      ctx.lineTo(radius * 0.2, radius * 0.12);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     if (sigil) {
       ctx.fillStyle = "#0b1016";
@@ -180,10 +292,14 @@
 
   /** 哨星 — a fixed emplacement. The muzzle ring shows how close the next shot is. */
   function drawSentry(ctx, enemy, options = {}) {
-    const { time = 0, charge = 0, flash = 0 } = options;
+    const { charge = 0, flash = 0 } = options;
+    const time = options.reducedMotion === true ? 0 : Number(options.time) || 0;
     const cx = enemy.x + enemy.w / 2;
     const baseY = enemy.y + enemy.h;
     ctx.save();
+    ctx.translate(cx, baseY);
+    ctx.scale(1.28, 1.28);
+    ctx.translate(-cx, -baseY);
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#05080c";
     ellipse(ctx, cx, baseY + 2, enemy.w * 0.62, 4);
@@ -229,13 +345,38 @@
     ctx.restore();
   }
 
-  /** 石胄 — a shelled walker. The plate reads as "bolts will not work here". */
-  function drawWarder(ctx, enemy, options = {}) {
-    const { time = 0, flash = 0 } = options;
+  /** The patrol rail stays in world coordinates while the creature art scales. */
+  function drawWarderPatrolRail(ctx, enemy, options = {}) {
+    const time = options.reducedMotion === true ? 0 : Number(options.time) || 0;
     const cx = enemy.x + enemy.w / 2;
     const baseY = enemy.y + enemy.h;
     const facing = enemy.vx >= 0 ? 1 : -1;
     ctx.save();
+    ctx.globalAlpha = 0.32;
+    ctx.strokeStyle = "#8b8f7c";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(enemy.baseX - enemy.patrol + enemy.w / 2, baseY + 6);
+    ctx.lineTo(enemy.baseX + enemy.patrol + enemy.w / 2, baseY + 6);
+    ctx.stroke();
+    ctx.globalAlpha = 0.5;
+    ctx.fillStyle = "#8b8f7c";
+    ellipse(ctx, cx + facing * 10 + Math.sin(time * 3) * 2, baseY + 6, 2.2, 2.2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** 石胄 — a shelled walker. The plate reads as "bolts will not work here". */
+  function drawWarder(ctx, enemy, options = {}) {
+    const { flash = 0 } = options;
+    const cx = enemy.x + enemy.w / 2;
+    const baseY = enemy.y + enemy.h;
+    const facing = enemy.vx >= 0 ? 1 : -1;
+    drawWarderPatrolRail(ctx, enemy, options);
+    ctx.save();
+    ctx.translate(cx, baseY);
+    ctx.scale(1.28, 1.28);
+    ctx.translate(-cx, -baseY);
     ctx.globalAlpha = 0.24;
     ctx.fillStyle = "#05080c";
     ellipse(ctx, cx, baseY + 2, enemy.w * 0.54, 4.5);
@@ -275,17 +416,6 @@
     ellipse(ctx, cx + facing * enemy.w * 0.22, baseY - enemy.h * 0.36, 3, 3.4);
     ctx.fill();
 
-    ctx.globalAlpha = 0.32;
-    ctx.strokeStyle = "#8b8f7c";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(enemy.baseX - enemy.patrol + enemy.w / 2, baseY + 6);
-    ctx.lineTo(enemy.baseX + enemy.patrol + enemy.w / 2, baseY + 6);
-    ctx.stroke();
-    ctx.globalAlpha = 0.5;
-    ellipse(ctx, cx + facing * 10 + Math.sin(time * 3) * 2, baseY + 6, 2.2, 2.2);
-    ctx.fillStyle = "#8b8f7c";
-    ctx.fill();
     ctx.restore();
   }
 
