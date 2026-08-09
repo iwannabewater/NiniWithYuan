@@ -2,8 +2,8 @@
 
 ## Status
 
-This document records the implemented v2.3.0 release-candidate scope. No tag or
-GitHub Release exists at this snapshot.
+This document records the implemented and released v2.3.0 scope. The release
+was published as `v2.3.0-r2` with the verified APK and checksum attached.
 
 ## Scope
 

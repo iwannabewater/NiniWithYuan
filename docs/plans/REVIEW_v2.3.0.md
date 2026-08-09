@@ -2,8 +2,8 @@
 
 Date: 2026-08-09
 
-Status: release candidate. No `v2.3.0` tag or GitHub Release exists at this
-snapshot.
+Status: released. The verified asset release is `v2.3.0-r2`, with the APK,
+checksum, and build provenance from the exact Android CI commit.
 
 ## Scope Review
 
