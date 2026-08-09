@@ -23,6 +23,10 @@ assert.equal(Playfield.phaseColor("b"), "#6da895");
 assert.equal(Playfield.powerupColor("berry"), "#b87b86");
 assert.equal(Playfield.powerupColor("core"), "#6da895");
 assert.equal(Playfield.powerupColor("bell"), "#c3a468");
+const pulseA = Playfield.pickupPulse("gem", 0, 10);
+const pulseB = Playfield.pickupPulse("gem", 0.2, 10);
+assert.ok(pulseA.pulse !== pulseB.pulse, "pickup presentation should vary with scene time");
+assert.equal(typeof pulseA.wash, "number");
 
 {
   const browserContext = { window: {}, Math };

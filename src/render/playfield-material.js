@@ -78,6 +78,17 @@
     return phase === "b" ? MATERIAL.carvedJade : MATERIAL.phaseBlue;
   }
 
+  function pickupPulse(kind, time = 0, phase = 0) {
+    const t = Math.max(0, Number(time) || 0);
+    const p = Math.max(0, Number(phase) || 0);
+    const wave = Math.sin(t * 3.2 + p * 0.7);
+    const bright = kind === "gem" ? 0.72 : 0.5;
+    return {
+      pulse: 0.5 + wave * 0.5,
+      wash: 0.14 + Math.max(0, wave) * bright * 0.08,
+    };
+  }
+
   function skyPointX(index, drift, width) {
     return (index * 173 + drift * (index % 3 + 1)) % (width + 160) - 80;
   }
@@ -536,16 +547,19 @@
 
   function drawCoin(ctx, coin, options = {}) {
     const time = Number(options.time) || 0;
+    const pulse = pickupPulse(coin.kind, time, coin.x);
     const bob = options.reducedMotion ? 0 : Math.sin(time / 0.36 + coin.x) * 3;
     ctx.save();
     ctx.translate(coin.x + 11, coin.y + 11 + bob);
     ctx.rotate(coin.kind === "gem" ? Math.PI / 4 : time * 0.16);
     const gradient = ctx.createRadialGradient(-3, -4, 1, 0, 0, 15);
     gradient.addColorStop(0, MATERIAL.moonWhite);
+    gradient.addColorStop(0.72, coin.kind === "gem" ? MATERIAL.carvedJade : MATERIAL.agedGold);
     gradient.addColorStop(1, coin.kind === "gem" ? MATERIAL.carvedJade : MATERIAL.agedGold);
     ctx.fillStyle = gradient;
     ctx.shadowColor = coin.kind === "gem" ? MATERIAL.carvedJade : MATERIAL.agedGold;
     ctx.shadowBlur = options.fx === false ? 0 : 7;
+    ctx.globalAlpha = 0.72 + pulse.pulse * 0.28;
     ctx.beginPath();
     if (coin.kind === "gem") {
       ctx.moveTo(0, -13);
@@ -566,7 +580,7 @@
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.fillStyle = MATERIAL.lacquer;
-    ctx.globalAlpha = 0.62;
+    ctx.globalAlpha = 0.52 + pulse.pulse * 0.18;
     ctx.beginPath();
     ctx.arc(0, 0, coin.kind === "gem" ? 3 : 3.5, 0, Math.PI * 2);
     ctx.fill();
@@ -581,10 +595,12 @@
     const time = Number(options.time) || 0;
     const color = powerupColor(powerup.kind);
     const bob = options.reducedMotion ? 0 : Math.sin(time / 0.28 + powerup.x) * 3;
+    const pulse = pickupPulse(powerup.kind, time, powerup.x);
     ctx.save();
     ctx.translate(powerup.x + powerup.w / 2, powerup.y + powerup.h / 2 + bob);
     ctx.shadowColor = color;
     ctx.shadowBlur = options.fx === false ? 0 : 8;
+    ctx.globalAlpha = 0.74 + pulse.pulse * 0.26;
     ctx.fillStyle = color;
     ctx.beginPath();
     if (powerup.kind === "berry") {
@@ -847,6 +863,7 @@
     MATERIAL,
     phaseColor,
     powerupColor,
+    pickupPulse,
     drawBackground,
     sceneryKind,
     drawScenery,
