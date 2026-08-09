@@ -30,6 +30,7 @@
       cast: 0,
       orbit: 0,
       slash: 0,
+      soak: 0,
       trailCount: 0,
       trailSpacing: 0,
       trailAlpha: 0,
@@ -37,8 +38,11 @@
 
     if (animation === "land") {
       plan.contact = Math.pow(1 - clamp(elapsed / 0.2, 0, 1), 2);
+      plan.soak = Math.max(plan.contact, plan.soak);
     } else if (animation === "shoot") {
       plan.cast = Math.pow(1 - clamp(elapsed / 0.18, 0, 1), 1.5);
+    } else if ((animation === "jump" || animation === "fall") && !reducedMotion) {
+      plan.soak = Math.pow(1 - clamp(elapsed / 0.22, 0, 1), 1.25);
     } else if (animation === "skill") {
       const release = 1 - clamp(elapsed / 0.24, 0, 1);
       if (input.id === "nini") plan.orbit = 0.58 + release * 0.42;
@@ -84,6 +88,20 @@
         ctx.beginPath();
         ctx.moveTo(x * 0.55, 1);
         ctx.lineTo(x, 4 + Math.abs(ray) * 1.2);
+        ctx.stroke();
+      }
+    }
+
+    if (plan.soak > 0.001) {
+      ctx.globalAlpha = 0.1 + plan.soak * 0.18;
+      ctx.strokeStyle = palette.secondary;
+      ctx.lineWidth = 1.1 + plan.soak * 0.7;
+      for (let line = -1; line <= 1; line += 1) {
+        const x = line * width * 0.22;
+        const delta = line * height * 0.04;
+        ctx.beginPath();
+        ctx.moveTo(x, -height * 0.06);
+        ctx.quadraticCurveTo(line * width * 0.12, -height * 0.22, line * width * 0.13, -height * 0.42 - delta);
         ctx.stroke();
       }
     }

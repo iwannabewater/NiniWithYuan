@@ -29,8 +29,13 @@ assert.ok(landingStart.contact > landingRecovery.contact, "a landing contact sho
 
 const niniSkill = CharacterEffects.resolveEffectPlan({ id: "nini", animation: "skill_left", elapsed: 0.04 });
 const yuanSkill = CharacterEffects.resolveEffectPlan({ id: "yuan", animation: "skill_right", elapsed: 0.04 });
+const jumpStart = CharacterEffects.resolveEffectPlan({ animation: "jump_right", elapsed: 0 });
+const jumpRecovery = CharacterEffects.resolveEffectPlan({ animation: "jump_right", elapsed: 0.18 });
+const stillJump = CharacterEffects.resolveEffectPlan({ animation: "jump_right", elapsed: 0, reducedMotion: true });
 assert.ok(niniSkill.orbit > 0 && niniSkill.slash === 0, "Nini should carry the star-dial orbit language");
 assert.ok(yuanSkill.slash > 0 && yuanSkill.orbit === 0, "Yuan should carry the gui-sword cut language");
+assert.ok(jumpStart.soak > jumpRecovery.soak, "jump presentation should keep a short rising settle envelope");
+assert.equal(stillJump.soak, 0, "reduced motion should not add extra movement feedback to a jump start");
 assert.equal(yuanSkill.trailCount, 2, "Yuan's dash should keep two readable echoes without stacking a third trail");
 assert.ok(
   yuanSkill.trailSpacing > niniSkill.trailSpacing && yuanSkill.trailAlpha > niniSkill.trailAlpha,
