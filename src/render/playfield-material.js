@@ -460,6 +460,14 @@
         ctx.stroke();
       }
     }
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = MATERIAL.moonWhiteSoft;
+    for (let x = platform.x + 18; x < platform.x + platform.w - 14; x += 116) {
+      ellipse(ctx, x, platform.y + platform.h - 6, 1.7, 1.7);
+      ctx.fill();
+      ellipse(ctx, x + 12, platform.y + platform.h - 10, 1.1, 1.1);
+      ctx.fill();
+    }
     ctx.restore();
   }
 
@@ -491,10 +499,25 @@
       ctx.fill();
       ctx.stroke();
     }
+    ctx.globalAlpha = 0.2;
+    ctx.strokeStyle = "rgba(238,231,213,.62)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(hazard.x + 4, hazard.y + 8);
+    ctx.lineTo(hazard.x + hazard.w - 4, hazard.y + 8);
+    ctx.stroke();
     ctx.restore();
   }
 
   function drawSpring(ctx, spring) {
+    ctx.save();
+    roundRect(ctx, spring.x, spring.y + spring.h - 2, spring.w, 6, 2, MATERIAL.lacquerRaised);
+    ctx.strokeStyle = "rgba(195,164,104,.38)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(spring.x + 7, spring.y + spring.h + 1);
+    ctx.lineTo(spring.x + spring.w - 7, spring.y + spring.h + 1);
+    ctx.stroke();
     roundRect(ctx, spring.x + 5, spring.y + 8, spring.w - 10, spring.h, 4, MATERIAL.agedGold);
     ctx.strokeStyle = MATERIAL.carvedJade;
     ctx.lineWidth = 3;
@@ -504,6 +527,11 @@
     ctx.lineTo(spring.x + 36, spring.y + 20);
     ctx.lineTo(spring.x + 48, spring.y + 8);
     ctx.stroke();
+    ctx.fillStyle = "rgba(238,231,213,.74)";
+    ctx.beginPath();
+    ctx.arc(spring.x + spring.w / 2, spring.y + spring.h - 4, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
   }
 
   function drawCoin(ctx, coin, options = {}) {

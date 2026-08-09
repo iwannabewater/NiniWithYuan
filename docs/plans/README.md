@@ -28,6 +28,8 @@ This folder keeps release planning and completion records out of the repository 
 - [v2.1.0 release candidate review notes](REVIEW_v2.1.0.md)
 - [v2.2.0 Gilded Companions release plan](OPTIMIZATION_PLAN_v2.2.0.md)
 - [v2.2.0 release candidate review notes](REVIEW_v2.2.0.md)
+- [v2.3.0 Living Field release plan](OPTIMIZATION_PLAN_v2.3.0.md)
+- [v2.3.0 release candidate review notes](REVIEW_v2.3.0.md)
 
 ## Design Specs
 

@@ -142,6 +142,15 @@ static mark. The helper is stateless and DOM-free, does not read viewport
 dimensions or device pixel ratio, and is never part of player entities, saves,
 or fixed-step simulation.
 
+## 3.8 Living Field Surfaces (v2.3.0)
+
+Living Field adds deterministic material cues to the playfield renderers without
+adding new gameplay entities. Ground creatures carry a smaller grounded core
+and warm ember flecks; hazard tops carry a quiet reading line; platforms gain a
+row of low-contrast seam studs; springs read as seated instruments with a
+visible lintel knob. The layer is stateless, honors reduced motion, and never
+changes collision geometry or simulation timing.
+
 ## 4. Component Styling
 
 ### Buttons

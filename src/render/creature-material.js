@@ -146,9 +146,12 @@
     ctx.restore();
   }
 
-  function drawGroundCreature(ctx, enemy, pose) {
+  function drawGroundCreature(ctx, enemy, pose, options = {}) {
     const colors = paletteFor(enemy.type);
     const footY = enemy.h / 2;
+    const still = options.reducedMotion === true;
+    const time = Number(options.time) || 0;
+    const seed = Math.floor((enemy.x + enemy.y) / 23) % 3;
     ctx.save();
     ctx.translate(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
     ctx.translate(0, footY);
@@ -194,6 +197,20 @@
       ctx.lineTo(4, 6);
       ctx.lineTo(10, 0);
       ctx.stroke();
+      if (!still && time > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.16 + pose.focus * 0.2;
+        for (let spark = 0; spark < 3; spark += 1) {
+          const a = (spark * 2.1 + seed) * 0.9 + time * 2 + enemy.x * 0.001;
+          const sx = Math.cos(a) * (7 + spark * 5);
+          const sy = -8 - Math.sin(a * 1.3 + spark) * (4 + spark * 2);
+          ctx.fillStyle = spark % 2 ? "#fff7d1" : MATERIAL.agedGold;
+          ctx.beginPath();
+          ctx.arc(sx, sy, Math.max(0.6, 1.8 - spark * 0.4), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
     } else {
       ctx.strokeStyle = "rgba(182,206,196,.78)";
       ctx.lineWidth = 2;
@@ -206,6 +223,13 @@
       ellipse(ctx, -13, -11, 4, 7, -0.6);
       ctx.fill();
       ellipse(ctx, 13, -11, 4, 7, 0.6);
+      ctx.fill();
+      ctx.globalAlpha = 0.48;
+      ctx.fillStyle = colors.dark;
+      ellipse(ctx, 0, 7, enemy.w * 0.14, 2.5);
+      ctx.fill();
+      ctx.fillStyle = colors.core;
+      ellipse(ctx, 0, 5.5, 3.2, 1.8);
       ctx.fill();
     }
 
@@ -322,7 +346,7 @@
     drawPatrolIntent(ctx, enemy, pose, options);
     drawHitContour(ctx, enemy, pose);
     if (enemy.type === "wisp") drawWisp(ctx, enemy, pose, options);
-    else drawGroundCreature(ctx, enemy, pose);
+    else drawGroundCreature(ctx, enemy, pose, options);
   }
 
   const api = {

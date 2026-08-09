@@ -31,6 +31,7 @@ const checks = [
   ["node", ["tests/character-gilded-v2_2_0.js"]],
   ["node", ["tests/playfield-material.js"]],
   ["node", ["tests/presentation-materials.js"]],
+  ["node", ["tests/living-field-v2_3_0.js"]],
   ["node", ["tests/starfield-cadence-v2_1_0.js"]],
   ["node", ["tests/song-atlas-ui.js"]],
   ["node", ["tests/docs-links.js"]],

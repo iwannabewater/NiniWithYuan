@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.3.0
+
+- Added **局境生息 / Living Field** field-level presentation. Ground creatures pick up deterministic cores and ember-flame flecks, platforms gain quiet seam studs, hazards carry a clearer top reading line, and springs now draw as seated tools with a lintel knob.
+- Kept all creature and playfield detail changes in the stateless renderers. Reduced-motion mode still freezes decorative creature sparks and decorative playfield motion, and gameplay/collision boundaries stay unchanged.
+- Rebuilt the local LXGW WenKai subsets for the new runtime `境` glyph and updated `assets/fonts/NOTICE.md` with the WOFF2 digests printed by the subset script.
+- Added v2.3.0 reset-assets regression coverage for creature micro-detail, spring/hazard/platform marks, reduced-motion separation, and release metadata. The release bumps web package to `2.3.0`, Android to `versionCode=24` and `versionName=2.3.0`, and the service-worker cache to `nini-yuan-v2.3.0-living-field-r1`.
+- Preserved the fifteen chapters, save schema 4, character values, collision geometry, input arbitration, collection rating, chain rules, assist records, movement tuning, and fixed-step simulation.
+
 ## v2.2.0
 
 - Added **人物金相 / Gilded Companions** character presentation. The character-select sheets now carry a signature inscription inside each portrait, and the in-play HUD exposes a small character sigil beside the companion name so the two leads read clearly at a glance without adding another status bar.
