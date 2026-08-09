@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.2.0
+
+- Added **人物金相 / Gilded Companions** character presentation. The character-select sheets now carry a signature inscription inside each portrait, and the in-play HUD exposes a small character sigil beside the companion name so the two leads read clearly at a glance without adding another status bar.
+- Added a stateless Canvas gilding helper. Nini and Yuan gain restrained overhead arcs, cloth-line echoes, and stride drafts around the existing production sprite; reduced-motion mode freezes the ambient motion and keeps only a quiet static mark. This is presentation-only and never writes into player entities, collision geometry, saves, or fixed-step simulation.
+- Refreshed the local WenKai subsets for the current runtime copy, including the new `金` glyph introduced by the release tag, and recorded the printed WOFF2 digests in `assets/fonts/NOTICE.md`.
+- Added focused v2.2.0 regression coverage for the new helper surface, HUD sigil refresh, offline cache wiring, runtime order, and semantic version metadata. The release bumps the web package to `2.2.0`, Android to `versionCode=23` and `versionName=2.2.0`, and the service-worker cache to `nini-yuan-v2.2.0-gilded-companions-r1`.
+- Preserved the fifteen chapters, save schema 4, character values, collision geometry, input arbitration, collection rating, chain-reward boundary, assist record rules, movement tuning, and fixed-step simulation.
+
 ## v2.1.0
 
 - Added **Starfield Cadence** presentation timing. Character bob, lean, stretch, and lift now converge from the displayed pose by elapsed simulation time, so the same transition settles consistently at 30, 60, and 120 Hz instead of lasting one display frame.

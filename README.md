@@ -1,6 +1,6 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.1.0, **星野律动 / Starfield Cadence**, makes the existing fifteen-chapter journey more legible and alive: character poses settle by elapsed time, signature actions gain restrained contact and trail effects, every star domain carries its own prop language, enemies and wardens read at compact-phone scale, and guardian recovery windows now match their stated combat rule. The game remains offline and local-only, with two playable characters, schema-validated saves, adjustable touch, display, and assist settings, PWA support, and a reproducible APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.2.0, **人物金相 / Gilded Companions**, makes the paired protagonist presentation carry more artifact life: character selection cards now hold signature inscriptions, the in-play HUD exposes the current character sigil, and the runtime adds a stateless gilded vignette around the atlas sprite that reads as cloth and orbit draft without changing gameplay. The release keeps the v2.1.0 Starfield Cadence clarity work: character poses settle after elapsed time, signature actions gain restrained contact and trail effects, every star domain carries its own prop language, enemies and wardens read at compact-phone scale, and guardian recovery windows match their stated combat rule. The game remains offline and local-only, with two playable characters, schema-validated saves, adaptive touch, display, and assist settings, PWA support, and a reproducible APK build path.
 
 ## Gameplay
 
@@ -55,7 +55,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.1.0 adds elapsed-time pose convergence, action-effect and reduced-motion contracts, world scenery grammar, compact enemy scale, guardian phase-by-damage-source behavior, HUD type-floor and toast-clearance checks, plus Android signer, checksum, provenance, and immutable-action coverage.
+The suite covers syntax, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.2.0 adds Gilded Companions character UI contracts: signature card copy, HUD sigil refresh, stateless runtime gilding, font subset checks for the new runtime copy, and release-floor metadata guards. v2.1.0 adds elapsed-time pose convergence, character-effect and reduced-motion contracts, world scenery, compact enemy scale, guardian phase-by-damage-source behavior, HUD type-floor and toast-clearance checks, plus Android signer, checksum, provenance, and immutable-action coverage.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 

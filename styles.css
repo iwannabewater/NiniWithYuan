@@ -1349,6 +1349,9 @@
     padding: 22px;
     overflow: hidden;
     border-radius: var(--r-l);
+    --character-edge: var(--c-aged-gold-deep);
+    --character-gold: var(--c-aged-gold);
+    --character-silk: var(--c-indigo-silk);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01)),
       radial-gradient(ellipse 80% 60% at 50% 0%, rgba(242, 211, 137, 0.10), transparent 70%),
@@ -1362,6 +1365,61 @@
     transition-duration: var(--d-base);
     transition-timing-function: var(--ease-out);
     isolation: isolate;
+  }
+
+  .character-card[data-character="nini"] {
+    --character-edge: var(--c-dusty-rose);
+    --character-gold: var(--c-aged-gold);
+    --character-silk: var(--c-indigo-silk);
+  }
+
+  .character-card[data-character="yuan"] {
+    --character-edge: var(--c-carved-jade);
+    --character-gold: var(--c-aged-gold);
+    --character-silk: var(--c-indigo-silk-raised);
+  }
+
+  .character-card-signature {
+    position: absolute;
+    left: 12px;
+    bottom: 10px;
+    z-index: 2;
+    padding: 6px 9px;
+    border-radius: var(--r-pill);
+    background: rgba(7, 11, 24, 0.68);
+    box-shadow:
+      inset 0 0 0 1px rgba(195, 164, 104, 0.38),
+      inset 0 1px rgba(255, 255, 255, 0.10);
+    color: var(--c-gold-200);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .character-card[data-character="nini"] .character-card-signature {
+    color: var(--c-rose-300);
+  }
+
+  .character-card[data-character="yuan"] .character-card-signature {
+    color: var(--c-jade-300);
+  }
+
+  .hud-character-sigil {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--r-pill);
+    color: var(--c-lacquer);
+    background: var(--c-gold-200);
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 250, 220, 0.55),
+      inset 0 1px rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   /* Character-specific halo (only visible when selected/hovered) */

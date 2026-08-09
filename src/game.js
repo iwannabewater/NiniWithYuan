@@ -18,6 +18,7 @@
   const toast = document.getElementById("toast");
   const hudEls = {
     character: document.getElementById("hudCharacter"),
+    characterSigil: document.getElementById("hudCharacterSigil"),
     health: document.getElementById("hudHealth"),
     coins: document.getElementById("hudCoins"),
     ammo: document.getElementById("hudAmmo"),
@@ -50,6 +51,7 @@
   const Hud = window.NiniYuanHud;
   const CharacterMotion = window.NiniYuanCharacterMotion;
   const CharacterEffects = window.NiniYuanCharacterEffects;
+  const CharacterGilding = window.NiniYuanCharacterGilding;
   const Playfield = window.NiniYuanPlayfieldMaterial;
   const CreatureArt = window.NiniYuanCreatureMaterial;
   const GameFeel = window.NiniYuanGameFeel;
@@ -3195,6 +3197,22 @@
       direction: localDirection,
       reducedMotion: effectStill,
     });
+    const rhythm = CharacterGilding?.resolveCharacterRhythm?.({
+      id,
+      time: simulationTime,
+      stride: motion?.stride,
+    }, { reducedMotion: effectStill });
+    CharacterGilding?.drawCharacterVignette?.(ctx, {
+      id,
+      width: destW,
+      height: destH,
+      time: simulationTime,
+      direction: facing,
+      reducedMotion: effectStill,
+      stride: motion?.stride,
+      rhythm,
+      px: Math.max(0.75, scale),
+    });
     drawMovementTrace(id, motion, targetW, targetH, scale);
     CharacterEffects?.drawAfterimages?.(ctx, image, sourceFrame, {
       id,
@@ -3491,9 +3509,11 @@
     const timeText = formatTime(player.elapsed);
     const statusText = statusLabel();
     const skillText = skillLabel();
+    const instrument = CharacterGilding?.resolveCharacterInstrument?.(save.selected);
     if (hudState.character !== null && hudState.character !== characterName) Hud.pulseHudPill?.(hudEls.character.parentElement);
     hudState.character = characterName;
     setHudText("character", hudEls.character, characterName);
+    setHudText("characterSigil", hudEls.characterSigil, instrument?.mark || (save.selected === "nini" ? "璇" : "青"));
     setHudText("health", hudEls.health, heartLabel(player.health, player.maxHealth));
     setHudText("coins", hudEls.coins, player.coins);
     setHudText("ammo", hudEls.ammo, player.ammo);

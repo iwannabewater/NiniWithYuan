@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-v2.1.0, **星野律动 / Starfield Cadence**, keeps the fifteen-chapter structure, schema 4 save, and core physics under **宋式星图器物幻想 / Song-atlas Night Observatory**. It improves temporal presentation, compact-screen creature readability, world-specific scenery, guardian encounter clarity, HUD legibility, and release-candidate artifact handling. The meta-progression, checkpoints, chain scoring, assist rules, routes, abilities, and movement tuning remain unchanged. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
+v2.2.0, **人物金相 / Gilded Companions**, keeps the fifteen-chapter structure, schema 4 save, and core physics under **宋式星图器物幻想 / Song-atlas Night Observatory**. It refines the character presentation surface: selection cards carry signature inscription chips, the gameplay HUD shows a character sigil, and the Canvas runtime adds a stateless gilded vignette around the existing sprite. The v2.1.0 Starfield Cadence improvements to elapsed-time pose damping, creature materials, world props, particles, guardian clarity, and HUD legibility remain. The meta-progression, checkpoints, chain scoring, assist rules, routes, abilities, collision geometry, input arbitration, and movement tuning remain unchanged. The original five chapters form World 1, **第一星域 破碎星图**. World 2, **第二星域 星门群岛**, contains five paired-star-gate chapters. World 3, **第三星域 星潮镜域**, contains five handcrafted chapters built around phase-tide bridges, route timing, and readable two-phase traversal without a hard postgame difficulty spike.
 
 ## Fiction
 
@@ -290,7 +290,7 @@ Record maps collapse to exactly 1 and reject any key that is not an allow-listed
 
 ## Release Candidate Artifacts
 
-The v2.1.0 candidate aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.1.0`; Android uses `versionCode=22`. The offline asset list includes the character-effects and creature-material render helpers.
+The v2.2.0 candidate aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.2.0`; Android uses `versionCode=23`. The offline asset list includes the character-effects, creature-material, and character-gilding render helpers.
 
 The Android build workflow writes and verifies `NiniYuan.apk.sha256` before upload. It uploads the APK and checksum together as `NiniYuan-<commit-sha>`, retains the artifact for 14 days without recompression, and fails when either candidate file is missing. A final release still requires CI on the intended release commit, downloaded-artifact checksum and package readback, device review, and live web readback.
 
@@ -314,4 +314,5 @@ The Android build workflow writes and verifies `NiniYuan.apk.sha256` before uplo
 - v1.9.0: presentation pose blending, pure input edge helpers, quieter ambient and brand ornament, calmer structural motion, and clearer touch press seals. Physics, chapters, and save schema remain unchanged.
 - v2.0.0: three world-finale wardens, star lanterns, star marrow, chain scoring, trial medals, a thirty-entry astral record, assist mode, two hostile types, and a deeper Canvas playfield. The fifteen chapters, character movement tuning, and fixed-step physics are unchanged; the save schema advances to 4.
 - v2.1.0: elapsed-time pose damping, action contact and cast effects, stateless creature materials, three deterministic world prop grammars, shaped particles, a 13 px HUD floor, recover-only guardian damage, distinct guardian profiles and silhouettes, and checksum-backed Android release candidates. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
+- v2.2.0: Gilded Companions character UI, a live HUD sigil, stateless Canvas gilding around the production sprite, and refreshed local WenKai subsets. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
 - Future release: local replay or ghost racing, subject to a separate scope review.

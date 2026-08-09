@@ -1,4 +1,4 @@
-const CACHE = "nini-yuan-v2.1.0-starfield-cadence-r1";
+const CACHE = "nini-yuan-v2.2.0-gilded-companions-r1";
 const CACHE_PREFIX = "nini-yuan-";
 const ASSETS = [
   "./",
@@ -13,6 +13,7 @@ const ASSETS = [
   "./src/render/hud.js",
   "./src/render/character-motion.js",
   "./src/render/character-effects.js",
+  "./src/render/character-gilding.js",
   "./src/render/playfield-material.js",
   "./src/render/creature-material.js",
   "./src/render/game-feel.js",

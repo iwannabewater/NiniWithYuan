@@ -111,6 +111,37 @@ core, recovery spreads the rings and exposes a moon-white center, and low star
 force adds restrained fracture lines. These marks report existing encounter
 state and do not alter the arena or hitbox.
 
+## 3.7 Gilded Companions Surfaces (v2.2.0)
+
+Gilded Companions adds a small set of character-differentiated instrument
+details without changing the established surface grammar. It is the next layer
+on top of Starfield Cadence: the atlas sprite remains the gameplay identity,
+the menu composition remains the paired art, and the UI now names each lead's
+signature artifact in the place where the player is asked to choose.
+
+Character selection uses the same approved paired illustration, but the portrait
+carries a quiet inscription chip. Nini reads as Xuanji Star Dial and star-track
+correction, Yuan as jade gui sword and wind-balancing route. The chip sits at
+the portrait lower edge, above the existing crop, so it does not consume
+precious screen height or push selection actions out of a short landscape.
+Selected cards keep gold structure but expose a rose or jade halo edge through
+the existing `--character-edge` variable.
+
+The gameplay HUD adds one 26 px sigil inside the companion pill. It shows 璇 for
+Nini and 青 for Yuan, making the left instrument read as an artifact medallion
+even when the character name is compacted or replaced. The existing character,
+health, status, resources, skill, route, chain, warden, toast, and touch-control
+rails are unchanged; the sigil is a presentation-only label. Its value is set
+by the runtime from the stateless `character-gilding` helper, not from an
+unchecked UI string.
+
+The Canvas runtime draws a restrained gilding under the production sprite: a
+low alpha overhead arc, a shoulder-to-hip cloth echo, and a stride draft only
+while running fast. Reduced-motion play freezes these layers and keeps a quiet
+static mark. The helper is stateless and DOM-free, does not read viewport
+dimensions or device pixel ratio, and is never part of player entities, saves,
+or fixed-step simulation.
+
 ## 4. Component Styling
 
 ### Buttons
