@@ -2,8 +2,8 @@
 
 Date: 2026-08-09
 
-Status: release candidate. No `v2.2.0` tag or GitHub Release exists at this
-snapshot.
+Status: released. The `v2.2.0` immutable GitHub Release is public, with the
+exact CI APK and checksum uploaded and verified.
 
 ## Scope
 
@@ -54,9 +54,9 @@ Local Android build: not run because this workstation reports `Unable to locate 
   verify checksum, badging, signer digest, WebView assets, and installation.
 - Read back the published web build, service-worker cache, offline assets, and
   release metadata after deployment.
-- Create `v2.2.0` at the verified workflow `headSha`, upload only the exact CI
-  APK and checksum to a draft after immutable Release verification, then publish
-  and verify locked assets.
+- The `v2.2.0` tag exists at the verified workflow `headSha`, and the exact CI
+  APK and checksum were uploaded to an immutable Release, then verified with
+  release and asset verification commands.
 
 ## Residual Limitation
 

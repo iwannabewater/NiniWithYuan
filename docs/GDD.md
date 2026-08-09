@@ -290,7 +290,7 @@ Record maps collapse to exactly 1 and reject any key that is not an allow-listed
 
 ## Release Candidate Artifacts
 
-The v2.2.0 candidate aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.2.0`; Android uses `versionCode=23`. The offline asset list includes the character-effects, creature-material, and character-gilding render helpers.
+The v2.2.0 release aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.2.0`; Android uses `versionCode=23`. The offline asset list includes the character-effects, creature-material, and character-gilding render helpers.
 
 The Android build workflow writes and verifies `NiniYuan.apk.sha256` before upload. It uploads the APK and checksum together as `NiniYuan-<commit-sha>`, retains the artifact for 14 days without recompression, and fails when either candidate file is missing. A final release still requires CI on the intended release commit, downloaded-artifact checksum and package readback, device review, and live web readback.
 

@@ -2,8 +2,9 @@
 
 ## Status
 
-This document records the implemented v2.2.0 release-candidate scope. It does
-not assert that a tag, GitHub Release, APK, or live deployment exists.
+This document records the implemented and released v2.2.0 scope. The `v2.2.0`
+GitHub Release is immutable and published from the exact commit listed in the
+release notes.
 
 ## Scope
 
