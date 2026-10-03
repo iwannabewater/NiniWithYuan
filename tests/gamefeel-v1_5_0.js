@@ -153,10 +153,6 @@ try {
 
 const game = fs.readFileSync("src/game.js", "utf8");
 const html = fs.readFileSync("index.html", "utf8");
-assert.ok(game.includes("vy < -160"), "variable jump cut threshold should stay pinned");
-assert.ok(game.includes("player.vy *= 0.56"), "variable jump cut multiplier should stay pinned");
-assert.ok(game.includes("player.coyote = 0.12"), "coyote time should stay pinned");
-assert.ok(game.includes("player.jumpBuffer = 0.14"), "jump buffer should stay pinned");
 assert.ok(game.includes("GameFeel?.consumeHitstop"), "game loop should consume hit-stop and retain crossing-frame time");
 assert.ok(game.includes("GameFeel?.cameraLookaheadOffset"), "camera should include lookahead offset");
 assert.match(html, /<script src="\.\/src\/game\.js" defer><\/script>/, "game runtime should join the deferred helper queue");

@@ -96,6 +96,8 @@ assert.match(source, /function drawObservatoryDisc/, "Backgrounds should carry t
 assert.match(source, /platform\.y \+ platform\.h - 2/, "Platforms should render a lacquered lower edge without changing collision geometry");
 assert.doesNotMatch(source, /function powerupColor\(kind\) \{\s*return \{/, "Power-up colors must not rebuild a map per draw");
 assert.doesNotMatch(source, /function portalColor\(portal\) \{\s*return \{/, "Portal colors must not rebuild a map per draw");
+assert.match(source, /const localX = i \* spacing \+ \(direction > 0 \? arrowPhase : -arrowPhase\)/, "wind arrows travel with the wind direction");
+assert.match(source, /ctx\.lineTo\(x - direction \* 9/, "wind fields draw directional arrowheads");
 for (const banned of ["#61e5ff", "#7ff1ba", "#ff7fb1", "#8cf6ff"]) {
   assert.equal(source.includes(banned), false, `Playfield material helper must not restore neon ${banned}`);
 }

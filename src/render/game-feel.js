@@ -9,8 +9,6 @@
 
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
-  const moveToward = (current, target, amount) =>
-    current < target ? Math.min(current + amount, target) : Math.max(current - amount, target);
 
   function prefersReducedMotion() {
     try {
@@ -37,21 +35,6 @@
 
   function resetHitstop() {
     hitstopRemaining = 0;
-  }
-
-  function horizontalVelocity(current, target, options = {}, dt = 0) {
-    const velocity = Number(current) || 0;
-    const desired = Number(target) || 0;
-    const intent = clamp(Number(options.intent) || 0, -1, 1);
-    const grounded = options.grounded === true;
-    const turning = options.turning === true;
-    const baseAcceleration = Math.max(0, Number(options.baseAcceleration) || 0);
-    const reversing = intent !== 0 && velocity * intent < 0;
-    let responseMultiplier = 1;
-    if (turning) responseMultiplier = grounded ? 2 : 1.45;
-    else if (reversing) responseMultiplier = grounded ? 1.7 : 1.35;
-    else if (intent === 0 && desired === 0 && grounded) responseMultiplier = 1.7;
-    return moveToward(velocity, desired, baseAcceleration * responseMultiplier * Math.max(0, Number(dt) || 0));
   }
 
   function cameraLookaheadOffset(player, view, dt, camera) {
@@ -112,7 +95,6 @@
     requestHitstop,
     consumeHitstop,
     resetHitstop,
-    horizontalVelocity,
     cameraLookaheadOffset,
     cameraLookaheadReset,
     interpolateCoordinate,

@@ -47,8 +47,16 @@ assert.ok(html.includes("多世界章节"), "visible menu metadata should use co
 assert.ok(manifest.description.includes("多世界章节"), "manifest description should use count-free chapter scope copy");
 assert.ok(!/(Yuan to Nini|Hidden Atlas|Constellation Found|Y · N · Y · N|Yuan ❤ Nini)/.test(eggs), "easter-egg overlays should avoid English-only labels inside Chinese UI copy");
 
-const progression = fs.readFileSync("src/core/progression.js", "utf8");
-const runtimeText = [html, css, game, eggs, hud, progression].join("\n");
+// Every runtime source can carry user-visible copy: chapter names live in
+// src/data, notices in src/game.js, achievement copy in src/core.
+function runtimeSources(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const file = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return runtimeSources(file);
+    return entry.name.endsWith(".js") ? [fs.readFileSync(file, "utf8")] : [];
+  });
+}
+const runtimeText = [html, css, fs.readFileSync("manifest.webmanifest", "utf8"), ...runtimeSources("src")].join("\n");
 const cjkChars = [...new Set([...runtimeText].filter((ch) => isCjk(ch)))].sort();
 for (const fontPath of [
   "assets/fonts/lxgw-wenkai-500.woff2",

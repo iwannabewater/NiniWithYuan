@@ -14,14 +14,16 @@ This is a single-context repository. See `docs/agents/domain.md`.
 
 ## Project map
 
-- `src/game.js` owns the Canvas runtime: level data, physics, combat, camera, canvas drawing, input routing, and HUD state wiring.
+- `src/game.js` owns the runtime orchestration: boot, the frame loop, camera, canvas drawing, input routing, HUD wiring, and turning simulation events into presentation, audio, notices, and saved records.
+- `src/data/` owns authored content as pure data: chapters (`chapters.js`) and character stats (`characters.js`). Builders return fresh records; nothing here touches runtime state.
+- `src/sim/` owns the fixed-step simulation: collision (`physics.js`), world state and chain scoring (`world.js`), damage and respawn (`damage.js`), the player controller, hostiles, projectiles, level mechanics, and warden encounters. `sim.js` is the facade (`NiniYuanSim.step`). The simulation is DOM-free, viewport-free, and deterministic, and reports everything presentation needs as events on `world.events`.
 - `styles.css` owns DOM layout, menu/panel presentation, responsive behavior, and CSS motion.
 - `src/core/` owns persistent storage, audio, input-state boundaries, pure gameplay rules, meta-progression rules, and fixed-step scheduling.
 - `src/core/progression.js` owns achievement predicates, trial-medal thresholds, and chain math as pure functions of a sanitized save plus chapter metadata.
 - `src/render/` owns optional render helpers loaded before `src/game.js`.
 - `src/render/playfield-material.js` owns stateless Canvas material drawing; collision geometry, gameplay state, and render ordering remain in `src/game.js`.
 - `src/render/warden.js` owns stateless Canvas drawing for wardens, hostile projectiles, sentries, warders, lanterns, and star marrow. Encounter state and collision stay in `src/game.js`.
-- `tests/browser-smoke.js` owns the cross-viewport Playwright smoke path; narrow regression guards live in adjacent `tests/*.js` files.
+- `tests/unit/` covers pure modules, `tests/sim/` drives the headless simulation with scripted input, `tests/content/` validates authored chapter data, and `tests/browser-smoke.js` owns the cross-viewport Playwright smoke path. Remaining interface and release guards live in adjacent `tests/*.js` files.
 
 ## Verification
 
@@ -37,7 +39,8 @@ This is a single-context repository. See `docs/agents/domain.md`.
 - Keep gameplay key capture behind the `play` mode and editable/control-target gate in `src/core/input-state.js`; every menu, modal, visibility, and focus transition must clear gameplay held keys, pressed edges, and pointer references together. Mapped physical keys already down at a transition stay suppressed until their matching `keyup`.
 - Keep collection rating, ammunition caps, terminal-outcome precedence, grounded spawn math, fixed-step overload policy, achievement predicates, trial-medal thresholds, and chain math in their pure `src/core/` helpers so recurring timing and state bugs remain directly testable.
 - Chain rewards may only add star dew. The collection rating reads `player.collectedValue`, which takes the authored pickup value and nothing else.
-- Gameplay entity simulation must not read `view.w`, `view.h`, or `view.dpr`. Ranges, trigger distances, and cull radii are world-space constants, so a chapter plays identically on a phone and a wide desktop. Camera framing, rendering, and HUD layout may read `view` freely.
+- Gameplay entity simulation must not read `view.w`, `view.h`, or `view.dpr`. Ranges, trigger distances, and cull radii are world-space constants, so a chapter plays identically on a phone and a wide desktop. Camera framing, rendering, and HUD layout may read `view` freely. `tests/sim/boundaries.test.js` enforces this for `src/sim/` and `src/data/`, together with determinism (no `Math.random`) and DOM independence.
+- New simulation behavior belongs in `src/sim/` with a headless test in `tests/sim/`; `src/game.js` only translates simulation events into presentation.
 - Assist scales the delivered frame, never the fixed step, and an assisted run never writes best times or trial medals.
 - Do not reintroduce per-release version allow-lists in tests. Assert a release floor through `tests/helpers/release.js` instead.
 - Do not introduce alternate triage labels, external PR triage, or new domain vocabulary that conflicts with `CONTEXT.md` or ADRs.

@@ -44,10 +44,6 @@ for (const shape of ["shard", "streak", "ring", "petal"]) {
   assert.ok(playfield.includes(`particle.shape === "${shape}"`), `particle material should retain the ${shape} response`);
 }
 
-assert.match(game, /if \(!wardenIsOpen\(\)\)[\s\S]*?return false;/, "closed guardian shells should reject every damage source at the shared entry");
-for (const profile of ["aurora", "core", "tide"]) {
-  assert.match(game, new RegExp(`${profile}: \\[\n\\s*\\{ above:`), `the ${profile} guardian should own a stage profile`);
-}
 assert.match(warden, /function drawWardenIdentity\(/, "guardian silhouettes should carry palette-specific geometry");
 assert.match(warden, /phase === "recover"/, "guardian art should expose the recovery opening");
 
