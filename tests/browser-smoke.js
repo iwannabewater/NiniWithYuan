@@ -39,21 +39,11 @@ async function withPage(testName, fn, options = {}) {
   await page.addInitScript(() => {
     window.__characterSpriteDraws = 0;
     window.__lastCharacterFrame = null;
-    const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
-    CanvasRenderingContext2D.prototype.drawImage = function patchedDrawImage(source, ...args) {
-      if (source instanceof HTMLImageElement && source.src.includes("/assets/characters/")) {
+    window.NiniYuanDiagnostics = {
+      onCharacterDraw(sample) {
         window.__characterSpriteDraws += 1;
-        if (args.length >= 8) {
-          window.__lastCharacterFrame = {
-            sx: args[0],
-            sy: args[1],
-            sw: args[2],
-            sh: args[3],
-            transformA: this.getTransform().a,
-          };
-        }
-      }
-      return originalDrawImage.call(this, source, ...args);
+        window.__lastCharacterFrame = sample;
+      },
     };
   });
   const errors = [];

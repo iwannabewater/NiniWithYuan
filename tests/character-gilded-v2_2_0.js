@@ -14,7 +14,7 @@ const Gilding = require("../src/render/character-gilding.js");
 
 assertReleaseFloor(assert, { pkg, lock, serviceWorker, html, androidManifest }, "2.2.0", 23);
 
-for (const fn of ["resolveCharacterInstrument", "resolveCharacterRhythm", "drawCharacterVignette"]) {
+for (const fn of ["resolveCharacterInstrument"]) {
   assert.equal(typeof Gilding[fn], "function", `character-gilding should export ${fn}`);
 }
 
@@ -25,19 +25,11 @@ assert.equal(nini.artifact, "璇玑星盘");
 assert.equal(yuan.mark, "青");
 assert.equal(yuan.artifact, "青玉圭剑");
 
-const rhythm = Gilding.resolveCharacterRhythm({ id: "nini", time: 0.5, stride: 0.8 }, { reducedMotion: false });
-assert.ok(Number.isFinite(rhythm.breath), "character rhythm should return a finite breath wave");
-assert.ok(Number.isFinite(rhythm.cloth), "character rhythm should return a cloth ripple");
-assert.ok(rhythm.draft > 0, "stride should shape a restrained draft layer");
-const still = Gilding.resolveCharacterRhythm({ id: "yuan", time: 0.5, stride: 0.8 }, { reducedMotion: true });
-assert.equal(still.breath, 0, "reduced motion should freeze breath and move layers");
-assert.equal(still.draft, 0, "reduced motion should remove speed drafts");
-
 assert.ok(html.includes("id=\"hudCharacterSigil\""), "the HUD should expose the current character sigil");
 assert.match(html, /class="character-card-signature"/, "character cards should carry a signature inscription");
 assert.ok(html.indexOf("src/render/character-gilding.js") < html.indexOf("src/game.js"), "the gilding helper must load before the runtime");
 assert.ok(serviceWorker.includes("./src/render/character-gilding.js"), "the gilding helper should ship in the offline cache");
-assert.match(game, /CharacterGilding\?\.drawCharacterVignette\?\./, "the runtime should draw the gilded vignette around the sprite");
+assert.match(game, /display\.silhouette/, "the runtime should light the painted figure with a moonlight rim");
 assert.match(game, /instrument\?\.mark/, "the HUD should read the instrument mark from the gilding helper");
 assert.doesNotMatch(game, /player\.(?:gilding|rhythm|vignette|graphics)/, "gilding must stay presentation-owned");
 assert.doesNotMatch(source.replace(/typeof window/g, ""), /document\b|window\./, "gilding art must stay DOM-free");

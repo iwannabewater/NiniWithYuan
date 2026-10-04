@@ -4,44 +4,16 @@ const { withPage } = require("../helpers/e2e");
 async function installPlayerProbe(page) {
   await page.evaluate(() => {
     window.__playerDrawSamples = [];
-
-    const saveStacks = new WeakMap();
-    const originalSave = CanvasRenderingContext2D.prototype.save;
-    const originalRestore = CanvasRenderingContext2D.prototype.restore;
-    const originalDrawImage = CanvasRenderingContext2D.prototype.drawImage;
-
-    CanvasRenderingContext2D.prototype.save = function probedSave() {
-      const stack = saveStacks.get(this) || [];
-      stack.push(this.getTransform());
-      saveStacks.set(this, stack);
-      return originalSave.call(this);
-    };
-
-    CanvasRenderingContext2D.prototype.restore = function probedRestore() {
-      const result = originalRestore.call(this);
-      saveStacks.get(this)?.pop();
-      return result;
-    };
-
-    CanvasRenderingContext2D.prototype.drawImage = function probedDrawImage(source, ...args) {
-      const sourceUrl = String(source?.currentSrc || source?.src || "");
-      const match = sourceUrl.match(/\/assets\/characters\/(nini|yuan)\//);
-      if (match && args.length >= 8) {
-        const parent = saveStacks.get(this)?.at(-1);
-        if (parent) {
-          const local = parent.inverse().multiply(this.getTransform());
-          window.__playerDrawSamples.push({
-            character: match[1],
-            time: performance.now(),
-            x: local.e,
-            y: local.f,
-            sourceX: Number(args[0]),
-            sourceY: Number(args[1]),
-          });
-          if (window.__playerDrawSamples.length > 1200) window.__playerDrawSamples.shift();
-        }
-      }
-      return originalDrawImage.call(this, source, ...args);
+    window.NiniYuanDiagnostics.onCharacterDraw = (sample) => {
+      window.__playerDrawSamples.push({
+        character: sample.id,
+        time: sample.time,
+        x: sample.x,
+        y: sample.y,
+        sourceX: sample.sx,
+        sourceY: sample.sy,
+      });
+      if (window.__playerDrawSamples.length > 1200) window.__playerDrawSamples.shift();
     };
   });
 }

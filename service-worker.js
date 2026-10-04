@@ -30,6 +30,8 @@ const ASSETS = [
   "./src/render/motifs.js",
   "./src/render/scene-specs.js",
   "./src/render/scenery.js",
+  "./src/render/character-cloth.js",
+  "./src/render/atlas-cache.js",
   "./src/render/terrain.js",
   "./src/render/props.js",
   "./src/render/effects.js",

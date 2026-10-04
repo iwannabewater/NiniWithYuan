@@ -58,6 +58,8 @@
   const Terrain = window.NiniYuanTerrain;
   const Props = window.NiniYuanProps;
   const Effects = window.NiniYuanEffects;
+  const Cloth = window.NiniYuanCharacterCloth;
+  const AtlasCache = window.NiniYuanAtlasCache;
   const CreatureArt = window.NiniYuanCreatureMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
@@ -104,6 +106,12 @@
   // Screen-space post layers, rebuilt only when the viewport changes.
   let vignette = null;
   const screenFlash = Effects.createFlash();
+  // Read-only presentation diagnostics for browser tests. Production never
+  // sets `onCharacterDraw`, so the hook costs one property check per frame.
+  const diagnostics = window.NiniYuanDiagnostics || (window.NiniYuanDiagnostics = {});
+  const characterDraw = { id: "", frame: 0, sx: 0, sy: 0, sw: 0, sh: 0, x: 0, y: 0, transformA: 1, time: 0 };
+  const cloth = Cloth.createCloth();
+  let presentationDt = 0;
   // Reused per frame: the padded world rectangle on screen, and draw options.
   const cullRect = { x: 0, y: 0, w: 0, h: 0 };
   const propFrame = { time: 0, reducedMotion: false, fx: true, rect: cullRect, color: "", sealed: false, arrowSpacing: WIND_ARROW_SPACING, arrowSpeed: WIND_ARROW_SPEED };
@@ -567,6 +575,7 @@
     const now = performance.now();
     const frameDt = Math.min(0.1, Math.max(0, (now - lastRenderAt) / 1000));
     lastRenderAt = now;
+    presentationDt = mode === "play" ? frameDt : 0;
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
     if (!activeLevel) {
       renderAttract(now / 1000, frameDt);
@@ -659,6 +668,7 @@
     presentation.displayMotionPose = null;
     presentation.motionRenderedAt = player?.elapsed || 0;
     presentation.snapMotionPose = true;
+    Cloth.resetCloth(cloth);
     renderAlpha = 1;
   }
 
@@ -894,6 +904,15 @@
     }
     presentation.resolvedMotionPose = resolvedMotion || null;
     presentation.motionRenderedAt = simulationTime;
+    Cloth.stepCloth(cloth, {
+      vx: player.vx,
+      vy: player.vy,
+      onGround: player.onGround,
+      speed: characters[save.selected].speed,
+      wind: player.windDir || 0,
+      time: simulationTime,
+      still: view.reducedMotion || !save.settings.fx,
+    }, presentationDt);
     const motion = {
       ...(resolvedMotion || {}),
       ...(presentation.displayMotionPose || {}),
@@ -1043,11 +1062,17 @@
     const lean = motion?.lean || 0;
     const stretchX = motion?.scaleX || 1;
     const stretchY = motion?.scaleY || 1;
-    const lift = targetH * (id === "nini" ? 0.03 : 0.02) + (motion?.lift || 0) * scale;
     const quantum = Camera.renderScale(camera, view.dpr).quantum;
     const align = (value) => Math.round(Number(value) / quantum) * quantum;
     const destW = align(targetW);
     const destH = align(targetH);
+    // Paint from the display-ready atlas: reduced once to its on-screen size,
+    // graded for the chapter's night light, with each cell's foot line measured.
+    const deviceScale = (destH / Math.max(1, sourceFrame.sh)) * camera.zoom * view.dpr;
+    const display = AtlasCache?.get?.(image, deviceScale, activeLevel?.world?.id, atlas?.frame) || null;
+    const baseline = display?.baselines?.[atlasFrameIndex(sourceFrame, image)] ?? 0.97;
+    // The lowest painted pixel of the pose sits on the feet line.
+    const lift = (1 - baseline) * destH * stretchY + (motion?.lift || 0) * scale;
     const effectPlan = CharacterEffects?.resolveEffectPlan?.({
       id,
       animation: animName,
@@ -1076,24 +1101,14 @@
       direction: localDirection,
       reducedMotion: effectStill,
     });
-    const rhythm = CharacterGilding?.resolveCharacterRhythm?.({
-      id,
-      time: simulationTime,
-      stride: motion?.stride,
-    }, { reducedMotion: effectStill });
-    CharacterGilding?.drawCharacterVignette?.(ctx, {
-      id,
-      width: destW,
-      height: destH,
-      time: simulationTime,
-      direction: facing,
-      reducedMotion: effectStill,
-      stride: motion?.stride,
-      rhythm,
-      px: Math.max(0.75, scale),
-    });
     drawMovementTrace(id, motion, targetW, targetH, scale);
-    CharacterEffects?.drawAfterimages?.(ctx, image, sourceFrame, {
+    const source = display?.canvas || image;
+    const k = display?.scale || 1;
+    const fsx = sourceFrame.sx * k;
+    const fsy = sourceFrame.sy * k;
+    const fsw = sourceFrame.sw * k;
+    const fsh = sourceFrame.sh * k;
+    CharacterEffects?.drawAfterimages?.(ctx, source, { sx: fsx, sy: fsy, sw: fsw, sh: fsh }, {
       id,
       plan: effectPlan,
       width: destW,
@@ -1108,17 +1123,30 @@
       motionElapsed,
       reducedMotion: effectStill,
     });
-    ctx.drawImage(
-      image,
-      sourceFrame.sx,
-      sourceFrame.sy,
-      sourceFrame.sw,
-      sourceFrame.sh,
-      -destW / 2,
-      -destH,
-      destW,
-      destH
-    );
+    const localSign = orientation.frameScaleX < 0 ? -1 : 1;
+    const animated = pose?.cloth !== false;
+    if (display?.silhouette && !effectStill) {
+      // Moonlight rim: the silhouette peeks out on the side facing the moon.
+      const light = (scene?.spec?.celestial?.x ?? 0.7) >= 0.5 ? 1 : -1;
+      const previousAlpha = ctx.globalAlpha;
+      ctx.globalAlpha = previousAlpha * 0.34;
+      Cloth.drawBanded(ctx, display.silhouette, fsx, fsy, fsw, fsh, -destW / 2 + light * localSign * 1.1, -destH - 0.7, destW, destH, animated ? cloth : null, localSign);
+      ctx.globalAlpha = previousAlpha;
+    }
+    Cloth.drawBanded(ctx, source, fsx, fsy, fsw, fsh, -destW / 2, -destH, destW, destH, animated ? cloth : null, localSign);
+    if (diagnostics.onCharacterDraw) {
+      characterDraw.id = id;
+      characterDraw.sx = sourceFrame.sx;
+      characterDraw.sy = sourceFrame.sy;
+      characterDraw.sw = sourceFrame.sw;
+      characterDraw.sh = sourceFrame.sh;
+      characterDraw.frame = atlasFrameIndex(sourceFrame, image);
+      characterDraw.x = align(x);
+      characterDraw.y = align(y + lift + bob);
+      characterDraw.transformA = ctx.getTransform().a;
+      characterDraw.time = performance.now();
+      diagnostics.onCharacterDraw({ ...characterDraw });
+    }
     CharacterEffects?.drawOverlay?.(ctx, {
       id,
       plan: effectPlan,
@@ -1204,6 +1232,11 @@
     if (id === "yuan" && player?.skillTimer > 0) return "skill";
     if (!pose.onGround) return pose.vy > 120 ? "fall" : "jump";
     return Math.abs(pose.vx || 0) > characters[id].speed * 0.18 ? "run" : "idle";
+  }
+
+  function atlasFrameIndex(frame, image) {
+    const columns = Math.max(1, Math.floor((image.naturalWidth || 1) / Math.max(1, frame.sw)));
+    return Math.round(frame.sy / Math.max(1, frame.sh)) * columns + Math.round(frame.sx / Math.max(1, frame.sw));
   }
 
   function atlasFrame(atlas, animName, image, elapsed = 0) {
