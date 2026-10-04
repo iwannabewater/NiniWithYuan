@@ -55,20 +55,30 @@
   const CharacterMotion = window.NiniYuanCharacterMotion;
   const CharacterEffects = window.NiniYuanCharacterEffects;
   const CharacterGilding = window.NiniYuanCharacterGilding;
-  const Playfield = window.NiniYuanPlayfieldMaterial;
+  const Terrain = window.NiniYuanTerrain;
+  const Props = window.NiniYuanProps;
+  const Effects = window.NiniYuanEffects;
   const CreatureArt = window.NiniYuanCreatureMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
   const WardenArt = window.NiniYuanWarden;
+  const Camera = window.NiniYuanCamera;
+  const Scenery = window.NiniYuanScenery;
+  const Art = window.NiniYuanArt;
   const SIM = Sim.CONSTANTS;
   const WISP_FLOAT_GAP = Chapters.WISP_FLOAT_GAP;
   const WISP_HOVER_RANGE = Chapters.WISP_HOVER_RANGE;
   const WIND_ARROW_SPACING = 72;
   const WIND_ARROW_SPEED = 18;
   const SETTINGS_PERSIST_DELAY = 150;
+  const MAX_CANVAS_PIXELS = 3.7e6;
   const ACCESSIBLE_TOUCH_HOLD = 140;
   const CANVAS_FONT_FAMILY = '"LXGW WenKai Local", "LXGW WenKai", "Noto Serif SC", "Noto Sans SC", "PingFang SC", sans-serif';
-  const CANVAS_MATERIAL = Playfield.MATERIAL;
+  const CANVAS_MATERIAL = Props.MATERIAL;
+  const FLOAT_FONT = `700 20px ${CANVAS_FONT_FAMILY}`;
+  const FLOAT_FONT_ITALIC = `italic 700 20px ${CANVAS_FONT_FAMILY}`;
+  // Glow rings accompany warm pickup bursts so collection reads as a reward.
+  const GLOW_BURST_COLORS = new Set(["#c3a468", "#6da895", "#eee7d5"]);
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const snap = (n) => Math.round(n);
@@ -84,7 +94,20 @@
   let activeLevel = null;
   let player = null;
   let warden = null;
-  let camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
+  let camera = Camera.create();
+  // Painted chapter backdrop and the animated menu landscape. Both are
+  // composed once per chapter (or viewport) and blitted each frame.
+  let scene = null;
+  let menuScene = null;
+  // Chapter terrain recipes (paths and gradients), prepared once per attempt.
+  let terrain = null;
+  // Screen-space post layers, rebuilt only when the viewport changes.
+  let vignette = null;
+  const screenFlash = Effects.createFlash();
+  // Reused per frame: the padded world rectangle on screen, and draw options.
+  const cullRect = { x: 0, y: 0, w: 0, h: 0 };
+  const propFrame = { time: 0, reducedMotion: false, fx: true, rect: cullRect, color: "", sealed: false, arrowSpacing: WIND_ARROW_SPACING, arrowSpeed: WIND_ARROW_SPEED };
+  let lastRenderAt = performance.now();
   let presentation = {
     ready: false,
     playerX: 0,
@@ -100,8 +123,8 @@
     snapMotionPose: true,
   };
   let renderAlpha = 1;
-  let particles = [];
-  let floatTexts = [];
+  const particles = Effects.createParticlePool();
+  const floatTexts = Effects.createTextPool();
   let keys = Object.create(null);
   let inputs = {
     left: false,
@@ -217,7 +240,10 @@
   }
 
   function resize() {
-    const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
+    // Device pixels are capped near 1440p: past that, fill rate costs more
+    // than the extra sharpness is worth, and the DOM HUD stays crisp anyway.
+    const cssPixels = Math.max(1, innerWidth * innerHeight);
+    const dpr = Math.min(clamp(window.devicePixelRatio || 1, 1, 2), Math.max(1, Math.sqrt(MAX_CANVAS_PIXELS / cssPixels)));
     const media = typeof window.matchMedia === "function" ? window.matchMedia.bind(window) : null;
     view = {
       w: innerWidth,
@@ -229,8 +255,14 @@
     canvas.width = Math.floor(view.w * dpr);
     canvas.height = Math.floor(view.h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Bilinear by default: backdrops blit 1:1 and glows are soft. Bitmap
+    // character frames opt into high-quality filtering where they draw.
     ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = "high";
+    ctx.imageSmoothingQuality = "low";
+    Camera.configure(camera, view);
+    menuScene = null;
+    vignette = Effects.createVignette(view);
+    if (activeLevel) composeChapterScene();
     syncOrientationGate();
   }
 
@@ -314,12 +346,13 @@
     activeLevel = world.level;
     player = world.player;
     warden = world.warden;
-    particles = [];
-    floatTexts = [];
-    camera = { x: 0, y: 0, shake: 0, lookX: 0, lookY: 0 };
-    const initialCamera = cameraTarget(0);
-    camera.x = initialCamera.x;
-    camera.y = initialCamera.y;
+    Effects.clear(particles);
+    Effects.clearTexts(floatTexts);
+    screenFlash.intensity = 0;
+    camera = Camera.configure(Camera.create(), view);
+    Camera.frameImmediately(camera, player, activeLevel);
+    composeChapterScene();
+    terrain = Terrain.prepare(ctx, activeLevel);
     syncPresentationState();
     resetControlState();
     clearToast();
@@ -356,8 +389,8 @@
     if (tone === "danger") return CANVAS_MATERIAL.danger;
     if (tone === "accent") return CHARACTER_TONES[save.selected].accent;
     if (tone === "accent2") return CHARACTER_TONES[save.selected].accent2;
-    if (typeof tone === "string" && tone.startsWith("portal:")) return Playfield.portalColor({ palette: tone.slice(7) });
-    if (typeof tone === "string" && tone.startsWith("powerup:")) return Playfield.powerupColor(tone.slice(8));
+    if (typeof tone === "string" && tone.startsWith("portal:")) return Props.portalColor({ palette: tone.slice(7) });
+    if (typeof tone === "string" && tone.startsWith("powerup:")) return Props.powerupColor(tone.slice(8));
     return CANVAS_MATERIAL.agedGold;
   }
 
@@ -388,7 +421,10 @@
           GameFeel?.resetHitstop?.();
           break;
         case "landing":
-          GameFeel?.landingPuff?.(spawnSpark, event.x, event.y, event.intensity, save.settings.fx);
+          GameFeel?.landingPuff?.(spawnDust, event.x, event.y, event.intensity, save.settings.fx);
+          break;
+        case "hurt":
+          if (!view.reducedMotion) Effects.triggerFlash(screenFlash, CANVAS_MATERIAL.danger, 0.16, 5);
           break;
         case "respawn":
           RespawnVeil?.flash?.(180);
@@ -423,6 +459,7 @@
           toastMsg(`${event.name} · 星门已封`);
           break;
         case "wardenDefeated":
+          if (!view.reducedMotion) Effects.triggerFlash(screenFlash, CANVAS_MATERIAL.moonWhite, 0.22, 2.5);
           toastMsg(`${event.name} 已归位 · 星门开启`);
           save.wardens[event.levelId] = 1;
           if (event.flawless) save.stats.wardenFlawless = Math.min(9999999, (save.stats.wardenFlawless || 0) + 1);
@@ -517,43 +554,35 @@
     );
   }
 
-  function cameraTarget(dt) {
-    const lookahead = GameFeel?.cameraLookaheadOffset?.(player, view, dt, camera) || { x: 0, y: 0 };
-    return {
-      x: clamp(player.x + lookahead.x - view.w * 0.38, 0, Math.max(0, activeLevel.width - view.w)),
-      y: clamp(player.y + lookahead.y - view.h * 0.55, 0, Math.max(0, activeLevel.height - view.h)),
-    };
+  function composeChapterScene() {
+    scene = Scenery.composeScene(Scenery.sceneFor(activeLevel.id, activeLevel.world.id), view, { fx: save.settings.fx });
   }
 
   function updateCamera(dt) {
-    const target = cameraTarget(dt);
-    if (presentation.snapCamera) {
-      camera.x = target.x;
-      camera.y = target.y;
-    } else {
-      camera.x = lerp(camera.x, target.x, 1 - Math.pow(0.001, dt));
-      camera.y = lerp(camera.y, target.y, 1 - Math.pow(0.001, dt));
-    }
-    camera.shake = Math.max(0, camera.shake - 35 * dt);
+    const lookahead = GameFeel?.cameraLookaheadOffset?.(player, view, dt, camera) || null;
+    Camera.step(camera, player, activeLevel, dt, { snap: presentation.snapCamera, lookahead });
   }
 
   function render() {
-    ctx.clearRect(0, 0, view.w, view.h);
+    const now = performance.now();
+    const frameDt = Math.min(0.1, Math.max(0, (now - lastRenderAt) / 1000));
+    lastRenderAt = now;
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
     if (!activeLevel) {
-      renderAttract();
+      renderAttract(now / 1000, frameDt);
       return;
     }
-    const shakeX = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
-    const shakeY = camera.shake ? snap((Math.random() - 0.5) * camera.shake) : 0;
-    const quantum = 1 / Math.max(1, view.dpr || 1);
+    const { scale, quantum } = Camera.renderScale(camera, view.dpr);
+    const shakeX = camera.shake ? (Math.random() - 0.5) * camera.shake : 0;
+    const shakeY = camera.shake ? (Math.random() - 0.5) * camera.shake : 0;
     const camX = GameFeel?.interpolateCoordinate?.(presentation.cameraX, camera.x, renderAlpha, {
       snap: presentation.snapCamera,
       quantum,
-    }) ?? snap(camera.x);
+    }) ?? camera.x;
     const camY = GameFeel?.interpolateCoordinate?.(presentation.cameraY, camera.y, renderAlpha, {
       snap: presentation.snapCamera,
       quantum,
-    }) ?? snap(camera.y);
+    }) ?? camera.y;
     const playerX = GameFeel?.interpolateCoordinate?.(presentation.playerX, player.x, renderAlpha, {
       snap: presentation.snapPlayer,
       quantum,
@@ -563,21 +592,54 @@
       quantum,
     }) ?? player.y;
     updateHud();
-    renderBackground(activeLevel, camX, camY);
-    ctx.save();
-    ctx.translate(-camX + shakeX, -camY + shakeY);
+    const time = sceneTime();
+    Scenery.drawScene(ctx, scene, {
+      view,
+      camX,
+      camY,
+      zoom: camera.zoom,
+      refCamY: Math.max(0, activeLevel.height - camera.visibleH),
+      time,
+      dt: mode === "play" ? frameDt : 0,
+      reducedMotion: view.reducedMotion,
+      fx: save.settings.fx,
+    });
+    const originX = Math.round((-camX + shakeX) * scale);
+    const originY = Math.round((-camY + shakeY) * scale);
+    ctx.setTransform(scale, 0, 0, scale, originX, originY);
+    Camera.visibleRect(camX, camY, camera, 48, cullRect);
+    propFrame.time = time;
+    propFrame.reducedMotion = view.reducedMotion;
+    propFrame.fx = save.settings.fx;
     renderWorld(activeLevel);
-    renderParticles();
+    Effects.draw(ctx, particles, cullRect);
     renderPlayer({ x: playerX, y: playerY });
-    renderFloatTexts();
-    ctx.restore();
-    if (mode !== "play") renderVignette();
+    Effects.drawTexts(ctx, floatTexts, { font: FLOAT_FONT, italicFont: FLOAT_FONT_ITALIC, fx: save.settings.fx });
+    ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    // The baked sky already frames play; menus and pauses dim the edges further.
+    if (mode !== "play") Effects.drawVignette(ctx, vignette, 1);
+    Effects.drawFlash(ctx, screenFlash, view, frameDt);
     settlePresentationSnap();
   }
 
-  function renderAttract() {
-    Playfield.drawBackground(ctx, { view, time: performance.now() / 1000, intensity: 0.3, attract: true });
-    renderVignette();
+  /**
+   * The menu sits on a living landscape: the same scroll renderer as play,
+   * panning slowly across a dedicated night panorama.
+   */
+  function renderAttract(time, frameDt) {
+    if (!menuScene) menuScene = Scenery.composeScene(Scenery.sceneFor("menu", "world1"), view, { fx: save.settings.fx });
+    Scenery.drawScene(ctx, menuScene, {
+      view,
+      camX: view.reducedMotion ? 0 : time * 14,
+      camY: 0,
+      zoom: 1,
+      refCamY: 0,
+      time,
+      dt: frameDt,
+      reducedMotion: view.reducedMotion,
+      fx: save.settings.fx,
+    });
+    Effects.drawVignette(ctx, vignette, 1);
   }
 
   function sceneTime() {
@@ -637,50 +699,54 @@
     presentation.snapCamera = false;
   }
 
-  function renderBackground(level, camX, camY) {
-    Playfield.drawBackground(ctx, {
-      view,
-      palette: level.palette,
-      camX,
-      camY,
-      time: sceneTime(),
-      intensity: save.settings.fx ? 1 : 0.4,
-    });
+  function isActivePhase(item) {
+    return Sim.phaseIsActive(item, world.tide);
   }
 
+  /** World-space playfield, back to front, culled to the padded view rectangle. */
   function renderWorld(level) {
+    const rect = cullRect;
+    const time = propFrame.time;
     const tide = world.tide;
-    Playfield.drawScenery?.(ctx, level, {
-      time: sceneTime(),
-      reducedMotion: view.reducedMotion,
-      fx: save.settings.fx,
-    });
-    drawPhaseTide(level, tide);
-    for (const w of level.wind || []) drawWind(w);
-    drawGoal(level.goal);
-    for (const lantern of level.lanterns || []) drawLantern(lantern);
-    for (const p of level.platforms) if (!p.broken && Sim.isPhaseItem(p) && !Sim.phaseIsActive(p, tide)) drawPhaseGhostPlatform(p, tide);
-    for (const m of level.moving) if (Sim.isPhaseItem(m) && !Sim.phaseIsActive(m, tide)) drawPhaseGhostPlatform(m, tide);
-    for (const p of level.platforms) if (!p.broken && Sim.phaseIsActive(p, tide)) drawPlatform(p);
-    for (const m of level.moving) if (Sim.phaseIsActive(m, tide)) drawPlatform(m);
-    for (const h of level.hazards) {
-      if (Sim.phaseIsActive(h, tide)) drawHazard(h);
-      else if (Sim.isPhaseItem(h)) drawPhaseGhostHazard(h, tide);
+    Props.drawPhaseTide(ctx, tide, propFrame);
+    for (const w of level.wind || []) {
+      if (Camera.intersects(rect, w.x, w.y, w.w, w.h)) Props.drawWind(ctx, w, propFrame);
     }
-    for (const s of level.springs) drawSpring(s);
-    for (const portal of level.portals || []) drawPortal(portal);
-    for (const c of level.coins) if (!c.taken && Sim.phaseIsActive(c, tide)) drawCoin(c);
-    for (const c of level.coins) if (!c.taken && Sim.isPhaseItem(c) && !Sim.phaseIsActive(c, tide)) drawPhaseGhostPickup(c, tide);
-    for (const p of level.powerups || []) if (!p.taken && Sim.phaseIsActive(p, tide)) drawPowerup(p);
-    for (const p of level.powerups || []) if (!p.taken && Sim.isPhaseItem(p) && !Sim.phaseIsActive(p, tide)) drawPhaseGhostPickup(p, tide);
+    const goal = level.goal;
+    if (Camera.intersects(rect, goal.x - 80, goal.y - 80, goal.w + 160, goal.h + 160)) {
+      propFrame.sealed = Sim.goalIsSealed(world);
+      Props.drawGoal(ctx, goal, propFrame);
+    }
+    for (const lantern of level.lanterns || []) {
+      if (Camera.intersects(rect, lantern.x - 40, lantern.y - 40, lantern.w + 80, lantern.h + 80)) {
+        WardenArt?.drawLantern?.(ctx, lantern, { time });
+      }
+    }
+    Terrain.draw(ctx, terrain, rect, time, isActivePhase, propFrame.fx);
+    Terrain.drawHazards(ctx, terrain, rect, time, isActivePhase, propFrame.fx);
+    Terrain.drawSprings(ctx, level.springs, rect, time, propFrame.fx);
+    for (const portal of level.portals || []) {
+      if (Camera.intersects(rect, portal.x - 40, portal.y - 40, portal.w + 80, portal.h + 80)) Props.drawPortal(ctx, portal, propFrame);
+    }
+    for (const c of level.coins) {
+      if (c.taken || !Camera.intersects(rect, c.x - 24, c.y - 24, c.w + 48, c.h + 48)) continue;
+      if (Sim.phaseIsActive(c, tide)) Props.drawCoin(ctx, c, propFrame);
+      else if (Sim.isPhaseItem(c)) Props.drawPickupGhost(ctx, c, propFrame);
+    }
+    for (const p of level.powerups || []) {
+      if (p.taken || !Camera.intersects(rect, p.x - 30, p.y - 30, p.w + 60, p.h + 60)) continue;
+      if (Sim.phaseIsActive(p, tide)) Props.drawPowerup(ctx, p, propFrame);
+      else if (Sim.isPhaseItem(p)) Props.drawPickupGhost(ctx, p, propFrame);
+    }
     drawMarrow(level);
-    for (const pr of world.projectiles) drawProjectile(pr);
-    for (const e of level.enemies) if (e.alive) drawEnemy(e);
+    for (const pr of world.projectiles) {
+      propFrame.color = toneColor(pr.tone);
+      Props.drawProjectile(ctx, pr, propFrame);
+    }
+    for (const e of level.enemies) {
+      if (e.alive && Camera.intersects(rect, e.x - 80, e.y - 80, e.w + 160, e.h + 160)) drawEnemy(e);
+    }
     drawWardenScene(level);
-  }
-
-  function drawLantern(lantern) {
-    WardenArt?.drawLantern?.(ctx, lantern, { time: sceneTime() });
   }
 
   function drawMarrow(level) {
@@ -695,7 +761,7 @@
     const arena = warden.data.arena;
     WardenArt?.drawArenaSeal?.(ctx, {
       x: arena.x,
-      top: Math.max(0, camera.y - 80),
+      top: Math.max(0, cullRect.y - 80),
       bottom: level.height + 40,
       time,
       active: warden.active && !warden.defeated,
@@ -719,120 +785,6 @@
       reducedMotion: view.reducedMotion,
       fontFamily: CANVAS_FONT_FAMILY,
     });
-  }
-
-  function phaseColor(phase) {
-    return Playfield.phaseColor(phase);
-  }
-
-  function drawPhaseTide(level, tide) {
-    if (!tide.enabled) return;
-    const color = phaseColor(tide.active);
-    const t = sceneTime();
-    const startX = Math.floor((camera.x - 160) / 220) * 220;
-    ctx.save();
-    const urgency = tide.warning ? tide.urgency || 0 : 0;
-    ctx.globalAlpha = tide.warning ? 0.18 + urgency * 0.08 : 0.11;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = tide.warning ? 2 + urgency * 2 : 2;
-    for (let x = startX; x < camera.x + view.w + 220; x += 220) {
-      ctx.beginPath();
-      for (let y = -80; y < level.height + 120; y += 44) {
-        const px = x + Math.sin(y * 0.018 + t * 1.6 + tide.progress * Math.PI * 2) * 18;
-        if (y === -80) ctx.moveTo(px, y);
-        else ctx.lineTo(px, y);
-      }
-      ctx.stroke();
-    }
-    ctx.restore();
-  }
-
-  function drawPlatform(p) {
-    Playfield.drawPlatform(ctx, p);
-  }
-
-  function drawPhaseGhostPlatform(p) {
-    const color = phaseColor(p.phase);
-    ctx.save();
-    ctx.globalAlpha = 0.28;
-    const g = ctx.createLinearGradient(p.x, p.y, p.x + p.w, p.y + p.h);
-    g.addColorStop(0, "rgba(255,255,255,.08)");
-    g.addColorStop(0.5, color);
-    g.addColorStop(1, "rgba(255,255,255,.02)");
-    roundRect(p.x, p.y, p.w, p.h, 8, g);
-    ctx.globalAlpha = 0.58;
-    ctx.setLineDash([8, 10]);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
-    ctx.strokeRect(p.x + 2, p.y + 2, p.w - 4, Math.max(4, p.h - 4));
-    ctx.restore();
-  }
-
-  function drawPhaseGhostHazard(h) {
-    ctx.save();
-    ctx.globalAlpha = 0.22;
-    drawHazard(h);
-    ctx.restore();
-  }
-
-  function drawPhaseGhostPickup(p) {
-    ctx.save();
-    ctx.globalAlpha = 0.22 + Math.sin(sceneTime() * 4.5 + p.x) * 0.05;
-    if (p.kind === "coin" || p.kind === "gem") drawCoin(p);
-    else drawPowerup(p);
-    ctx.restore();
-  }
-
-  function drawHazard(h) {
-    Playfield.drawHazard(ctx, h, sceneTime());
-  }
-
-  function drawSpring(s) {
-    Playfield.drawSpring(ctx, s);
-  }
-
-  function drawCoin(c) {
-    Playfield.drawCoin(ctx, c, {
-      time: sceneTime(),
-      reducedMotion: view.reducedMotion,
-      fx: save.settings.fx,
-    });
-  }
-
-  function powerupColor(kind) {
-    return Playfield.powerupColor(kind);
-  }
-
-  function drawPowerup(p) {
-    Playfield.drawPowerup(ctx, p, {
-      time: sceneTime(),
-      reducedMotion: view.reducedMotion,
-      fx: save.settings.fx,
-    });
-  }
-
-  function drawProjectile(pr) {
-    ctx.save();
-    ctx.translate(pr.x + pr.w / 2, pr.y + pr.h / 2);
-    ctx.shadowColor = pr.color;
-    ctx.shadowBlur = save.settings.fx ? 7 : 0;
-    ctx.fillStyle = pr.color;
-    if (pr.owner === "nini") {
-      ctx.rotate(sceneTime() * 8.3);
-      ctx.beginPath();
-      for (let i = 0; i < 5; i += 1) {
-        const a = -Math.PI / 2 + i * Math.PI * 0.8;
-        const r = i % 2 ? 5 : 12;
-        ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-      }
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      ellipse(0, 0, 15, 7, 0);
-      ctx.fillStyle = "rgba(255,255,255,.72)";
-      ellipse(5, -2, 5, 2, 0);
-    }
-    ctx.restore();
   }
 
   function drawEnemy(e) {
@@ -866,27 +818,6 @@
     });
   }
 
-  function drawGoal(g) {
-    const sealed = Sim.goalIsSealed(world);
-    Playfield.drawGoal(ctx, g, { time: sceneTime(), reducedMotion: view.reducedMotion, sealed });
-  }
-
-  function drawWind(w) {
-    Playfield.drawWind(ctx, w, {
-      time: sceneTime(),
-      arrowSpacing: WIND_ARROW_SPACING,
-      arrowSpeed: WIND_ARROW_SPEED,
-    });
-  }
-
-  function portalColor(portal) {
-    return Playfield.portalColor(portal);
-  }
-
-  function drawPortal(portal) {
-    Playfield.drawPortal(ctx, portal, { time: sceneTime(), reducedMotion: view.reducedMotion });
-  }
-
   function renderPlayer(renderPosition = player) {
     if (!player) return;
     const renderX = Number(renderPosition?.x) || 0;
@@ -907,11 +838,8 @@
       ctx.stroke();
       ctx.restore();
     }
-    const authoredHeight = save.selected === "nini" ? 248 : 242;
-    const defaultScale = 0.9 * (player.h / player.baseH);
-    const maxViewportShare = player.bigTimer > 0 ? 0.4 : 0.34;
-    const responsiveScale = view.isMobileLandscape ? (view.h * maxViewportShare) / authoredHeight : defaultScale;
-    const artScale = Math.min(defaultScale, responsiveScale);
+    // World-space figure size; the camera zoom adapts it to the device.
+    const artScale = 0.36 * (player.h / player.baseH);
     const motionFacing = CharacterMotion?.resolveMotionFacing?.({
       id: save.selected,
       facing: player.facing,
@@ -1116,7 +1044,7 @@
     const stretchX = motion?.scaleX || 1;
     const stretchY = motion?.scaleY || 1;
     const lift = targetH * (id === "nini" ? 0.03 : 0.02) + (motion?.lift || 0) * scale;
-    const quantum = 1 / Math.max(1, view.dpr || 1);
+    const quantum = Camera.renderScale(camera, view.dpr).quantum;
     const align = (value) => Math.round(Number(value) / quantum) * quantum;
     const destW = align(targetW);
     const destH = align(targetH);
@@ -1321,125 +1249,55 @@
     ctx.fill();
   }
 
-  function renderVignette() {
-    const g = ctx.createRadialGradient(view.w / 2, view.h / 2, Math.min(view.w, view.h) * 0.2, view.w / 2, view.h / 2, Math.max(view.w, view.h) * 0.7);
-    g.addColorStop(0, "rgba(0,0,0,0)");
-    g.addColorStop(1, "rgba(0,0,0,.42)");
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, view.w, view.h);
-  }
-
   function burst(x, y, color, count, options = {}) {
-    if (!save.settings.fx) count = Math.ceil(count * 0.45);
-    for (let i = 0; i < count; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const s = 80 + Math.random() * 420;
-      particles.push({
-        x,
-        y,
-        vx: Math.cos(a) * s,
-        vy: Math.sin(a) * s,
-        r: 2 + Math.random() * 4,
-        life: 0.35 + Math.random() * 0.55,
-        max: 0.9,
-        color,
-        shape: options.shape || "orb",
-        gravity: Number.isFinite(options.gravity) ? options.gravity : 520,
-        drag: Math.max(0, Number(options.drag) || 0),
-        rotation: a,
-        spin: (Math.random() - 0.5) * 9,
-      });
-    }
-    // v1.2.4 — single composite-add glow ring on warm pickup bursts so coins feel collected.
-    if (save.settings.fx && [CANVAS_MATERIAL.agedGold, CANVAS_MATERIAL.carvedJade, CANVAS_MATERIAL.moonWhite].includes(color)) {
-      particles.push({ x, y, vx: 0, vy: 0, r: 18, life: 0.28, max: 0.28, color, glow: true });
-    }
+    const scaled = save.settings.fx ? count : Math.ceil(count * 0.45);
+    Effects.burst(particles, x, y, color, scaled, {
+      shape: options.shape,
+      gravity: options.gravity,
+      drag: options.drag,
+      glow: save.settings.fx && GLOW_BURST_COLORS.has(color),
+    });
   }
 
   function spawnSpark(x, y, color, count) {
-    for (let i = 0; i < count; i++) particles.push({
-      x,
-      y,
-      vx: -player.facing * (50 + Math.random() * 120),
-      vy: 80 + Math.random() * 70,
-      r: 2,
-      life: 0.28,
-      max: 0.28,
-      color,
-      shape: "streak",
-      gravity: 420,
-      rotation: player.facing > 0 ? Math.PI : 0,
-    });
+    const rotation = player.facing > 0 ? Math.PI : 0;
+    for (let i = 0; i < count; i++) {
+      Effects.emit(
+        particles, x, y,
+        -player.facing * (50 + Math.random() * 120), 80 + Math.random() * 70,
+        2, 0.28, color, "streak", 420, 0, rotation, 0, false,
+      );
+    }
+  }
+
+  /** Landing dust: soft motes that skid out along the ground on both sides. */
+  function spawnDust(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+      const side = i % 2 ? 1 : -1;
+      Effects.emit(
+        particles, x + side * (4 + Math.random() * 8), y - 2,
+        side * (40 + Math.random() * 110), -(10 + Math.random() * 45),
+        1.6 + Math.random() * 2.4, 0.32 + Math.random() * 0.2, color, "orb", 60, 4, 0, 0, false,
+      );
+    }
   }
 
   function spawnWind(x, y, dir) {
     if (!save.settings.fx || Math.random() > 0.28) return;
-    particles.push({
-      x,
-      y,
-      vx: -dir * (70 + Math.random() * 70),
-      vy: -20 + Math.random() * 40,
-      r: 1.5,
-      life: 0.35,
-      max: 0.35,
-      color: CANVAS_MATERIAL.moonWhiteSoft,
-      shape: "streak",
-      gravity: 0,
-      rotation: dir > 0 ? Math.PI : 0,
-    });
+    Effects.emit(
+      particles, x, y,
+      -dir * (70 + Math.random() * 70), -20 + Math.random() * 40,
+      1.5, 0.35, CANVAS_MATERIAL.moonWhiteSoft, "streak", 0, 0, dir > 0 ? Math.PI : 0, 0, false,
+    );
   }
 
   function updateParticles(dt) {
-    for (const p of particles) {
-      p.life -= dt;
-      p.x += p.vx * dt;
-      p.y += p.vy * dt;
-      p.vy += (Number.isFinite(p.gravity) ? p.gravity : 520) * dt;
-      if (p.drag > 0) {
-        const damping = Math.exp(-p.drag * dt);
-        p.vx *= damping;
-        p.vy *= damping;
-      }
-      p.rotation = (Number(p.rotation) || 0) + (Number(p.spin) || 0) * dt;
-    }
-    particles = particles.filter((p) => p.life > 0);
-    for (const f of floatTexts) {
-      f.life -= dt;
-      f.y -= 46 * dt;
-    }
-    floatTexts = floatTexts.filter((f) => f.life > 0);
-  }
-
-  function renderParticles() {
-    ctx.save();
-    for (const p of particles) {
-      Playfield.drawParticle(ctx, p, { alpha: clamp(p.life / p.max, 0, 1) });
-    }
-    ctx.restore();
+    Effects.update(particles, dt);
+    Effects.updateTexts(floatTexts, dt);
   }
 
   function floatText(text, x, y, color) {
-    floatTexts.push({ text, x, y, color, life: 0.8 });
-  }
-
-  function renderFloatTexts() {
-    ctx.save();
-    ctx.textAlign = "center";
-    for (const f of floatTexts) {
-      const alpha = clamp(f.life / 0.8, 0, 1);
-      // v1.2.4 — gilded edge: italic gold underprint at low alpha, then the regular color on top.
-      if (save.settings.fx) {
-        ctx.font = `italic 700 20px ${CANVAS_FONT_FAMILY}`;
-        ctx.globalAlpha = alpha * 0.55;
-        ctx.fillStyle = "#f2d389";
-        ctx.fillText(f.text, f.x + 1, f.y + 1);
-      }
-      ctx.font = `700 20px ${CANVAS_FONT_FAMILY}`;
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = f.color;
-      ctx.fillText(f.text, f.x, f.y);
-    }
-    ctx.restore();
+    Effects.addText(floatTexts, text, x, y, color);
   }
 
   function beep(freq, duration) {

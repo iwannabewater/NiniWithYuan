@@ -8,7 +8,7 @@ const hud = fs.readFileSync("src/render/hud.js", "utf8");
 const cursor = fs.readFileSync("src/render/cursor-trail.js", "utf8");
 const eggs = fs.readFileSync("src/render/easter-eggs.js", "utf8");
 const game = fs.readFileSync("src/game.js", "utf8");
-const playfield = fs.readFileSync("src/render/playfield-material.js", "utf8");
+const playfield = fs.readFileSync("src/render/effects.js", "utf8");
 const sw = fs.readFileSync("service-worker.js", "utf8");
 const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
@@ -109,10 +109,12 @@ assert.ok(/@media \(hover: hover\) and \(pointer: fine\) {[\s\S]*?\.ambient\.hun
 
 // --- in-game canvas polish ---------------------------------------------------
 
-assert.ok(game.includes("glow: true"), "game.js burst should push a glow particle for warm pickup bursts");
+assert.match(game, /glow: save\.settings\.fx && GLOW_BURST_COLORS\.has\(color\)/, "game.js burst should add a glow ring for warm pickup bursts");
 assert.ok(/globalCompositeOperation = "lighter"/.test(playfield), "the playfield renderer should composite glow particles with lighter blend");
 assert.ok(game.includes("CANVAS_FONT_FAMILY"), "game.js renderFloatTexts should use the shared Canvas font family");
-assert.ok(game.includes("save.settings.fx") && /if \(save\.settings\.fx\) {[\s\S]*?italic 700 20px \$\{CANVAS_FONT_FAMILY\}/.test(game), "gilded float-text should be guarded by the FX toggle");
+assert.match(game, /const FLOAT_FONT_ITALIC = `italic 700 20px \$\{CANVAS_FONT_FAMILY\}`/, "gilded float-text should use the shared Canvas font family");
+assert.match(game, /Effects\.drawTexts\(ctx, floatTexts, \{[^}]*fx: save\.settings\.fx/, "gilded float-text should be guarded by the FX toggle");
+assert.match(playfield, /if \(options\.fx !== false\) \{\s*ctx\.font = options\.italicFont/, "the gilded underprint only draws with effects on");
 
 // --- reduced-motion contract -------------------------------------------------
 

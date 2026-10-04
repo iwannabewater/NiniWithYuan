@@ -41,11 +41,13 @@ const tests = [
   "tests/sim/boundaries.test.js",
   // Authored content.
   "tests/content/chapters.test.js",
+  // Render modules.
+  "tests/render/playfield.test.js",
+  "tests/render/scenery.test.js",
   // Presentation, interface, and release contracts.
   "tests/character-atlas.js",
   "tests/character-motion.js",
   "tests/character-gilded-v2_2_0.js",
-  "tests/playfield-material.js",
   "tests/presentation-materials.js",
   "tests/living-field-v2_3_0.js",
   "tests/starfield-cadence-v2_1_0.js",

@@ -32,8 +32,8 @@ assert.ok(css.includes("--font-canvas:"), "styles.css should define the shared C
 assert.ok(css.includes("font-family: var(--font-ui);"), "styles.css should apply --font-ui to visible UI text");
 assert.ok(game.includes("CANVAS_FONT_FAMILY"), "game.js should define a shared Canvas font family");
 assert.ok(!/ctx\.font\s*=\s*["'][^"']*system-ui/.test(game), "Canvas text should not use a system-ui-only font");
-assert.ok(/ctx\.font = `italic 700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas gilded underprint should use CANVAS_FONT_FAMILY");
-assert.ok(/ctx\.font = `700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas float text should use CANVAS_FONT_FAMILY");
+assert.ok(/const FLOAT_FONT_ITALIC = `italic 700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas gilded underprint should use CANVAS_FONT_FAMILY");
+assert.ok(/const FLOAT_FONT = `700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas float text should use CANVAS_FONT_FAMILY");
 
 for (const [name, source] of [
   ["index.html", html],

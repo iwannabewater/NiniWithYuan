@@ -31,7 +31,7 @@ assert.ok(game.includes("const simulationTime = sceneTime()"), "character motion
 assert.ok(game.includes("presentation.cameraX, camera.x, renderAlpha"), "rendering should interpolate fixed-step camera samples");
 assert.match(
   game,
-  /const initialCamera = cameraTarget\(0\);[\s\S]*?syncPresentationState\(\);/,
+  /Camera\.frameImmediately\(camera, player, activeLevel\);[\s\S]*?syncPresentationState\(\);/,
   "level start should frame the player before the first rendered simulation step",
 );
 assert.ok(!game.includes("player.motionState"), "render presentation state must not leak into gameplay entities");

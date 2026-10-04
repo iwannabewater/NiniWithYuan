@@ -3,7 +3,6 @@ const fs = require("node:fs");
 
 const CharacterEffects = require("../src/render/character-effects.js");
 const CreatureMaterial = require("../src/render/creature-material.js");
-const Playfield = require("../src/render/playfield-material.js");
 const WardenArt = require("../src/render/warden.js");
 
 function mockContext() {
@@ -63,26 +62,6 @@ CharacterEffects.drawOverlay(effectsContext, {
 });
 assert.ok(effectsContext.calls.some(([name]) => name === "drawImage"), "action trails should reuse the crisp authored frame");
 assert.ok(effectsContext.calls.some(([name]) => name === "strokeRect"), "a shot release should carry a visible star seal");
-
-assert.equal(Playfield.sceneryKind("world1"), "star-bloom");
-assert.equal(Playfield.sceneryKind("world2"), "gate-beacon");
-assert.equal(Playfield.sceneryKind("world3"), "mirror-reed");
-const sceneryContext = mockContext();
-for (const [index, worldId] of ["world1", "world2", "world3"].entries()) {
-  Playfield.drawScenery(sceneryContext, {
-    id: `chapter-${index}`,
-    world: { id: worldId },
-    platforms: Array.from({ length: 8 }, (_, platformIndex) => ({
-      x: platformIndex * 150,
-      y: 260,
-      w: 132,
-      h: 48,
-      type: "ground",
-    })),
-  }, { time: 1.2, reducedMotion: false, fx: true });
-}
-assert.ok(sceneryContext.calls.filter(([name]) => name === "quadraticCurveTo").length >= 3, "world props should author curved organic or silk details");
-assert.ok(sceneryContext.calls.filter(([name]) => name === "strokeRect").length >= 1, "the mirror world should carry faceted props");
 
 const baseEnemy = { x: 30, y: 80, w: 38, h: 34, baseX: 30, baseY: 80, vx: 90, phase: 0.4, hitTimer: 0 };
 assert.ok(CreatureMaterial.resolveCreaturePose({ ...baseEnemy, type: "slime" }).scale >= 1.36);
@@ -156,7 +135,9 @@ assert.ok(
 for (const path of [
   "src/render/character-effects.js",
   "src/render/creature-material.js",
-  "src/render/playfield-material.js",
+  "src/render/terrain.js",
+  "src/render/props.js",
+  "src/render/effects.js",
   "src/render/warden.js",
 ]) {
   const source = fs.readFileSync(path, "utf8").replace(/typeof window/g, "");
@@ -173,4 +154,4 @@ assert.match(
 );
 assert.doesNotMatch(game, /function drawGroundEnemy|function drawWispEnemy/, "creature drawing should not grow the gameplay hotspot again");
 
-console.log("presentation-materials: action envelopes, world props, creatures, and guardian silhouettes passed");
+console.log("presentation-materials: action envelopes, creatures, and guardian silhouettes passed");

@@ -161,8 +161,8 @@ assert.ok(
   "game-feel must execute before the game captures its runtime reference"
 );
 assert.ok(
-  html.indexOf("./src/render/playfield-material.js") < html.indexOf("./src/game.js"),
-  "playfield materials must execute before the game captures its renderer reference"
+  ["terrain", "props", "effects"].every((name) => html.indexOf(`./src/render/${name}.js`) > 0 && html.indexOf(`./src/render/${name}.js`) < html.indexOf("./src/game.js")),
+  "playfield renderers must execute before the game captures their references"
 );
 
 console.log("gamefeel-v1.5.0: hit-stop, lookahead, shake, cue table, and physics pins passed");

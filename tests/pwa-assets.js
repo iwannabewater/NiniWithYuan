@@ -25,22 +25,12 @@ for (const icon of manifest.icons) {
   assert.ok(serviceWorker.includes(icon.src), `Service worker should cache ${icon.src}`);
 }
 
-for (const asset of [
-  "./src/core/storage.js",
-  "./src/core/audio.js",
-  "./src/core/input-state.js",
-  "./src/core/game-rules.js",
-  "./src/core/fixed-step.js",
-  "./src/render/hud.js",
-  "./src/render/character-motion.js",
-  "./src/render/character-effects.js",
-  "./src/render/playfield-material.js",
-  "./src/render/creature-material.js",
-  "./src/render/game-feel.js",
-  "./src/render/respawn-veil.js",
-  "./src/game.js",
-]) {
-  assert.ok(serviceWorker.includes(asset), `Service worker missing cache asset: ${asset}`);
+// Every script the web entry loads must ship in the offline cache.
+const indexHtml = fs.readFileSync("index.html", "utf8");
+const entryScripts = [...indexHtml.matchAll(/<script src="(\.\/src\/[^"]+\.js)"/g)].map((match) => match[1]);
+assert.ok(entryScripts.length >= 30 && entryScripts.includes("./src/game.js"), "index.html should load the runtime modules");
+for (const asset of entryScripts) {
+  assert.ok(serviceWorker.includes(`"${asset}"`), `Service worker missing cache asset: ${asset}`);
 }
 
 assert.ok(serviceWorker.includes("./assets/characters/concepts/nini-yuan-song-atlas-v1.png"), "Service worker should cache the approved paired protagonist art");

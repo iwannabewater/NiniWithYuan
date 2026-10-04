@@ -21,9 +21,11 @@ This is a single-context repository. See `docs/agents/domain.md`.
 - `src/core/` owns persistent storage, audio, input-state boundaries, pure gameplay rules, meta-progression rules, and fixed-step scheduling.
 - `src/core/progression.js` owns achievement predicates, trial-medal thresholds, and chain math as pure functions of a sanitized save plus chapter metadata.
 - `src/render/` owns optional render helpers loaded before `src/game.js`.
-- `src/render/playfield-material.js` owns stateless Canvas material drawing; collision geometry, gameplay state, and render ordering remain in `src/game.js`.
+- `src/render/camera.js` owns presentation framing: normalized zoom across viewports, the platform-anchor dead zone, render scale, and the culling rectangle.
+- `src/render/scenery.js` (with `scene-specs.js`, `motifs.js`, and `art.js`) owns chapter backdrops. Backdrops are painted once per chapter and viewport; each frame only blits baked layers at whole device pixels, so per-frame cost does not grow with art detail.
+- `src/render/terrain.js` owns platforms, hazards, and springs; `src/render/props.js` owns pickups, goals, portals, wind, projectiles, and the phase tide; `src/render/effects.js` owns pooled particles, float texts, and post layers. All three are stateless with respect to gameplay, and the drawn walkable top of every platform sits exactly on its collision edge.
 - `src/render/warden.js` owns stateless Canvas drawing for wardens, hostile projectiles, sentries, warders, lanterns, and star marrow. Encounter state and collision stay in `src/game.js`.
-- `tests/unit/` covers pure modules, `tests/sim/` drives the headless simulation with scripted input, `tests/content/` validates authored chapter data, and `tests/browser-smoke.js` owns the cross-viewport Playwright smoke path. Remaining interface and release guards live in adjacent `tests/*.js` files.
+- `tests/unit/` covers pure modules, `tests/render/` covers render contracts against recording canvases (`tests/helpers/canvas.js`), `tests/sim/` drives the headless simulation with scripted input, `tests/content/` validates authored chapter data, and `tests/browser-smoke.js` owns the cross-viewport Playwright smoke path. Remaining interface and release guards live in adjacent `tests/*.js` files.
 
 ## Verification
 

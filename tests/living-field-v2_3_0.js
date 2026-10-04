@@ -8,9 +8,7 @@ const serviceWorker = fs.readFileSync("service-worker.js", "utf8");
 const html = fs.readFileSync("index.html", "utf8");
 const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 const creatureSource = fs.readFileSync("src/render/creature-material.js", "utf8");
-const playfieldSource = fs.readFileSync("src/render/playfield-material.js", "utf8");
 const CreatureArt = require("../src/render/creature-material.js");
-const Playfield = require("../src/render/playfield-material.js");
 
 assertReleaseFloor(assert, { pkg, lock, serviceWorker, html, androidManifest }, "2.3.0", 24);
 
@@ -21,14 +19,6 @@ for (const marker of [
   "drawGroundCreature(ctx, enemy, pose, options)",
 ]) {
   assert.ok(creatureSource.includes(marker), `creature material should contain ${marker}`);
-}
-
-for (const marker of [
-  "platform.y + platform.h - 6",
-  "spring.y + spring.h - 2",
-  "arc(spring.x + spring.w / 2",
-]) {
-  assert.ok(playfieldSource.includes(marker), `playfield material should contain ${marker}`);
 }
 
 function mockContext() {
@@ -87,11 +77,6 @@ for (const type of ["slime", "ember", "wisp"]) {
   assert.ok(ctx.calls.some(([name]) => name === "restore"), `${type} should restore canvas state`);
 }
 
-const fieldCtx = mockContext();
-Playfield.drawPlatform(fieldCtx, { x: 0, y: 0, w: 192, h: 48, type: "ground" });
-Playfield.drawSpring(fieldCtx, { x: 10, y: 10, w: 56, h: 24 });
-Playfield.drawHazard(fieldCtx, { x: 0, y: 0, w: 96, h: 32, type: "spike" }, 0.5);
-assert.ok(fieldCtx.calls.some(([name]) => name === "ellipse"), "field detail should use deterministic ellipse marks");
-assert.ok(fieldCtx.calls.some(([name]) => name === "arc"), "spring seats should keep a visible pivot mark");
+// Field material contracts moved to tests/render/playfield.test.js with the v3 terrain.
 
 console.log("living-field-v2.3.0: field micro-detail, reduced-motion separation, and release contracts passed");
