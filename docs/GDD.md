@@ -92,9 +92,9 @@ arena wakes it, seals the arena's left edge, and locks the gate until it falls.
 
 | Chapter | Warden | Star force | Arena |
 | --- | --- | --- | --- |
-| 5 Aurora Citadel | 极光守望者 | 16 | 20 tiles |
-| 10 Island Star Core | 群岛守望者 | 20 | 12 tiles |
-| 15 Phase Tide Court | 星潮守望者 | 24 | 22 tiles |
+| 5 Aurora Citadel | 烛龙 (Zhulong, the torch dragon) | 16 | 20 tiles |
+| 10 Island Star Core | 巨鳌 (Ao, the isle-bearing turtle) | 20 | 12 tiles |
+| 15 Phase Tide Court | 鲲 (Kun, the tide leviathan) | 24 | 22 tiles |
 
 One data-authored encounter model serves all three. Each guardian owns a
 deterministic three-stage profile. Stages advance as star force crosses 66 and
@@ -188,17 +188,17 @@ it cannot drift from the underlying records.
 | 2 | Moon-Mirror Ruins | Reflective ruins | 24 s | Moving platforms and elevated collection routes. |
 | 3 | Cloudsea Sails | High-altitude wind fields | 28 s | Wind zones that modify landing positions. |
 | 4 | Radiant Forge | Crystal furnace | 30 s | Breakable crystals and denser hazards. |
-| 5 | Aurora Citadel | Aurora throne | 55 s | Combined wind, moving platform, crystal, and jump-chain tests, sealed by 极光守望者. |
+| 5 | Aurora Citadel | Aurora throne | 55 s | Combined wind, moving platform, crystal, and jump-chain tests, sealed by 烛龙. |
 | 6 | Star Gate Cove | Tide-lit gate islands | 24 s | First paired-gate route split with low punishment. |
 | 7 | Looping Lighthouse | Vertical beacon tower | 28 s | Layered gate loops, glides, dashes, and collection routing. |
 | 8 | Ring Conservatory | Floating greenhouse rings | 32 s | Mid-World 2 route combining gates, wind, moving platforms, and crystals. |
 | 9 | Star Bridge Tide | Tide-lit star bridge | 30 s | Star gates plus wind fields and momentum preservation. |
-| 10 | Island Star Core | Star-core archipelago | 65 s | World 2 finale combining gates, wind, moving platforms, crystals, and a longer collection route, sealed by 群岛守望者. |
+| 10 | Island Star Core | Star-core archipelago | 65 s | World 2 finale combining gates, wind, moving platforms, crystals, and a longer collection route, sealed by 巨鳌. |
 | 11 | Phase Shallows | Mirror-water shallows | 32 s | Phase-tide tutorial with low-risk bridge timing. |
 | 12 | Tide Corridor | Alternating star corridor | 36 s | Phase pickups and route timing. |
 | 13 | Moon-Mirror Break | Broken mirror bridge | 40 s | Phase bridges plus wind-field landing prediction. |
 | 14 | Twin-Star Clocktower | Star gate clocktower | 42 s | Hybrid phase bridges plus star gates. |
-| 15 | Phase Tide Court | Mirror-tide court | 78 s | Final synthesis of phase bridges, portals, wind, moving platforms, crystals, and hazards, sealed by 星潮守望者. |
+| 15 | Phase Tide Court | Mirror-tide court | 78 s | Final synthesis of phase bridges, portals, wind, moving platforms, crystals, and hazards, sealed by 鲲. |
 
 Star ratings are determined only by the value of level coins and gems collected. Combat rewards still contribute to earned star dew and persistent totals, but never raise the collection rating:
 

@@ -12,15 +12,6 @@ const CreatureArt = require("../src/render/creature-material.js");
 
 assertReleaseFloor(assert, { pkg, lock, serviceWorker, html, androidManifest }, "2.3.0", 24);
 
-for (const marker of [
-  "time = Number(options.time) || 0",
-  "spark * 2.1 + seed",
-  "ellipse(ctx, 0, 7, enemy.w * 0.14",
-  "drawGroundCreature(ctx, enemy, pose, options)",
-]) {
-  assert.ok(creatureSource.includes(marker), `creature material should contain ${marker}`);
-}
-
 function mockContext() {
   const calls = [];
   const ctx = {

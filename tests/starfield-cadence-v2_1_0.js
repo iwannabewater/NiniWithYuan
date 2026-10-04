@@ -74,8 +74,8 @@ for (const path of [
 }
 
 const gdd = fs.readFileSync("docs/GDD.md", "utf8");
-assert.match(gdd, /Aurora Citadel \| 极光守望者 \| 16 \| 20 tiles/);
-assert.match(gdd, /Island Star Core \| 群岛守望者 \| 20 \| 12 tiles/);
-assert.match(gdd, /Phase Tide Court \| 星潮守望者 \| 24 \| 22 tiles/);
+assert.match(gdd, /Aurora Citadel \| 烛龙 [^|]*\| 16 \| 20 tiles/);
+assert.match(gdd, /Island Star Core \| 巨鳌 [^|]*\| 20 \| 12 tiles/);
+assert.match(gdd, /Phase Tide Court \| 鲲 [^|]*\| 24 \| 22 tiles/);
 
 console.log("starfield-cadence-v2.1.0: presentation, guardian, HUD, scenery, and release contracts passed");

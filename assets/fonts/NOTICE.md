@@ -4,8 +4,8 @@ The bundled webfonts are app-specific WOFF2 subsets of the official [LXGW WenKai
 
 | Bundled file | Official source | Source SHA-256 | Bundled SHA-256 |
 | --- | --- | --- | --- |
-| `lxgw-wenkai-500.woff2` | `LXGWWenKai-Regular.ttf` | `39ad71264b588165b469e35e6afb162a378dacd1f95348160240ba9038ac3009` | `15aa127dd9e75e4c552fea9ac6816cbffab14675e8103e364bfc0eb4a1b1eb8d` |
-| `lxgw-wenkai-700.woff2` | `LXGWWenKai-Medium.ttf` | `d4bdeb38a39151d74d084cba5090f8cb7d20bf83eedb78c35939ae70b9f4e3f6` | `2c6281bba27f1d3bc434243e14958b8361255a37d6b6bdcb6581f9938f5876d1` |
+| `lxgw-wenkai-500.woff2` | `LXGWWenKai-Regular.ttf` | `39ad71264b588165b469e35e6afb162a378dacd1f95348160240ba9038ac3009` | `ec7f736a5f043e1799a372e077a25e557318a3e4459126fb60c9cc2ab8af4a98` |
+| `lxgw-wenkai-700.woff2` | `LXGWWenKai-Medium.ttf` | `d4bdeb38a39151d74d084cba5090f8cb7d20bf83eedb78c35939ae70b9f4e3f6` | `25a5bc846337c131b8f1fde33297e3066f425544ec6bb944567e9d4cc4d0f6e0` |
 
 The application maps the Medium subset to CSS weight 700. This is an application style mapping; the upstream file is not described as Bold.
 

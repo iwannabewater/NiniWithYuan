@@ -45,6 +45,7 @@ const tests = [
   "tests/render/playfield.test.js",
   "tests/render/scenery.test.js",
   "tests/render/character.test.js",
+  "tests/render/plaques.test.js",
   // Presentation, interface, and release contracts.
   "tests/character-atlas.js",
   "tests/character-motion.js",

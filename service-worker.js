@@ -35,6 +35,7 @@ const ASSETS = [
   "./src/render/terrain.js",
   "./src/render/props.js",
   "./src/render/effects.js",
+  "./src/render/plaques.js",
   "./src/render/creature-material.js",
   "./src/render/game-feel.js",
   "./src/render/warden.js",

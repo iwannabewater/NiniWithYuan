@@ -60,6 +60,7 @@
   const Effects = window.NiniYuanEffects;
   const Cloth = window.NiniYuanCharacterCloth;
   const AtlasCache = window.NiniYuanAtlasCache;
+  const Plaques = window.NiniYuanPlaques;
   const CreatureArt = window.NiniYuanCreatureMaterial;
   const GameFeel = window.NiniYuanGameFeel;
   const RespawnVeil = window.NiniYuanRespawnVeil;
@@ -79,6 +80,11 @@
   const CANVAS_MATERIAL = Props.MATERIAL;
   const FLOAT_FONT = `700 20px ${CANVAS_FONT_FAMILY}`;
   const FLOAT_FONT_ITALIC = `italic 700 20px ${CANVAS_FONT_FAMILY}`;
+  const PLAQUE_FONTS = Object.freeze({
+    seal: `700 14px ${CANVAS_FONT_FAMILY}`,
+    name: `700 19px ${CANVAS_FONT_FAMILY}`,
+    hint: `500 13px ${CANVAS_FONT_FAMILY}`,
+  });
   // Glow rings accompany warm pickup bursts so collection reads as a reward.
   const GLOW_BURST_COLORS = new Set(["#c3a468", "#6da895", "#eee7d5"]);
   const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
@@ -111,6 +117,10 @@
   const diagnostics = window.NiniYuanDiagnostics || (window.NiniYuanDiagnostics = {});
   const characterDraw = { id: "", frame: 0, sx: 0, sy: 0, sw: 0, sh: 0, x: 0, y: 0, transformA: 1, time: 0 };
   const cloth = Cloth.createCloth();
+  // Name seals introduce each creature and fixture once per session.
+  const introductions = Plaques.createIntroductions();
+  const scanRect = { x: 0, y: 0, w: 0, h: 0 };
+  const renderCamera = { x: 0, y: 0 };
   let presentationDt = 0;
   // Reused per frame: the padded world rectangle on screen, and draw options.
   const cullRect = { x: 0, y: 0, w: 0, h: 0 };
@@ -356,6 +366,7 @@
     warden = world.warden;
     Effects.clear(particles);
     Effects.clearTexts(floatTexts);
+    Plaques.clear(introductions);
     screenFlash.intensity = 0;
     camera = Camera.configure(Camera.create(), view);
     Camera.frameImmediately(camera, player, activeLevel);
@@ -386,6 +397,8 @@
     updateParticles(dt);
     updateCamera(dt);
     updateChapterIntro(dt);
+    Plaques.scan(introductions, activeLevel, Camera.visibleRect(camera.x, camera.y, camera, -60, scanRect), dt);
+    Plaques.update(introductions, dt);
   }
 
   /** Semantic event tones resolve to the active palette here, not in the simulation. */
@@ -625,6 +638,9 @@
     renderPlayer({ x: playerX, y: playerY });
     Effects.drawTexts(ctx, floatTexts, { font: FLOAT_FONT, italicFont: FLOAT_FONT_ITALIC, fx: save.settings.fx });
     ctx.setTransform(view.dpr, 0, 0, view.dpr, 0, 0);
+    renderCamera.x = camX;
+    renderCamera.y = camY;
+    Plaques.draw(ctx, introductions, worldToScreen, PLAQUE_FONTS, { view, reducedMotion: view.reducedMotion });
     // The baked sky already frames play; menus and pauses dim the edges further.
     if (mode !== "play") Effects.drawVignette(ctx, vignette, 1);
     Effects.drawFlash(ctx, screenFlash, view, frameDt);
@@ -707,6 +723,12 @@
     }
     presentation.snapPlayer = false;
     presentation.snapCamera = false;
+  }
+
+  function worldToScreen(x, y, out) {
+    out.x = (x - renderCamera.x) * camera.zoom;
+    out.y = (y - renderCamera.y) * camera.zoom;
+    return out;
   }
 
   function isActivePhase(item) {
@@ -792,6 +814,7 @@
       attack: warden.attack,
       open: Sim.wardenIsOpen(world),
       healthRatio: warden.health / Math.max(1, warden.maxHealth),
+      facing: player && player.x + player.w / 2 < warden.x + warden.w / 2 ? -1 : 1,
       reducedMotion: view.reducedMotion,
       fontFamily: CANVAS_FONT_FAMILY,
     });

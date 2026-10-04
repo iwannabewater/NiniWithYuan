@@ -121,9 +121,9 @@
     { id: "allclear", group: "journey", name: "星穹回响", desc: "完成全部十五章。", test: (c) => c.levelCount > 0 && c.clearedCount >= c.levelCount },
 
     // 守望 — wardens
-    { id: "warden1", group: "warden", name: "极光落幕", desc: "击败极光守望者。", test: (c) => c.wardens.auroracitadel === true },
-    { id: "warden2", group: "warden", name: "星核平息", desc: "击败群岛守望者。", test: (c) => c.wardens.islandstarcore === true },
-    { id: "warden3", group: "warden", name: "潮汐终章", desc: "击败星潮守望者。", test: (c) => c.wardens.phasetidecourt === true },
+    { id: "warden1", group: "warden", name: "极光落幕", desc: "令极光守望烛龙归位。", test: (c) => c.wardens.auroracitadel === true },
+    { id: "warden2", group: "warden", name: "星核平息", desc: "令群岛守望巨鳌归位。", test: (c) => c.wardens.islandstarcore === true },
+    { id: "warden3", group: "warden", name: "潮汐终章", desc: "令星潮守望鲲归位。", test: (c) => c.wardens.phasetidecourt === true },
     { id: "wardenflawless", group: "warden", name: "无瑕之战", desc: "在未受伤的情况下击败任意一位守望者。", test: (c) => c.stats.wardenFlawless >= 1 },
 
     // 收集 — collection

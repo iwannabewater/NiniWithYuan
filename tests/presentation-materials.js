@@ -63,6 +63,9 @@ CharacterEffects.drawOverlay(effectsContext, {
 assert.ok(effectsContext.calls.some(([name]) => name === "drawImage"), "action trails should reuse the crisp authored frame");
 assert.ok(effectsContext.calls.some(([name]) => name === "strokeRect"), "a shot release should carry a visible star seal");
 
+const { recordingContext } = require("./helpers/canvas.js");
+const named = (ctx, name) => ctx.calls.filter((call) => call[0] === name);
+
 const baseEnemy = { x: 30, y: 80, w: 38, h: 34, baseX: 30, baseY: 80, vx: 90, phase: 0.4, hitTimer: 0 };
 assert.ok(CreatureMaterial.resolveCreaturePose({ ...baseEnemy, type: "slime" }).scale >= 1.36);
 assert.ok(CreatureMaterial.resolveCreaturePose({ ...baseEnemy, type: "wisp" }).scale >= 1.28);
@@ -71,60 +74,43 @@ assert.equal(
   0,
   "reduced motion should stop decorative creature gait",
 );
-const raisedWispShadow = CreatureMaterial.wispShadowGeometry(
-  { ...baseEnemy, type: "wisp", y: baseEnemy.baseY - 6 },
-  { floatGap: 24 },
-  { scale: 1.28 },
-);
-const loweredWispShadow = CreatureMaterial.wispShadowGeometry(
-  { ...baseEnemy, type: "wisp", y: baseEnemy.baseY + 6 },
-  { floatGap: 24 },
-  { scale: 1.28 },
-);
 assert.deepEqual(
-  raisedWispShadow,
-  loweredWispShadow,
+  CreatureMaterial.wispShadowGeometry({ ...baseEnemy, type: "wisp", y: baseEnemy.baseY - 6 }, { floatGap: 24 }, { scale: 1.28 }),
+  CreatureMaterial.wispShadowGeometry({ ...baseEnemy, type: "wisp", y: baseEnemy.baseY + 6 }, { floatGap: 24 }, { scale: 1.28 }),
   "wisp presentation hover must not move its authored ground shadow",
 );
-const creatureContext = mockContext();
-for (const type of ["slime", "ember", "wisp"]) {
-  CreatureMaterial.drawEnemy(creatureContext, { ...baseEnemy, type }, {
-    hitDuration: 0.18,
-    floatGap: 24,
-    hoverRange: 6,
-    focus: 0.8,
-    support: { x: 0, y: 114, w: 180 },
-  });
-}
-assert.ok(
-  creatureContext.calls.some(([name, x, y]) => name === "scale" && x >= 1.28 && y >= 1.28),
-  "creature silhouettes should clear the compact-viewport visual scale floor without changing hitboxes",
+assert.deepEqual(
+  { slime: CreatureMaterial.NAMES.slime, ember: CreatureMaterial.NAMES.ember, wisp: CreatureMaterial.NAMES.wisp },
+  { slime: "玉蟾", ember: "祸斗", wisp: "灯魅" },
+  "creatures carry their bestiary names",
 );
-assert.ok(creatureContext.calls.filter(([name]) => name === "ellipse").length >= 18, "creatures should carry layered silhouettes, eyes, and shadows");
-
-const wardenContext = mockContext();
-for (const [palette, phase, attack] of [
-  ["aurora", "telegraph", "volley"],
-  ["core", "recover", "sweep"],
-  ["tide", "recover", "rain"],
-]) {
-  WardenArt.drawWarden(wardenContext, { x: 20, y: 30, w: 104, h: 96, palette }, {
-    time: 1,
-    telegraph: phase === "telegraph" ? 0.8 : 0,
-    phase,
-    attack,
-    open: phase === "recover",
-    healthRatio: 0.3,
-    sigil: "星",
-  });
+for (const type of ["slime", "ember", "wisp"]) {
+  const calm = recordingContext();
+  const hit = recordingContext();
+  CreatureMaterial.drawEnemy(calm, { ...baseEnemy, type }, { hitDuration: 0.18, floatGap: 24, hoverRange: 6, focus: 0.8, support: { x: 0, y: 114, w: 180 } });
+  CreatureMaterial.drawEnemy(hit, { ...baseEnemy, type, hitTimer: 0.15 }, { hitDuration: 0.18, floatGap: 24, hoverRange: 6, focus: 0.8, support: { x: 0, y: 114, w: 180 } });
+  assert.ok(named(calm, "scale").some(([, x, y]) => Math.abs(x) >= 1.28 && Math.abs(y) >= 1.28), `${type} clears the compact-viewport visual scale floor without changing hitboxes`);
+  assert.equal(named(calm, "save").length, named(calm, "restore").length, `${type} restores every canvas state it saves`);
+  assert.ok(named(hit, "fill").some((call) => call.at(-1).fillStyle === "#fff7d1"), `${type} washes pale on a landed hit`);
+  assert.ok(named(calm, "fill").length + named(calm, "fillRect").length >= 8, `${type} is a layered painting, not a token`);
 }
-assert.ok(wardenContext.calls.filter(([name]) => name === "strokeRect").length >= 4, "the core guardian should own a squared gate silhouette");
-assert.ok(wardenContext.calls.filter(([name]) => name === "arc").length >= 10, "open cores and tide crescents should expose readable rings");
 
-const warderContext = mockContext();
-WardenArt.drawWarder(warderContext, {
-  x: 100, y: 100, w: 34, h: 34, baseX: 100, patrol: 40, vx: 70,
-}, { time: 1 });
+const wardenShapes = new Set();
+for (const palette of ["aurora", "core", "tide"]) {
+  const closed = recordingContext();
+  const open = recordingContext();
+  const options = { time: 1, healthRatio: 0.3, sigil: "烛", facing: -1 };
+  WardenArt.drawWarden(closed, { x: 20, y: 30, w: 104, h: 96, palette }, { ...options, phase: "telegraph", telegraph: 0.8, attack: "sweep" });
+  WardenArt.drawWarden(open, { x: 20, y: 30, w: 104, h: 96, palette }, { ...options, phase: "recover", open: true });
+  assert.ok(named(open, "stroke").length > named(closed, "stroke").length, `${palette}: the open weak point radiates`);
+  assert.ok(named(closed, "fillText").some((call) => call[1] === "烛"), `${palette}: the warden carries its cinnabar seal`);
+  assert.ok(named(closed, "set").some(([, key, value]) => key === "strokeStyle" && value === "#c96978"), `${palette}: a sweep telegraphs in rose`);
+  wardenShapes.add(named(closed, "fill").length);
+}
+assert.ok(wardenShapes.size >= 2, "each warden owns a distinct mythic silhouette");
+
+const warderContext = recordingContext();
+WardenArt.drawWarder(warderContext, { x: 100, y: 100, w: 34, h: 34, baseX: 100, patrol: 40, vx: 70 }, { time: 1 });
 const patrolEndIndex = warderContext.calls.findIndex(([name, x]) => name === "lineTo" && x === 157);
 const creatureScaleIndex = warderContext.calls.findIndex(([name, x]) => name === "scale" && x === 1.28);
 assert.ok(
@@ -154,4 +140,4 @@ assert.match(
 );
 assert.doesNotMatch(game, /function drawGroundEnemy|function drawWispEnemy/, "creature drawing should not grow the gameplay hotspot again");
 
-console.log("presentation-materials: action envelopes, creatures, and guardian silhouettes passed");
+console.log("presentation-materials: action envelopes, mythic creatures, and guardian silhouettes passed");
