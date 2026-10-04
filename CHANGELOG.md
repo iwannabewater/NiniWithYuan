@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.0.0
+
+- Added **星河长卷 / Starriver Scroll**. The playfield is painted as a nocturnal blue-green landscape scroll: chapter backdrops with mineral-pigment ranges, architecture, flora, and celestial bodies are painted once per chapter and viewport and blitted at whole device pixels; terrain uses mineral crests over ochre bodies with hemp-fibre strokes and moss dots, glass slabs, and carved jade bridges. Headless Chromium frame task time fell from 6.5 to 5.2 ms (desktop) and 8.0 to 6.2 ms (DPR 2 phone) against v2.3.0.
+- Extracted a headless, deterministic simulation into `src/sim/` with chapter and character data in `src/data/`, and drove it from headless tests. This fixed a pre-existing bug where Yuan's dash could never contact-break crystals.
+- Grounded the painted protagonists on each cell's measured foot line (shipped in `atlas.json`, so it also holds in the Android WebView), graded them for night light, added a moonlight rim, and gave robes spring-driven hem motion. The gilding vignette strokes were removed.
+- Repainted creatures and wardens as beings from Chinese myth: 玉蟾, 祸斗, and 灯魅; bronze taotie sentries and stone bixi warders; and the wardens 烛龙, 巨鳌, and 鲲. Added name seals that introduce each creature and fixture once per session.
+- Added World 4, **第四星域 银汉鹊桥**: five chapters with magpie bridges and updrafts, sealed by the warden 天狗. Added the 鹊桥重连 and 天狗还月 records; all-chapter record copy is count-free. Saves that cleared chapter 15 unlock chapter 16.
+- Pickups now play plucked pentatonic phrases in Pythagorean tuning; World 4 adds bridge flutter and scatter cues.
+- Interface: silk panels, cinnabar seal eyebrows, and chapter cards with the ordinal above an unbroken title.
+- Pooled particles and float texts; restored player-projectile colours lost when the simulation moved to semantic tones.
+- Added render tests against recording canvases, a reachability validator for both protagonists, and headless World 4 mechanics tests. `playfield-material.js` was retired; its contracts moved to `tests/render/`.
+- Release metadata: web package `3.0.0`, Android `versionCode=25` and `versionName=3.0.0`, service-worker cache `nini-yuan-v3.0.0-starriver-scroll-r1`. Unused `nini-v2.png` and `yuan-v2.png` were removed, and pose-sheet sources are excluded from the APK.
+- Preserved save schema 4, character movement tuning, input arbitration, collection rating, chain rules, assist records, and the fixed-step simulation.
+
 ## v2.3.0
 
 - Added **局境生息 / Living Field** field-level presentation. Ground creatures pick up deterministic cores and ember-flame flecks, platforms gain quiet seam studs, hazards carry a clearer top reading line, and springs now draw as seated tools with a lintel knob.

@@ -112,6 +112,13 @@ World props use level-id and platform-index seeds, not random placement. Star bl
 
 Guardian attack order advances deterministically through the active stage's data-authored pattern list. Aurora, Core, and Tide use separate orders and cadence curves. The renderer maps wait, telegraph, act, recover, and low-health state to distinct silhouette marks. Only `recover` opens the damage gate; this presentation signal reflects the centralized gameplay rule rather than creating a second timing source.
 
+## Starriver Scroll Motion (v3.0.0)
+
+- Hem motion: each protagonist frame draws as one rigid band above the waist and nine robe bands on damped springs. Hems trail the direction of travel, flutter faster with speed and in the air, lean into crosswinds, and swing past centre when the runner stops. Neighbouring bands may not shear more than 1.6 px apart. The springs run on presentation time, never inside the fixed step.
+- Magpie bridges beat their wings gently at rest, shake and beat fast while trembling, burst skyward over 0.8 s when they scatter, and fly back in over the last 0.55 s before they regather, while a dashed ribbon marks where the span will return.
+- Updrafts draw rising dashed silk and upward chevrons.
+- Name seals rise 8 px and fade in over 0.3 s, hold for 2.6 s, and fade out.
+
 ## Reduced Motion
 
 Under `prefers-reduced-motion: reduce`:
@@ -122,6 +129,7 @@ Under `prefers-reduced-motion: reduce`:
 - Ink-scroll parallax and star-chart drift become static.
 - Character afterimages and movement traces are removed. Creature gait, world-prop sway, and guardian rotation become static.
 - The respawn veil becomes a single 40 ms flash.
+- Hem springs hold at zero, bridge wings and tremble stop, updraft silk and chevrons stand still (chevrons still point up), name seals appear without rising, and pickups stop bobbing.
 - Gameplay timing, platform state, hazards, phase silhouettes, contact shadows, and essential contact, cast, skill, and guardian-opening cues remain visible.
 - Optional pickup bursts still follow the high-frame-rate visual-effects setting.
 
@@ -130,10 +138,13 @@ Under `prefers-reduced-motion: reduce`:
 - HUD text, classes, and ARIA labels are written only when their rendered values change. Chapter progress is quantized to quarter-percent increments.
 - Settings sliders preview immediately, persist after a 150 ms trailing delay, and flush on `change`, `visibilitychange`, or `pagehide`.
 - Pointer stardust is limited to fine pointers, interpolates gaps at about 18 px, and caps the live particle count at 56.
-- Character-effect, creature, warden, and playfield material helpers remain stateless. Collision geometry, render order, and gameplay state remain in `src/game.js`.
+- Character-effect, creature, warden, terrain, props, and effects helpers remain stateless with respect to gameplay. Collision and gameplay state live in `src/sim/`; render order lives in `src/game.js`.
+- Particles and float texts live in fixed pools and compact in place, so play allocates nothing per frame for effects.
 
 ## Audio Timing
 
 `src/core/audio.js` owns master, BGM, and semantic SFX levels. BGM starts after entering gameplay, pauses for menus and modal outcomes, and retries after a later gesture if WebView autoplay blocks the first request. Visibility loss suspends the audio context and pauses BGM. Foreground return resumes it only when gameplay remains active.
+
+Star dew and jade shards play plucked notes on the five-tone pentatonic in Pythagorean tuning over a D tonic. Pickups within 1.1 s of each other climb the scale (capped two octaves up); a pause resets the phrase.
 
 The current BGM is `Fairy Adventure` by MintoDog under CC0 1.0 Universal. Source and license details are in [assets/audio/NOTICE.md](../assets/audio/NOTICE.md).

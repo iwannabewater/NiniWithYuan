@@ -4,7 +4,7 @@
 
 `Nini & Yuan` is a Chinese-language fantasy platformer built for the web and Android WebView. Route choice distinguishes the two characters: Nini favors elevated collection routes, double jumps, and gliding; Yuan favors dash movement, crystal breaking, and fast clears through danger zones.
 
-v2.3.0, **局境生息 / Living Field**, keeps the fifteen-chapter structure, schema 4 save, and core physics under **宋式星图器物幻想 / Song-atlas Night Observatory**. It refines in-field material: common enemies gain stronger grounded cores and ember flecks, platform seams and hazard edges read with deterministic marks, and springs read as seated tools in the obstacle layer. The fifteen chapters remain grouped as World 1, **第一星域 破碎星图**; World 2, **第二星域 星门群岛**; and World 3, **第三星域 星潮镜域**.
+v3.0.0, **星河长卷 / Starriver Scroll**, keeps the schema 4 save and core physics and grows the campaign to twenty chapters in four worlds: World 1, **第一星域 破碎星图**; World 2, **第二星域 星门群岛**; World 3, **第三星域 星潮镜域**; and World 4, **第四星域 银汉鹊桥**. The playfield is painted as a nocturnal blue-green landscape scroll, creatures and wardens are drawn as beings from Chinese myth, and each creature and fixture is introduced in place by a Chinese name seal.
 
 ## Fiction
 
@@ -32,13 +32,13 @@ Playable characters:
 
 ### Wind Fields
 
-Wind fields appear in chapter 3 and chapter 5. They are directional horizontal currents that contribute to the player's movement target, so they visibly change landing positions, partially counter movement into the wind without blocking forward progress on the ground or during jumps, and speed same-direction routes without exceeding the wind speed cap. Canvas wind fields draw repeated arrowheads that drift with the current direction to make the airflow readable during play.
+Wind fields appear across the campaign, beginning in chapter 3. They are directional horizontal currents that contribute to the player's movement target, so they visibly change landing positions, partially counter movement into the wind without blocking forward progress on the ground or during jumps, and speed same-direction routes without exceeding the wind speed cap. Wind columns draw drifting silk streams and swallow-tail chevrons that point with the current, so direction reads even with reduced motion.
 
 ### Enemies
 
-Slimes and embers are ground enemies across all chapters. 哨星 sentries are fixed emplacements: they face the player, telegraph, and fire one slow bolt, so the answer is position rather than reaction speed. 石胄 warders are shelled walkers that deflect projectiles and must be answered with a stomp, a dash, or invulnerability. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, use their current supporting platform as the patrol boundary, and show a quiet ground intent rail so the player can read their path before contact. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw a winged aurora-core silhouette with a distant shadow, no feet, and a dashed hover tether. Projectile hits add a short ivory flash on the enemy body without changing enemy health, patrol, or collision rules.
+Slimes and embers are ground enemies across all chapters. 哨星 sentries are fixed emplacements: they face the player, telegraph, and fire one slow bolt, so the answer is position rather than reaction speed. 石胄 warders are shelled walkers that deflect projectiles and must be answered with a stomp, a dash, or invulnerability. They spawn bottom-aligned to the platform row they are placed on, draw contact feet/shadow, use their current supporting platform as the patrol boundary, and show a quiet ground intent rail so the player can read their path before contact. Wisps are flying enemies: they spawn above the platform row with a visible hover gap, use bounded hover around their base route, and draw as a floating lantern with a distant shadow, no feet, and a dashed hover tether. Projectile hits add a short ivory flash on the enemy body without changing enemy health, patrol, or collision rules.
 
-All common creature drawing now passes through a stateless material renderer. Ground creatures use a 1.36 presentation scale; wisps, sentries, and warders use at least 1.28. These scales enlarge only the drawn silhouette around its contact anchor. Entity coordinates, collision boxes, patrol boundaries, health, and physics stay authoritative in `src/game.js`.
+All common creature drawing now passes through a stateless material renderer. Ground creatures use a 1.36 presentation scale; wisps, sentries, and warders use at least 1.28. These scales enlarge only the drawn silhouette around its contact anchor. Entity coordinates, collision boxes, patrol boundaries, health, and physics stay authoritative in the simulation (`src/sim/`).
 
 ### Skills
 
@@ -87,7 +87,7 @@ raises a star rating.
 
 ### Wardens
 
-Chapter 5, chapter 10, and chapter 15 each end at a 守望者 guardian. Entering the
+Chapter 5, chapter 10, chapter 15, and chapter 20 each end at a 守望者 guardian. Entering the
 arena wakes it, seals the arena's left edge, and locks the gate until it falls.
 
 | Chapter | Warden | Star force | Arena |
@@ -95,6 +95,7 @@ arena wakes it, seals the arena's left edge, and locks the gate until it falls.
 | 5 Aurora Citadel | 烛龙 (Zhulong, the torch dragon) | 16 | 20 tiles |
 | 10 Island Star Core | 巨鳌 (Ao, the isle-bearing turtle) | 20 | 12 tiles |
 | 15 Phase Tide Court | 鲲 (Kun, the tide leviathan) | 24 | 22 tiles |
+| 20 Tiangou Eats the Moon | 天狗 (Tiangou, the moon-swallowing hound) | 26 | 22 tiles |
 
 One data-authored encounter model serves all three. Each guardian owns a
 deterministic three-stage profile. Stages advance as star force crosses 66 and
@@ -140,15 +141,34 @@ World 2 introduces paired star gates. A gate activates only when the player's bo
 
 World 3 introduces phase-tide bridges. A level-local tide clock alternates between phase `a` and phase `b`. Phase-tagged platforms, moving platforms, hazards, coins, and gems participate only when their phase is active. Inactive phase objects render as ghosted mirror silhouettes so the player can read the next route before committing, and the HUD reports the active phase with a one-decimal remaining-time countdown. The mechanic does not change fixed-step physics, character jump/dash/glide tuning, or input handling.
 
+### Magpie Bridges and Updrafts
+
+World 4 adds two fixtures, both simulated in `src/sim/mechanics.js` with headless tests in `tests/sim/sky.test.js`.
+
+- A 鹊桥 magpie bridge is a span of sky held by a flock. Landing on it starts a tremble; after 0.6 s the birds scatter and the span is not solid for 2.2 s. The flock then regathers, but only once the player is clear of the span, so a bridge never closes around a body. Scatter and regather are reported as simulation events and drawn as a burst of feathers and a returning flight.
+- A 扶摇 updraft cancels gravity for a body inside its column and lifts it with its own net upward acceleration toward a capped rising speed. Columns draw rising silk and upward chevrons so the direction reads even with reduced motion.
+
+### Creatures
+
+Common creatures keep their hitboxes and behaviour and are painted as beings from Chinese myth: the slime as 玉蟾, a jade moon-toad with a gilt cloud scroll; the ember as 祸斗, the fire-eating hound of the Classic of Mountains and Seas; and the wisp as 灯魅, a red paper lantern that drifted off its eave. Sentries are drawn as bronze taotie beacons (哨星) and warders as stone bixi tortoises (石胄). The wardens are 烛龙, 巨鳌, 鲲, and 天狗; each shows the same readable signals: a weak point that swells while it telegraphs and blazes open during recovery, a pale hit wash, rose sweep telegraphs, and cracks at low health.
+
+### Name Seals
+
+The first time each creature or fixture enters view in a session, a lacquer tag with a cinnabar seal, its Chinese name, and a four-character hint fades in beside it (for example 玉鼓 · 踏之高跃 or 鹊桥 · 落足即散). Tags queue one at a time, draw in screen space, and never repeat within the session.
+
+### Reachability
+
+`tests/content/reachability.test.js` proves every chapter's goal is reachable for both protagonists with their own kit: ballistic jumps from the real movement constants, Yuan's minimum dash distance, Nini's air jump, springs, crosswinds, updrafts, star gates, moving-platform sweeps, and magpie bridges. It was calibrated against the fifteen shipped chapters before World 4 was authored against it. It is a conservative ballistic graph, not a full playthrough.
+
 ### World Presentation Grammar
 
-Each world derives non-colliding props from its level id and authored platform list. World 1 places star blooms, World 2 places silk-ring gate beacons, and World 3 places mirror reeds. The selection and placement are deterministic, props draw behind authored solids, and reduced-motion play freezes their sway. They never enter the entity list or add collision geometry.
+Each chapter paints its own backdrop from a scene spec: mineral-pigment ranges, architecture and flora along the ridges, a celestial body (moon, crescent, aurora, star core, twin stars, or the Silver River), the world beneath the floating isles, and ambient life. Terrain decor (flowers, reeds, stones, tufts) is seeded per platform. None of it enters the entity list or adds collision geometry.
 
 Gameplay particles use a stateless shape renderer instead of treating every event as the same circle. Jumps and stomps can use rings, dashes and wind use streaks, and crystal or guardian impacts use shards; orb, petal, and glow materials remain available to the same particle system. Shape, gravity, drag, rotation, and spin are presentation fields. Particle lifetime remains the simulation-owned limit.
 
 ### Star Marrow
 
-One 星髓 is hidden in every chapter, fifteen in total. Each sits off the forward
+One 星髓 is hidden in every chapter, twenty in total. Each sits off the forward
 route, above the optional elevated line, and is recorded the moment it is
 touched, so a later failure never takes it back. Star marrow does not affect the
 collection rating.
@@ -174,7 +194,7 @@ disqualifies the 独行星路 record. The settings group states this before the 
 
 ### Astral Record
 
-星录 holds thirty achievements across six groups: 征程 journey, 守望 wardens,
+星录 holds thirty-two achievements across six groups: 征程 journey, 守望 wardens,
 收集 collection, 试炼 trials, 技巧 mastery, and 秘录 secrets. The two secret
 entries stay unnamed until earned. Achievement state is evaluated as a pure
 function of the sanitized save plus chapter metadata rather than incremented, so
@@ -199,6 +219,11 @@ it cannot drift from the underlying records.
 | 13 | Moon-Mirror Break | Broken mirror bridge | 40 s | Phase bridges plus wind-field landing prediction. |
 | 14 | Twin-Star Clocktower | Star gate clocktower | 42 s | Hybrid phase bridges plus star gates. |
 | 15 | Phase Tide Court | Mirror-tide court | 78 s | Final synthesis of phase bridges, portals, wind, moving platforms, crystals, and hazards, sealed by 鲲. |
+| 16 | Silver River Ford (银汉渡口) | Silver River ford | 32 s | Magpie-bridge onboarding and a first updraft climb. |
+| 17 | The Magpie Bridge Forms (鹊桥初成) | Bridge chains | 38 s | Longer bridge chains that must be crossed in one run, two updrafts. |
+| 18 | The Weaver's Loom (织女机杼) | Weaver's palace | 44 s | Jade shuttles on the loom's rhythm, bridges, sentries, and warders. |
+| 19 | The Herdsman's Fields (牵牛星野) | Altair and Vega over the fields | 48 s | Alternating tail- and headwinds, short bridges, updrafts across cliffs. |
+| 20 | Tiangou Eats the Moon (天狗食月) | Half-devoured moon | 70 s | World 4 finale combining bridges, updrafts, wind, and a shuttle, sealed by 天狗. |
 
 Star ratings are determined only by the value of level coins and gems collected. Combat rewards still contribute to earned star dew and persistent totals, but never raise the collection rating:
 
@@ -284,13 +309,13 @@ Fields:
 | Assist bonus air jump | Off | On or off |
 | Assist game speed | 100% | 60 to 100% |
 
-Loading applies schema validation, type clamping, and chapter ID allow-listing. Schema 4 adds star marrow, warden, flawless, and achievement records, per-character clear counts, lifetime statistics, and assist preferences while retaining the existing storage key. Older saves receive safe defaults for the new fields and clamp to the fifteen-chapter cap. Completed Aurora Citadel progress derives chapter 6 access, and completed Ring Conservatory progress derives chapter 9 access.
+Loading applies schema validation, type clamping, and chapter ID allow-listing. Schema 4 adds star marrow, warden, flawless, and achievement records, per-character clear counts, lifetime statistics, and assist preferences while retaining the existing storage key. Older saves receive safe defaults for the new fields and clamp to the authored chapter count. Completed Aurora Citadel progress derives chapter 6 access, completed Ring Conservatory progress derives chapter 9 access, and a completed Phase Tide Court derives chapter 16 access, because v2 saves capped unlocks at fifteen.
 
 Record maps collapse to exactly 1 and reject any key that is not an allow-listed chapter or achievement id, so a hand-edited save cannot smuggle arbitrary numbers into a count. Assist toggles accept only a real boolean `true`, and assist speed clamps to 60 through 100. If localStorage is unavailable or tampered with, the game falls back to safe defaults.
 
 ## Release Candidate Artifacts
 
-The v2.3.0 release aligns the web package, package lock, ambient strip, service-worker cache, and Android `versionName=2.3.0`; Android uses `versionCode=24`. The offline asset list includes the character-effects, creature-material, character-gilding, and playfield-material render helpers.
+The v3.0.0 release aligns the web package, package lock, ambient strip, service-worker cache (`nini-yuan-v3.0.0-starriver-scroll-r1`), and Android `versionName=3.0.0`; Android uses `versionCode=25`. The offline asset list is derived from the scripts `index.html` loads, so every runtime module ships offline. Pose-sheet source art stays in the repository but is excluded from the APK.
 
 The Android build workflow writes and verifies `NiniYuan.apk.sha256` before upload. It uploads the APK and checksum together as `NiniYuan-<commit-sha>`, retains the artifact for 14 days without recompression, and fails when either candidate file is missing. A final release still requires CI on the intended release commit, downloaded-artifact checksum and package readback, device review, and live web readback.
 
@@ -316,4 +341,5 @@ The Android build workflow writes and verifies `NiniYuan.apk.sha256` before uplo
 - v2.1.0: elapsed-time pose damping, action contact and cast effects, stateless creature materials, three deterministic world prop grammars, shaped particles, a 13 px HUD floor, recover-only guardian damage, distinct guardian profiles and silhouettes, and checksum-backed Android release candidates. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
 - v2.2.0: Gilded Companions character UI, a live HUD sigil, stateless Canvas gilding around the production sprite, and refreshed local WenKai subsets. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
 - v2.3.0: Living Field material detail for creatures and obstacle/playfield surfaces, plus a refreshed runtime font subset for the new `境` glyph. Chapters, save schema, collision geometry, movement tuning, input arbitration, assist rules, and fixed-step physics remain unchanged.
+- v3.0.0: a headless deterministic simulation, the baked blue-green landscape render pipeline, grounded and graded painted protagonists with hem motion, mythic creatures and wardens, Chinese name seals, World 4 with magpie bridges, updrafts, and the 天狗 warden, pentatonic pickup phrases, and a reachability validator. Save schema, character movement tuning, and fixed-step physics remain unchanged.
 - Future release: local replay or ghost racing, subject to a separate scope review.

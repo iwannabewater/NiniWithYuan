@@ -27,3 +27,19 @@ _Avoid_: Generic xianxia sword, folding fan
 **Xuanji Union Seal**:
 The product emblem formed by the circular Xuanji Star Dial, the vertical Jade Gui Sword, and rose and jade inlays representing the protagonist pair.
 _Avoid_: Chibi couple icon, single-character app icon
+
+**Magpie bridge**:
+A World 4 span of sky held by a flock of magpies (鹊桥). It scatters shortly after the player lands and regathers once the span is clear.
+_Avoid_: Crumbling platform, falling block
+
+**Updraft**:
+A World 4 column of rising wind (扶摇) that cancels gravity and lifts the player toward a capped rising speed.
+_Avoid_: Fan, jump pad
+
+**Name seal**:
+The lacquer tag with a cinnabar seal, Chinese name, and four-character hint that introduces a creature or fixture the first time it comes into view in a session.
+_Avoid_: Tutorial popup, tooltip
+
+**Warden**:
+The mythic guardian sealing each world finale: 烛龙 (World 1), 巨鳌 (World 2), 鲲 (World 3), and 天狗 (World 4).
+_Avoid_: Boss monster, generic dragon

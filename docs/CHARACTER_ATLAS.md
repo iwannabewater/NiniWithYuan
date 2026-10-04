@@ -111,9 +111,17 @@ The renderer receives interpolated player coordinates from the fixed-step presen
 
 Portal travel, respawn, and level entry snap presentation history. Hit-stop completion synchronizes history when no fixed step occurs, so the character cannot render a one-frame rewind.
 
+## Display Caches and Hem Motion (v3.0.0)
+
+`src/render/atlas-cache.js` keeps display-ready copies of each atlas. An atlas is reduced once to the size it will occupy on screen by successive halving, graded with the chapter's night tint, and paired with a moonlight rim silhouette built from the opaque core only (the silhouette is composited onto itself with `destination-in`, raising alpha to the fourth power without reading pixels), so translucent gauze is never backed by rim light. Each cell's lowest painted row becomes the feet line, so run and landing poses no longer float above the ground. The baselines ship in `atlas.json` as `baselines`, measured by `node scripts/measure-atlas-baselines.js` and verified against the image by `tests/render/character.test.js`; the Android WebView serves `file://` assets, which taint canvases, so the runtime only measures pixels as a fallback. Rerun the script whenever an atlas image changes. Scales are quantized in 0.04 steps and the cache keeps six entries.
+
+`src/render/character-cloth.js` draws each frame as one rigid band above the waist (top 42 percent) and nine robe bands offset by damped springs. See `docs/MOTION.md` for the motion contract.
+
+Browser tests observe protagonist draws through `window.NiniYuanDiagnostics.onCharacterDraw`, which reports the authored cell, world placement, and transform, instead of matching `drawImage` sources.
+
 ## Source and Production Files
 
-Generated source sheets remain available for later art passes:
+Generated source sheets remain in the repository for later art passes. The Android build excludes them from the APK because the runtime only reads the packed atlases:
 
 ```text
 assets/characters/nini/nini-pose-sheet-source-v1.png
