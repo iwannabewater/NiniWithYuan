@@ -6242,3 +6242,74 @@
     }
   }
 }
+
+/* ============================================================================
+   v3.0 Night Scroll interface layer
+   Panels become translucent silk over the living landscape, screen headings
+   carry a cinnabar seal, and chapter cards set their ordinal above an
+   unbroken title. Visual properties only: layout and sizing contracts stay
+   with the earlier boundaries.
+   ============================================================================ */
+
+@layer tokens {
+  :root {
+    --v3-silk: rgba(12, 15, 23, 0.74);
+    --v3-silk-deep: rgba(8, 10, 16, 0.86);
+    --v3-hairline: rgba(201, 171, 108, 0.34);
+    --v3-cinnabar: #b8322e;
+    --v3-cinnabar-ink: #f8eadb;
+  }
+}
+
+@layer component {
+  .panel {
+    background:
+      linear-gradient(180deg, rgba(255, 247, 213, 0.07) 0 1px, transparent 1px 100%),
+      radial-gradient(ellipse 80% 55% at 50% -15%, rgba(242, 211, 137, 0.12), transparent 62%),
+      radial-gradient(ellipse 60% 45% at 100% 100%, rgba(155, 140, 255, 0.08), transparent 70%),
+      linear-gradient(160deg, var(--v3-silk), var(--v3-silk-deep));
+  }
+
+  .screen-head .eyebrow {
+    display: inline-block;
+    padding: 3px 8px 2px;
+    border: 0;
+    border-radius: 2px;
+    background: var(--v3-cinnabar);
+    color: var(--v3-cinnabar-ink);
+    box-shadow: inset 0 0 0 1.5px rgba(248, 234, 219, 0.55), 0 1px 0 rgba(0, 0, 0, 0.35);
+    letter-spacing: 0.12em;
+    transform: rotate(-2deg);
+  }
+
+  .screen-head h2:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .level-item {
+    background:
+      linear-gradient(180deg, rgba(255, 247, 213, 0.05) 0 1px, transparent 1px),
+      linear-gradient(165deg, rgba(20, 26, 38, 0.72), rgba(10, 13, 20, 0.8));
+  }
+
+  .level-item .level-title {
+    display: grid;
+    gap: 2px;
+  }
+
+  .level-item .level-ordinal {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: var(--c-gold-200, #e2c27d);
+    opacity: 0.86;
+  }
+
+  .level-item .level-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+}
