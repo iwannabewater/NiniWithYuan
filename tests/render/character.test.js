@@ -61,3 +61,18 @@ assert.equal(AtlasCache.quantize(0.313), 0.32, "scales snap to shared cache step
 assert.equal(AtlasCache.get(null, 0.3, "world1"), null, "no image, no cache");
 
 console.log("render/character: hem motion, banded drawing, and atlas baselines passed");
+
+// --- shipped baselines match the atlas paintings ---------------------------------
+{
+  const fs = require("node:fs");
+  const { decodePng, cellBaselines } = require("../../scripts/png.js");
+  for (const id of ["nini", "yuan"]) {
+    const manifest = JSON.parse(fs.readFileSync(`assets/characters/${id}/atlas.json`, "utf8"));
+    const image = decodePng(fs.readFileSync(`assets/characters/${id}/${manifest.image}`));
+    assert.deepEqual(manifest.baselines, cellBaselines(image, manifest.frame.w, manifest.frame.h), `${id}: atlas.json baselines match the image (run node scripts/measure-atlas-baselines.js)`);
+    assert.ok(manifest.baselines.every((value) => value > 0.5 && value <= 1), `${id}: every pose has feet in its lower half`);
+  }
+  const game = fs.readFileSync("src/game.js", "utf8");
+  assert.match(game, /AtlasCache\?\.get\?\.\([^)]*atlas\?\.baselines\)/, "the runtime prefers shipped baselines over pixel reads");
+  console.log("render/character: shipped baselines match the atlas paintings");
+}

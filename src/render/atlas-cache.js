@@ -111,11 +111,15 @@
     return baselines;
   }
 
-  function build(image, scale, worldId, frame) {
+  function build(image, scale, worldId, frame, shipped) {
     const reduced = reduce(image, scale);
     if (!reduced) return null;
     const k = reduced.width / (image.naturalWidth || image.width);
-    const baselines = frame ? measureBaselines(reduced, frame.w * k, frame.h * k) : null;
+    // Baselines measured at build time ship in atlas.json; reading pixels at
+    // runtime is only a fallback (file:// origins taint canvases on Android).
+    const baselines = Array.isArray(shipped) && shipped.length
+      ? Float32Array.from(shipped)
+      : frame ? measureBaselines(reduced, frame.w * k, frame.h * k) : null;
     const grade = gradeFor(worldId);
     if (grade.alpha > 0) {
       const g = reduced.getContext("2d");
@@ -131,15 +135,13 @@
       const g = silhouette.getContext("2d");
       g.drawImage(reduced, 0, 0);
       // Only the opaque core casts a rim; translucent gauze would otherwise be
-      // backed by moonlight and wash out.
-      try {
-        const pixels = g.getImageData(0, 0, silhouette.width, silhouette.height);
-        const data = pixels.data;
-        for (let i = 3; i < data.length; i += 4) data[i] = data[i] > 200 ? 255 : 0;
-        g.putImageData(pixels, 0, 0);
-      } catch {
-        // Unreadable canvas: keep the plain silhouette.
-      }
+      // backed by moonlight and wash out. Compositing the silhouette onto
+      // itself with destination-in raises alpha to the fourth power (0.5 ->
+      // 0.06, 1 -> 1) without reading pixels, so it also works on canvases
+      // tainted by file:// images in the Android WebView.
+      g.globalCompositeOperation = "destination-in";
+      g.drawImage(silhouette, 0, 0);
+      g.drawImage(silhouette, 0, 0);
       g.globalCompositeOperation = "source-in";
       g.fillStyle = grade.rim;
       g.fillRect(0, 0, silhouette.width, silhouette.height);
@@ -154,7 +156,7 @@
    * image is still loading or no canvas is available (callers then draw the
    * source image directly).
    */
-  function get(image, scale, worldId, frame = null) {
+  function get(image, scale, worldId, frame = null, shipped = null) {
     if (!image || !(image.naturalWidth || image.width)) return null;
     const key = quantize(scale);
     for (let i = 0; i < entries.length; i += 1) {
@@ -167,7 +169,7 @@
         return entry.cache;
       }
     }
-    const cache = build(image, key, worldId, frame);
+    const cache = build(image, key, worldId, frame, shipped);
     if (!cache) return null;
     entries.unshift({ image, key, worldId, cache });
     if (entries.length > MAX_ENTRIES) entries.length = MAX_ENTRIES;

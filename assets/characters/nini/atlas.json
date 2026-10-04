@@ -1,6 +1,7 @@
 {
   "image": "nini-atlas-v1.png",
   "frame": { "w": 320, "h": 320 },
+  "baselines": [0.9594, 0.8344, 0.9375, 0.9344, 0.8781, 0.825, 0.825, 0.7781, 1, 0.8438, 0.8438, 1, 0.8531, 0.7625, 0.7688, 0.875],
   "animations": {
     "idle": { "frames": [0], "fps": 7, "loop": true, "sourceFacing": "left" },
     "run": { "frames": [1], "fps": 14, "loop": true },

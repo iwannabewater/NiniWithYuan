@@ -1104,7 +1104,7 @@
     // Paint from the display-ready atlas: reduced once to its on-screen size,
     // graded for the chapter's night light, with each cell's foot line measured.
     const deviceScale = (destH / Math.max(1, sourceFrame.sh)) * camera.zoom * view.dpr;
-    const display = AtlasCache?.get?.(image, deviceScale, activeLevel?.world?.id, atlas?.frame) || null;
+    const display = AtlasCache?.get?.(image, deviceScale, activeLevel?.world?.id, atlas?.frame, atlas?.baselines) || null;
     const baseline = display?.baselines?.[atlasFrameIndex(sourceFrame, image)] ?? 0.97;
     // The lowest painted pixel of the pose sits on the feet line.
     const lift = (1 - baseline) * destH * stretchY + (motion?.lift || 0) * scale;
