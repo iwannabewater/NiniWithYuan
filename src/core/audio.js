@@ -40,6 +40,31 @@
     bridge_scatter: { wave: "sine", freq: [700, 1560], attack: 6, release: 260, gain: 0.42, osc2: { detune: 1200, mix: 0.3 } },
   };
 
+  // v3.0.0 — the five tones of the Chinese pentatonic (宫商角徵羽), tuned by
+  // the classical "add or remove a third" generation (三分损益), i.e.
+  // Pythagorean ratios over a D tonic. Pickups climb this scale as plucked
+  // notes when collected in quick succession, so a run of star dew plays a
+  // phrase instead of repeating one beep.
+  const PENTATONIC_RATIOS = Object.freeze([1, 9 / 8, 81 / 64, 3 / 2, 27 / 16]);
+  const PENTATONIC_TONIC = 293.66;
+  const PICKUP_RUN_WINDOW = 1.1;
+  const PICKUP_RUN_TOP = 9;
+
+  /** Frequency of pentatonic step `step` (0 = tonic; every fifth step is an octave). */
+  function pentatonicFrequency(step) {
+    const n = Math.max(0, Math.floor(Number(step) || 0));
+    const octave = Math.floor(n / PENTATONIC_RATIOS.length);
+    return PENTATONIC_TONIC * PENTATONIC_RATIOS[n % PENTATONIC_RATIOS.length] * Math.pow(2, octave);
+  }
+
+  /** Advance a pickup run: consecutive pickups inside the window climb the scale. */
+  function advancePickupRun(run, now) {
+    const continuing = run.lastAt !== null && now - run.lastAt <= PICKUP_RUN_WINDOW;
+    run.step = continuing ? Math.min(PICKUP_RUN_TOP, run.step + 1) : 0;
+    run.lastAt = now;
+    return run.step;
+  }
+
   function createAudioBus(options = {}) {
     let audioCtx = null;
     let bgm = null;
@@ -166,10 +191,64 @@
       osc.stop(end + 0.02);
     }
 
+    const pickupRun = { step: 0, lastAt: null };
+
+    /**
+     * A plucked-string note: a bright triangle fundamental with a quiet octave,
+     * a 3 ms attack, a long exponential decay, and a slight settle in pitch,
+     * which reads as a zither rather than a synth beep.
+     */
+    function pluck(ctx, freq, start, gainScale) {
+      const volume = getVolume();
+      const decay = 0.7;
+      const output = ctx.createGain();
+      output.gain.setValueAtTime?.(0.0001, start);
+      output.gain.linearRampToValueAtTime?.((volume / 1000) * 0.5 * gainScale, start + 0.003);
+      output.gain.exponentialRampToValueAtTime?.(0.0001, start + decay);
+      if (!output.gain.setValueAtTime) output.gain.value = (volume / 1000) * 0.5 * gainScale;
+      const tone = ctx.createBiquadFilter();
+      tone.type = "lowpass";
+      tone.frequency.value = Math.min(6000, freq * 6);
+      tone.connect(output).connect(ctx.destination);
+      for (const [type, multiple, level] of PLUCK_PARTIALS) {
+        const osc = ctx.createOscillator();
+        osc.type = type;
+        osc.frequency.setValueAtTime?.(freq * multiple * 1.006, start);
+        osc.frequency.exponentialRampToValueAtTime?.(freq * multiple, start + 0.05);
+        if (!osc.frequency.setValueAtTime) osc.frequency.value = freq * multiple;
+        const mix = ctx.createGain();
+        mix.gain.value = level;
+        osc.connect(mix).connect(tone);
+        osc.start(start);
+        osc.stop(start + decay + 0.05);
+      }
+    }
+
+    function pickupPhrase(name) {
+      const volume = getVolume();
+      if (!volume) return;
+      try {
+        const ctx = ensureContext();
+        if (!ctx) return;
+        if (ctx.state === "suspended") ctx.resume().catch(() => {});
+        const now = ctx.currentTime;
+        const step = advancePickupRun(pickupRun, now);
+        pluck(ctx, pentatonicFrequency(step + 5), now, 0.8);
+        // A jade shard rings a second string two steps higher.
+        if (name === "pickup_gem") pluck(ctx, pentatonicFrequency(step + 7), now + 0.06, 0.6);
+      } catch {
+        // SFX are optional and may be blocked before a user gesture.
+      }
+    }
+
     function cue(name) {
       const volume = getVolume();
       const spec = CUE_TABLE[name];
       if (!volume || !spec) return;
+      if (name === "pickup_coin" || name === "pickup_gem") {
+        pickupPhrase(name);
+        return;
+      }
       try {
         const ctx = ensureContext();
         if (!ctx) return;
@@ -240,7 +319,20 @@
     return { beep, cue, armAutoplayRetry, setBgmSource, playBgm, pauseBgm, syncBgmVolume, suspend, resume, dispose };
   }
 
-  const api = { createAudioBus, CUE_TABLE };
+  const PLUCK_PARTIALS = Object.freeze([
+    Object.freeze(["triangle", 1, 1]),
+    Object.freeze(["sine", 2, 0.28]),
+    Object.freeze(["sine", 3, 0.08]),
+  ]);
+
+  const api = {
+    createAudioBus,
+    CUE_TABLE,
+    PENTATONIC_RATIOS,
+    PICKUP_RUN_WINDOW,
+    pentatonicFrequency,
+    advancePickupRun,
+  };
   root.NiniYuanAudio = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
