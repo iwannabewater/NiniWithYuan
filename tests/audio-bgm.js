@@ -19,6 +19,17 @@ assert.ok(audio.includes("bgm.preload = \"auto\""), "BGM should be preloaded");
 assert.ok(audio.includes("armAutoplayRetry"), "AudioBus should expose BGM autoplay retry");
 assert.ok(audio.includes('addEventListener("pointerdown"'), "BGM retry should listen for pointer gestures");
 assert.ok(audio.includes('addEventListener("keydown"'), "BGM retry should listen for keyboard gestures");
+// Pickups climb the pentatonic in Pythagorean tuning.
+assert.deepEqual(Audio.PENTATONIC_RATIOS, [1, 9 / 8, 81 / 64, 3 / 2, 27 / 16]);
+assert.ok(Math.abs(Audio.pentatonicFrequency(5) - Audio.pentatonicFrequency(0) * 2) < 1e-9, "every fifth step is an octave");
+{
+  const run = { step: 0, lastAt: null };
+  assert.equal(Audio.advancePickupRun(run, 1), 0, "a run starts on the tonic");
+  assert.equal(Audio.advancePickupRun(run, 1.5), 1, "a quick follow-up climbs");
+  assert.equal(Audio.advancePickupRun(run, 1.5 + Audio.PICKUP_RUN_WINDOW + 0.01), 0, "a pause resets the phrase");
+  for (let i = 0; i < 20; i += 1) Audio.advancePickupRun(run, 3 + i * 0.1);
+  assert.equal(run.step, 9, "a long run holds at the top of its range");
+}
 assert.match(notice, /OpenGameArt/i);
 assert.match(notice, /CC0 1\.0 Universal/i);
 assert.match(notice, /creativecommons\.org\/publicdomain\/zero\/1\.0/i);

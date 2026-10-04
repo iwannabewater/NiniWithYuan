@@ -1,20 +1,22 @@
 # 妮妮源源历险记 / Nini & Yuan
 
-`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v2.3.0, **局境生息 / Living Field**, strengthens the in-game field surface: common enemies gain subtle grounded cores and warm ember flecks, platforms and hazards carry deterministic material marks, and springs read as seated tools instead of floating shapes. The release keeps the v2.2.0 Gilded Companions character presentation and the v2.1.0 Starfield Cadence construction, including signature character UI, elapsed-time pose settling, restrained contact effects, world props, compact enemy scale, and guardian recovery contracts. The game remains offline and local-only, with two playable characters, schema-validated saves, adaptive touch, display, and assist settings, PWA support, and a reproducible APK build path.
+`Nini & Yuan` is a Chinese-language fantasy platformer for the web and Android WebView. v3.0.0, **星河长卷 / Starriver Scroll**, rebuilds the playfield as a nocturnal blue-green landscape scroll and adds a fourth world. Backdrops are painted once per chapter and viewport, then blitted at whole device pixels; terrain follows the mineral-pigment convention of blue-green landscape painting; the painted protagonists are grounded on their real foot line, graded for night light, rimmed by moonlight, and given spring-driven hem motion. Creatures and wardens become beings from Chinese myth (玉蟾, 祸斗, 灯魅; 烛龙, 巨鳌, 鲲, 天狗), and each one is introduced in place by a cinnabar name seal. World 4, **第四星域 银汉鹊桥**, adds magpie bridges and updrafts, and pickups now play plucked pentatonic phrases. In headless Chromium the frame task time fell from 6.5 to 5.2 ms on desktop and from 8.0 to 6.2 ms on a DPR 2 phone viewport against the v2.3.0 baseline, despite the richer art. The game remains offline and local-only, with two playable characters, schema-validated saves, adaptive touch, display, and assist settings, PWA support, and a reproducible APK build path.
 
 ## Gameplay
 
 - Nini emphasizes precision platforming, double jumps, aerial glide control, and collection routes through the Xuanji Star Dial.
 - Yuan emphasizes dash movement, crystal breaking, enemy breakthrough, and fast routes through the Jade Gui Sword.
-- Each world finale is sealed by a 守望者 warden. Entering its arena locks the gate until the guardian falls. Attacks are telegraphed, the guardian descends into reach on its recovery beat, and three stages escalate as its star force drops.
+- Each world finale is sealed by a mythic warden: 烛龙, 巨鳌, 鲲, and 天狗. Entering its arena locks the gate until the guardian falls. Attacks are telegraphed, the guardian descends into reach on its recovery beat, and three stages escalate as its star force drops.
 - Every chapter derives 星灯 lanterns from its own platforms. Leaving the floor costs one health and returns the player to the last lit lantern.
 - One 星髓 is hidden in each chapter, off the forward route and recorded the moment it is touched.
 - Defeats and gems build a 连星 chain whose multiplier raises star dew only. Collection ratings still read the authored pickup value.
-- Each chapter declares a par time. Recorded bests earn 星章, 月章, or 露章, and feed a thirty-entry 星录 achievement record.
+- Each chapter declares a par time. Recorded bests earn 星章, 月章, or 露章, and feed a thirty-two-entry 星录 achievement record.
 - 星辉护佑 assist mode offers invulnerability, a skill without cooldown, a bonus air jump, and a 60 to 100 percent game speed. Assisted runs unlock chapters and record ratings and marrow, but never best times or medals.
-- The game ships fifteen chapters across three worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, World 2 / 星门群岛 contains five star-gate chapters, and World 3 / 星潮镜域 contains five phase-tide chapters.
+- The game ships twenty chapters across four worlds: World 1 / 破碎星图 covers the original five heart-stone chapters, World 2 / 星门群岛 contains five star-gate chapters, World 3 / 星潮镜域 contains five phase-tide chapters, and World 4 / 银汉鹊桥 contains five Silver River chapters.
 - World 2 introduces paired star gates that preserve momentum, facing, character state, and route intent while using a short cooldown and safe-exit checks.
 - World 3 introduces phase-tide bridges: platforms, pickups, and hazards can alternate between two readable star-tide phases without changing the base character physics.
+- World 4 introduces 鹊桥 magpie bridges, spans of sky held by a flock that scatter shortly after the player lands and regather once the span is clear, and 扶摇 updrafts that lift the player toward a capped rising speed.
+- The first time each creature or fixture comes into view in a session, a lacquer name seal shows its Chinese name and a four-character hint.
 - The application runs offline. It does not require login, networking, advertising SDKs, analytics SDKs, or server storage.
 - Desktop play uses arrow keys or WASD. Android starts in landscape and uses a sliding direction rail with separate jump, skill, and projectile controls.
 - The mobile web build pauses behind an orientation dialog in portrait. Players may continue in portrait or return to the menu.
@@ -55,7 +57,7 @@ http://127.0.0.1:4173
 npm test
 ```
 
-The suite covers syntax checks, physics and fixed-step balance, save migration and tampering recovery, input arbitration, character motion, Canvas materials, PWA assets, Android wrapper safety, audio lifecycle, accessibility, runtime mutation budgets, and real browser behavior. v2.3.0 adds Living Field renderer contracts for creature micro-detail, spring/hazard/platform marks, reduced-motion separation, and release-floor metadata. v2.2.0 adds Gilded Companions character UI contracts and stateless runtime gilding.
+The suite covers syntax checks, pure rules, the headless deterministic simulation (movement, combat, mechanics, wardens, magpie bridges, updrafts), authored chapter contracts, a reachability validator that proves every goal is reachable for both protagonists with their own kit, render contracts against recording canvases (terrain collision honesty, culling, whole-device-pixel backdrop blits, pooled effects, cloth motion, atlas baselines, name seals), save migration and tampering recovery, input arbitration, PWA assets, Android wrapper safety, audio lifecycle and pentatonic tuning, accessibility, runtime mutation budgets, and real browser behavior.
 
 Run the cross-viewport browser path directly after layout, Canvas, or asset changes:
 

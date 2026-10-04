@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const InputState = require("../src/core/input-state.js");
+const InputState = require("../../src/core/input-state.js");
 
 const browserContext = { window: {} };
 vm.runInNewContext(fs.readFileSync("src/core/input-state.js", "utf8"), browserContext);

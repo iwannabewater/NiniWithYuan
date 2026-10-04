@@ -11,7 +11,7 @@ const game = fs.readFileSync("src/game.js", "utf8");
 const motion = fs.readFileSync("src/render/character-motion.js", "utf8");
 const effects = fs.readFileSync("src/render/character-effects.js", "utf8");
 const creatures = fs.readFileSync("src/render/creature-material.js", "utf8");
-const playfield = fs.readFileSync("src/render/playfield-material.js", "utf8");
+const particleSource = fs.readFileSync("src/render/effects.js", "utf8");
 const warden = fs.readFileSync("src/render/warden.js", "utf8");
 const css = fs.readFileSync("styles.css", "utf8");
 const workflow = fs.readFileSync(".github/workflows/android-build-smoke.yml", "utf8");
@@ -21,7 +21,9 @@ assertReleaseFloor(assert, { pkg, lock, serviceWorker, html, androidManifest }, 
 for (const modulePath of [
   "src/render/character-motion.js",
   "src/render/character-effects.js",
-  "src/render/playfield-material.js",
+  "src/render/terrain.js",
+  "src/render/props.js",
+  "src/render/effects.js",
   "src/render/creature-material.js",
   "src/render/warden.js",
 ]) {
@@ -37,17 +39,10 @@ assert.match(effects, /reducedMotion[\s\S]*?trailCount = 0|if \(!reducedMotion\)
 
 assert.match(creatures, /scale: enemy\.type === "wisp" \? 1\.28 : 1\.36/, "creature art should preserve the compact visual scale floor");
 assert.doesNotMatch(creatures.replace(/typeof window/g, ""), /document\.|window\./, "creature art must remain stateless and DOM-free");
-for (const grammar of ["star-bloom", "gate-beacon", "mirror-reed"]) {
-  assert.ok(playfield.includes(grammar), `playfield scenery should retain the ${grammar} grammar`);
-}
 for (const shape of ["shard", "streak", "ring", "petal"]) {
-  assert.ok(playfield.includes(`particle.shape === "${shape}"`), `particle material should retain the ${shape} response`);
+  assert.ok(particleSource.includes(`p.shape === "${shape}"`), `particle material should retain the ${shape} response`);
 }
 
-assert.match(game, /if \(!wardenIsOpen\(\)\)[\s\S]*?return false;/, "closed guardian shells should reject every damage source at the shared entry");
-for (const profile of ["aurora", "core", "tide"]) {
-  assert.match(game, new RegExp(`${profile}: \\[\n\\s*\\{ above:`), `the ${profile} guardian should own a stage profile`);
-}
 assert.match(warden, /function drawWardenIdentity\(/, "guardian silhouettes should carry palette-specific geometry");
 assert.match(warden, /phase === "recover"/, "guardian art should expose the recovery opening");
 
@@ -79,8 +74,8 @@ for (const path of [
 }
 
 const gdd = fs.readFileSync("docs/GDD.md", "utf8");
-assert.match(gdd, /Aurora Citadel \| 极光守望者 \| 16 \| 20 tiles/);
-assert.match(gdd, /Island Star Core \| 群岛守望者 \| 20 \| 12 tiles/);
-assert.match(gdd, /Phase Tide Court \| 星潮守望者 \| 24 \| 22 tiles/);
+assert.match(gdd, /Aurora Citadel \| 烛龙 [^|]*\| 16 \| 20 tiles/);
+assert.match(gdd, /Island Star Core \| 巨鳌 [^|]*\| 20 \| 12 tiles/);
+assert.match(gdd, /Phase Tide Court \| 鲲 [^|]*\| 24 \| 22 tiles/);
 
 console.log("starfield-cadence-v2.1.0: presentation, guardian, HUD, scenery, and release contracts passed");

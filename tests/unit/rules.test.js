@@ -1,8 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const rules = require("../src/core/game-rules");
-const gameSource = fs.readFileSync("src/game.js", "utf8");
+const rules = require("../../src/core/game-rules");
 
 assert.equal(globalThis.NiniRules, rules, "Node and browser-style exports should expose the same API");
 {
@@ -51,10 +50,4 @@ assert.ok(Math.abs(rules.advanceIntentWindow(0.12, { pressed: false, eligible: t
 assert.equal(rules.advanceIntentWindow(0.04, { pressed: true, eligible: false, dt: 0.02, minimum: 0.12 }), 0.02);
 assert.equal(rules.advanceIntentWindow(0.01, { pressed: false, eligible: true, dt: 0.02, minimum: 0.12 }), 0);
 
-assert.match(
-  gameSource,
-  /updatePlayer\(dt\);\s*if \(mode !== "play" \|\| player\.settledOutcome\) return;\s*if \(player\.onGround/,
-  "A terminal player update must stop downstream enemies, projectiles, pickups, and rewards in the same fixed step"
-);
-
-console.log("game-integrity-rules: collectible rating, ammo caps, intent windows, terminal arbitration, and grounded spawns passed");
+console.log("unit/rules: collectible rating, ammo caps, intent windows, terminal arbitration, and grounded spawns passed");

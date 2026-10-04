@@ -21,6 +21,9 @@ cp "$ROOT/manifest.webmanifest" "$ASSET_DIR/manifest.webmanifest"
 cp "$ROOT/service-worker.js" "$ASSET_DIR/service-worker.js"
 cp -R "$ROOT/src/." "$ASSET_DIR/src/"
 cp -R "$ROOT/assets" "$ASSET_DIR/assets"
+# Pose-sheet sources are authoring material documented in docs/CHARACTER_ATLAS.md;
+# the runtime only reads the packed atlases, so keep the sources out of the APK.
+find "$ASSET_DIR/assets/characters" -name "*-pose-sheet-source-*.png" -delete
 
 "$BUILD_TOOLS/aapt2" compile --dir "$APP_DIR/res" -o "$BUILD_DIR/resources.zip"
 "$BUILD_TOOLS/aapt2" link \

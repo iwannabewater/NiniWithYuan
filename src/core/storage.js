@@ -3,7 +3,7 @@
 
   const STORAGE_KEY = "nini-yuan-save-v1";
   const SAVE_SCHEMA_VERSION = 4;
-  const DEFAULT_LEVEL_COUNT = 15;
+  const DEFAULT_LEVEL_COUNT = 20;
 
   const defaultSave = {
     schemaVersion: SAVE_SCHEMA_VERSION,
@@ -154,6 +154,11 @@
     }
     if (levelCount >= 9 && (bestTimes.ringconservatory || levelStars.ringconservatory > 0)) {
       unlocked = Math.max(unlocked, 9);
+    }
+    // v3.0.0 — a cleared World 3 finale was capped at fifteen unlocks; open
+    // the Silver River for those saves.
+    if (levelCount >= 16 && (bestTimes.phasetidecourt || levelStars.phasetidecourt > 0)) {
+      unlocked = Math.max(unlocked, 16);
     }
     return {
       schemaVersion: SAVE_SCHEMA_VERSION,

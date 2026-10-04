@@ -1,6 +1,7 @@
 {
   "image": "yuan-atlas-v1.png",
   "frame": { "w": 320, "h": 320 },
+  "baselines": [1, 0.9375, 0.9875, 1, 0.8344, 0.8281, 0.8063, 0.75, 0.7063, 1, 1, 1, 0.6844, 0.7375, 0.75, 0.7531],
   "animations": {
     "idle": { "frames": [0], "fps": 7, "loop": true },
     "run": { "frames": [1], "fps": 14, "loop": true },

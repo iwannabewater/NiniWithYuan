@@ -247,8 +247,20 @@
       const intro = document.createElement("span");
       intro.className = "level-copy";
       appendText(intro, "span", String(i + 1).padStart(2, "0"), "level-index");
-      appendText(intro, "strong", level.name);
-      appendText(intro, "span", level.vibe, "level-vibe");
+      // "第十一章 相位浅滩" -> a small ordinal line above an unbroken title.
+      const title = document.createElement("strong");
+      title.className = "level-title";
+      const split = String(level.name).indexOf(" ");
+      if (split > 0) {
+        appendText(title, "span", String(level.name).slice(0, split), "level-ordinal");
+        title.append(" ");
+        appendText(title, "span", String(level.name).slice(split + 1), "level-name");
+      } else {
+        title.textContent = level.name;
+      }
+      intro.appendChild(title);
+      // The vibe line is a second name for the place; skip it when it only repeats the title.
+      if (level.vibe && !String(level.name).endsWith(level.vibe)) appendText(intro, "span", level.vibe, "level-vibe");
       appendText(intro, "span", level.hint, "level-hint");
 
       const stars = save.levelStars[level.id] || 0;

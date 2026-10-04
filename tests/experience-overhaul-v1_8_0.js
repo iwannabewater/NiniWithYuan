@@ -21,7 +21,7 @@ assert.equal(typeof InputState.createActionInputState, "function");
 assert.ok(game.includes("actionInputs.direction()"), "movement should use unified latest-direction arbitration");
 assert.ok(game.includes('btn.addEventListener("pointermove", move'), "the captured movement rail should support drag-to-switch input");
 assert.ok(game.includes("syncOrientationGate"), "orientation changes should pass through an explicit focus and input boundary");
-assert.ok(game.includes("orientationGated || !player"), "the orientation gate should freeze simulation");
+assert.ok(game.includes("orientationGated || !world"), "the orientation gate should freeze simulation");
 assert.ok(game.includes("trapDialogFocus"), "all modal surfaces should share focus containment");
 assert.ok(game.includes('btn.addEventListener("click"'), "semantic touch controls should accept synthesized activation");
 
@@ -31,7 +31,7 @@ assert.ok(game.includes("const simulationTime = sceneTime()"), "character motion
 assert.ok(game.includes("presentation.cameraX, camera.x, renderAlpha"), "rendering should interpolate fixed-step camera samples");
 assert.match(
   game,
-  /const initialCamera = cameraTarget\(0\);[\s\S]*?syncPresentationState\(\);/,
+  /Camera\.frameImmediately\(camera, player, activeLevel\);[\s\S]*?syncPresentationState\(\);/,
   "level start should frame the player before the first rendered simulation step",
 );
 assert.ok(!game.includes("player.motionState"), "render presentation state must not leak into gameplay entities");

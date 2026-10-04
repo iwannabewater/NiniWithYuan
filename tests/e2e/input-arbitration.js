@@ -1,18 +1,13 @@
 const { withPage } = require("../helpers/e2e");
 
+// The runtime reports each protagonist draw through its diagnostics hook:
+// world-space placement and the authored atlas cell being shown.
 function installCharacterProbe() {
   window.__characterProbe = null;
-  const original = CanvasRenderingContext2D.prototype.drawImage;
-  CanvasRenderingContext2D.prototype.drawImage = function probeCharacter(source, ...args) {
-    if (source instanceof HTMLImageElement && source.src.includes("/assets/characters/nini/") && args.length >= 8) {
-      const transform = this.getTransform();
-      window.__characterProbe = {
-        x: transform.e,
-        y: transform.f,
-        frame: (args[1] / args[3]) * 4 + args[0] / args[2],
-      };
-    }
-    return original.call(this, source, ...args);
+  window.NiniYuanDiagnostics = {
+    onCharacterDraw(sample) {
+      if (sample.id === "nini") window.__characterProbe = { x: sample.x, y: sample.y, frame: sample.frame };
+    },
   };
 }
 

@@ -28,6 +28,10 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          # The legacy `tools` package is gone from the SDK repository; the
+          # action's default would fail before the build starts.
+          packages: platform-tools
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - run: npm ci
       - name: Restore stable Android signing key
@@ -97,6 +101,10 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
+        with:
+          # The legacy `tools` package is gone from the SDK repository; the
+          # action's default would fail before the build starts.
+          packages: platform-tools
       - run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
       - run: npm ci
       - name: Build Android pull-request smoke candidate

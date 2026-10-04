@@ -93,7 +93,7 @@ async function runDesktopScreenChecks() {
         };
       });
       check(
-        state.fits && state.groups.length === 3 && state.groups.every((count) => count === 5) && state.locked.disabled && state.locked.text.includes("完成上一章") && state.locked.opacity >= 0.9,
+        state.fits && state.groups.length >= 4 && state.groups.every((count) => count === 5) && state.locked.disabled && state.locked.text.includes("完成上一章") && state.locked.opacity >= 0.9,
         "chapter atlas should fit and communicate locks through text, semantics, and texture",
         state
       );
@@ -199,7 +199,7 @@ async function runLandscapeChecks() {
           groups: document.querySelectorAll(".level-world-group").length,
         };
       });
-      check(state.verticalFit && state.horizontalPages && state.groups === 3, "landscape chapters should page horizontally without vertical overflow", state);
+      check(state.verticalFit && state.horizontalPages && state.groups >= 4, "landscape chapters should page horizontally without vertical overflow", state);
 
       // v2.0.0 — every card on a page must be fully visible with its marks. A
       // 112px column floor previously overflowed the track and clipped the fifth

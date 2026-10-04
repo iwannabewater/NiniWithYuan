@@ -50,9 +50,8 @@ from fontTools.ttLib import TTFont
 
 repo = pathlib.Path(os.environ["REPO_ROOT"])
 # Every source that can contain user-visible text.
-sources = ["index.html", "styles.css", "manifest.webmanifest", "src/game.js"]
-sources += sorted(str(p.relative_to(repo)) for p in (repo / "src/core").glob("*.js"))
-sources += sorted(str(p.relative_to(repo)) for p in (repo / "src/render").glob("*.js"))
+sources = ["index.html", "styles.css", "manifest.webmanifest"]
+sources += sorted(str(p.relative_to(repo)) for p in (repo / "src").rglob("*.js"))
 
 points = set()
 for source in sources:

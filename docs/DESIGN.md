@@ -201,6 +201,14 @@ The playfield uses the same material hierarchy as the DOM instead of a separate 
 - Character poses and atlas frames use simulation time. The renderer interpolates player and camera samples between 120 Hz updates, then synchronizes those samples after portals, respawns, lifecycle resets, and hit-stop recovery. Continuous pose fields use elapsed-time damping, so display refresh rate does not change their settling time.
 - Hazards retain the strongest warm-danger contrast. Goals and portals use gold, jade, rose, and phase blue as semantic rings rather than a rainbow bloom.
 
+### Starriver Scroll (v3.0.0)
+
+- Terrain follows blue-green landscape painting at night: mineral green or azurite on the lit crest, ochre and umber in the body, hemp-fibre texture strokes, and moss dots along the crest. Crystal, aurora, phase, and amber slabs read as cut glass; moving bridges are carved jade with gilt studs. The drawn walkable top of every platform sits exactly on its collision edge.
+- Backdrops are painted once per chapter and viewport and blitted at whole device pixels. Do not add per-frame gradients, `shadowBlur`, or `backdrop-filter`; glows come from cached sprites.
+- Cinnabar (`#b8322e`) is reserved for seals: screen eyebrows, warden sigils, and name seals. It is never a danger colour; danger stays rose.
+- Panels are translucent silk over the living landscape, without blur.
+- Name seals pair a cinnabar seal, a WenKai name, and a gold four-character hint on a lacquer tag with a gilt hairline and a leader line to the thing they name.
+
 ## 5. Layout Principles
 
 The spacing scale is `4, 8, 12, 16, 24, 32, 48, 64`, also exposed as `--s-1` through `--s-8`. Surfaces prefer lower ornament weight: one aged-gold structure edge, lacquer and silk planes, and no multi-color aurora wash competing with hierarchy. Main panels use a 12-column mental grid without shipping grid utilities. Desktop menu allocation is approximately 40 percent for title, actions, and journey state, and 60 percent for the paired art. Secondary screens favor vertical inscriptions and content-specific layouts rather than interchangeable cards.

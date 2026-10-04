@@ -32,8 +32,8 @@ assert.ok(css.includes("--font-canvas:"), "styles.css should define the shared C
 assert.ok(css.includes("font-family: var(--font-ui);"), "styles.css should apply --font-ui to visible UI text");
 assert.ok(game.includes("CANVAS_FONT_FAMILY"), "game.js should define a shared Canvas font family");
 assert.ok(!/ctx\.font\s*=\s*["'][^"']*system-ui/.test(game), "Canvas text should not use a system-ui-only font");
-assert.ok(/ctx\.font = `italic 700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas gilded underprint should use CANVAS_FONT_FAMILY");
-assert.ok(/ctx\.font = `700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas float text should use CANVAS_FONT_FAMILY");
+assert.ok(/const FLOAT_FONT_ITALIC = `italic 700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas gilded underprint should use CANVAS_FONT_FAMILY");
+assert.ok(/const FLOAT_FONT = `700 20px \$\{CANVAS_FONT_FAMILY\}`/.test(game), "Canvas float text should use CANVAS_FONT_FAMILY");
 
 for (const [name, source] of [
   ["index.html", html],
@@ -47,8 +47,16 @@ assert.ok(html.includes("多世界章节"), "visible menu metadata should use co
 assert.ok(manifest.description.includes("多世界章节"), "manifest description should use count-free chapter scope copy");
 assert.ok(!/(Yuan to Nini|Hidden Atlas|Constellation Found|Y · N · Y · N|Yuan ❤ Nini)/.test(eggs), "easter-egg overlays should avoid English-only labels inside Chinese UI copy");
 
-const progression = fs.readFileSync("src/core/progression.js", "utf8");
-const runtimeText = [html, css, game, eggs, hud, progression].join("\n");
+// Every runtime source can carry user-visible copy: chapter names live in
+// src/data, notices in src/game.js, achievement copy in src/core.
+function runtimeSources(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const file = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) return runtimeSources(file);
+    return entry.name.endsWith(".js") ? [fs.readFileSync(file, "utf8")] : [];
+  });
+}
+const runtimeText = [html, css, fs.readFileSync("manifest.webmanifest", "utf8"), ...runtimeSources("src")].join("\n");
 const cjkChars = [...new Set([...runtimeText].filter((ch) => isCjk(ch)))].sort();
 for (const fontPath of [
   "assets/fonts/lxgw-wenkai-500.woff2",

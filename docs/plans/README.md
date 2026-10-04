@@ -30,6 +30,8 @@ This folder keeps release planning and completion records out of the repository 
 - [v2.2.0 release candidate review notes](REVIEW_v2.2.0.md)
 - [v2.3.0 Living Field release plan](OPTIMIZATION_PLAN_v2.3.0.md)
 - [v2.3.0 release candidate review notes](REVIEW_v2.3.0.md)
+- [v3.0.0 Starriver Scroll release plan](OPTIMIZATION_PLAN_v3.0.0.md)
+- [v3.0.0 release candidate review notes](REVIEW_v3.0.0.md)
 
 ## Design Specs
 

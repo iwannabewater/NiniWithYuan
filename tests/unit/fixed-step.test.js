@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const vm = require("node:vm");
-const fixedStep = require("../src/core/fixed-step");
+const fixedStep = require("../../src/core/fixed-step");
 
 assert.equal(globalThis.NiniFixedStep, fixedStep, "Node and browser-style exports should expose the same API");
 {

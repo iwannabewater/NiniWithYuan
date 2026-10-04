@@ -2,7 +2,6 @@ const assert = require("node:assert/strict");
 const { assertReleaseFloor } = require("./helpers/release.js");
 const fs = require("node:fs");
 
-const game = fs.readFileSync("src/game.js", "utf8");
 const hud = fs.readFileSync("src/render/hud.js", "utf8");
 const storage = fs.readFileSync("src/core/storage.js", "utf8");
 const css = fs.readFileSync("styles.css", "utf8");
@@ -13,12 +12,7 @@ const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
 const lock = JSON.parse(fs.readFileSync("package-lock.json", "utf8"));
 const androidManifest = fs.readFileSync("android/app/src/main/AndroidManifest.xml", "utf8");
 
-const buildStart = game.indexOf("  function buildLevels()");
-const buildEnd = game.indexOf("  function resize()");
-assert.ok(buildStart >= 0 && buildEnd > buildStart, "Could not extract buildLevels for content validation");
-const levels = new Function(
-  `const TILE = 48; const ENEMY_WIDTH = 38; const ENEMY_HEIGHT = 34; const WISP_FLOAT_GAP = 24; const WISP_HOVER_RANGE = 6; const MARROW_SIZE = 30; const SENTRY_COOLDOWN = 2.1; ${game.slice(buildStart, buildEnd)}; return buildLevels();`
-)();
+const levels = require("../src/data/chapters.js").buildChapters().slice(0, 15);
 
 assertReleaseFloor(assert, { pkg, lock, serviceWorker: sw, html, androidManifest }, "1.4.0", 10);
 
@@ -49,7 +43,7 @@ assert.ok(hud.includes("button.dataset.world"), "level buttons should carry a wo
 assert.ok(/\.level-world\s*{/.test(css), "styles.css should style world headings");
 assert.ok(/\.level-item\.featured\s*{[\s\S]*?grid-column: span 2/.test(css), "featured chapter should still be prominent in grouped layout");
 
-assert.ok(storage.includes("DEFAULT_LEVEL_COUNT = 15"), "storage default level count should be updated to 15");
+assert.ok(Number(storage.match(/DEFAULT_LEVEL_COUNT = (\d+)/)?.[1]) >= 15, "storage default level count should cover every authored chapter");
 assert.ok(storage.includes("bestTimes.auroracitadel") && storage.includes("levelStars.auroracitadel"), "storage should derive chapter 6 access from old chapter 5 completion");
 assert.ok(storage.includes("bestTimes.ringconservatory") && storage.includes("levelStars.ringconservatory"), "storage should derive chapter 9 access from old chapter 8 completion");
 
