@@ -76,6 +76,13 @@
     const W1 = { id: "world1", name: "第一星域 破碎星图", subtitle: "五枚心石碎片" };
     const W2 = { id: "world2", name: "第二星域 星门群岛", subtitle: "星门重新接合路线" };
     const W3 = { id: "world3", name: "第三星域 星潮镜域", subtitle: "星潮相位路线" };
+    const W4 = { id: "world4", name: "第四星域 银汉鹊桥", subtitle: "七夕之夜重连鹊桥" };
+    // v3.0.0 — World 4 fixtures. A magpie bridge is a span of sky held by a
+    // flock: it scatters shortly after the player lands and regathers once the
+    // span is clear. An updraft cancels gravity and lifts with a capped speed.
+    const Q = (x, y, w) => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: 18, type: "magpie" });
+    const U = (x, y, w, h, force = 900, max = 520) => ({ x: x * TILE, y: y * TILE, w: w * TILE, h: h * TILE, force, max });
+    const goalOn = (x, top) => ({ x: x * TILE, y: (top - 5) * TILE, w: 80, h: 136 });
     // v2.0.0 — new hostiles. `sentry` is a fixed emplacement that telegraphs then
     // fires; `warder` is a shelled ground enemy that projectiles cannot break.
     const T = (x, y, facing = -1, cadence = SENTRY_COOLDOWN) => ({
@@ -596,6 +603,156 @@
         hazards: [H(25, 20, 5, 1, "spike", "b"), H(68, 18, 5, 1, "spike", "a"), H(102, 16, 5, 1, "spike", "b"), H(124, 15, 4, 1, "spike", "a"), H(140, 13, 4, 1, "spike", "b")],
         moving: [M(30, 15, 3, 6, 104, "x", "jade"), M(76, 12, 4, 5, 92, "y", "jade", "b"), M(105, 10, 3, 6, 106, "x", "jade", "a"), M(128, 8, 4, 4, 92, "y", "jade")],
       },
+      // --- World 4: the Silver River ------------------------------------------
+      {
+        id: "riverford",
+        world: W4,
+        name: "第十六章 银汉渡口",
+        vibe: "银汉渡口",
+        hint: "鹊群托起的桥一踏即散，落脚就要继续前行；扶摇之风会托你上云。",
+        width: 122 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 17 * TILE - 80 },
+        goal: goalOn(114, 10),
+        palette: ["#080a1c", "#1c2350", "#b8c4ff", "#fff4dc"],
+        platforms: [
+          P(0, 17, 14, 3), P(23, 16, 10, 4), P(36, 15, 8, 5), P(54, 14, 9, 6),
+          P(67, 9, 10, 11), P(80, 12, 8, 8), P(96, 11, 10, 9), P(108, 10, 14, 10),
+          P(40, 11, 3, 1, "stone"), P(57, 10, 3, 1, "stone"), P(84, 8, 3, 1, "stone"),
+        ],
+        bridges: [Q(14, 17, 4), Q(18, 17, 5), Q(44, 15, 5), Q(49, 15, 5), Q(88, 12, 4), Q(92, 12, 4)],
+        updrafts: [U(63, 3, 4, 17)],
+        coins: [
+          C(5, 15), C(9, 15), C(16, 15), C(20, 15), C(26, 14), C(30, 14), C(41, 9, "gem"), C(46, 13),
+          C(51, 13), C(58, 12), C(64, 10), C(64, 6), C(71, 7), C(75, 7), C(85, 6, "gem"), C(90, 10),
+          C(94, 10), C(100, 9), C(112, 8), C(118, 8, "gem"),
+        ],
+        powerups: [F(25, 14, "bell"), F(70, 7, "berry"), F(99, 9, "core")],
+        enemies: [E(28, 15, 150), E(39, 14, 120, "wisp"), E(72, 8, 170, "ember"), E(100, 10, 150)],
+        springs: [S(31, 15)],
+        hazards: [H(60, 13, 2, 1), H(103, 10, 2, 1)],
+        moving: [],
+      },
+      {
+        id: "magpiebridge",
+        world: W4,
+        name: "第十七章 鹊桥初成",
+        vibe: "鹊桥初成",
+        hint: "连成一线的鹊桥要一口气跑过；两道扶摇风把路线托向更高的星野。",
+        width: 132 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 16 * TILE - 80 },
+        goal: goalOn(126, 9),
+        palette: ["#080a1c", "#20285a", "#c6d0ff", "#fff4dc"],
+        platforms: [
+          P(0, 16, 12, 4), P(24, 15, 8, 5), P(36, 9, 9, 11), P(53, 10, 8, 10), P(64, 12, 7, 8),
+          P(83, 11, 9, 9), P(96, 6, 10, 14), P(109, 8, 8, 12), P(120, 9, 12, 11),
+          P(27, 11, 3, 1, "stone"), P(58, 6, 3, 1, "stone"), P(86, 7, 3, 1, "stone"),
+        ],
+        bridges: [Q(12, 16, 4), Q(16, 16, 4), Q(20, 16, 4), Q(45, 9, 4), Q(49, 9, 4), Q(71, 12, 4), Q(75, 12, 4), Q(79, 12, 4)],
+        updrafts: [U(32, 3, 4, 17), U(92, 2, 4, 18)],
+        coins: [
+          C(6, 14), C(14, 14), C(18, 14), C(22, 14), C(28, 9, "gem"), C(33, 10), C(33, 6), C(40, 7),
+          C(47, 7), C(51, 7), C(56, 8), C(67, 10), C(73, 10), C(77, 10), C(81, 10), C(87, 5, "gem"),
+          C(93, 8), C(93, 4), C(100, 4), C(112, 6), C(124, 7), C(129, 7, "gem"),
+        ],
+        powerups: [F(37, 7, "moon"), F(85, 9, "bell"), F(110, 6, "heart")],
+        enemies: [E(28, 14, 140), E(40, 8, 170, "ember"), E(66, 11, 120), E(87, 10, 140, "wisp"), E(100, 5, 180), E(124, 8, 160, "ember")],
+        springs: [S(59, 9)],
+        hazards: [H(89, 10, 2, 1), H(113, 7, 2, 1)],
+        moving: [],
+      },
+      {
+        id: "weaverloom",
+        world: W4,
+        name: "第十八章 织女机杼",
+        vibe: "织女机杼",
+        hint: "青玉梭往复穿行，像织机上的经纬；看准梭子的节拍再起跳。",
+        width: 140 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 16 * TILE - 80 },
+        goal: goalOn(132, 8),
+        palette: ["#0a0a1e", "#2a2458", "#d6c8ff", "#fff4dc"],
+        platforms: [
+          P(0, 16, 12, 4), P(20, 14, 8, 6), P(34, 10, 9, 10), P(51, 11, 8, 9), P(67, 10, 9, 10),
+          P(80, 5, 8, 15), P(91, 8, 8, 12), P(107, 9, 9, 11), P(123, 8, 17, 12),
+          P(24, 10, 3, 1, "stone"), P(55, 7, 3, 1, "stone"),
+        ],
+        bridges: [Q(43, 10, 4), Q(47, 10, 4), Q(99, 8, 4), Q(103, 8, 4)],
+        updrafts: [U(76, 2, 4, 18)],
+        coins: [
+          C(6, 14), C(14, 12), C(17, 12), C(23, 12), C(25, 8, "gem"), C(31, 9), C(38, 8), C(45, 8),
+          C(49, 8), C(54, 9), C(60, 9), C(63, 9), C(71, 8), C(77, 8), C(77, 4), C(84, 3, "gem"),
+          C(95, 6), C(101, 6), C(105, 6), C(111, 7), C(118, 7), C(128, 6), C(135, 6, "gem"),
+        ],
+        powerups: [F(22, 12, "berry"), F(69, 8, "bell"), F(110, 7, "core")],
+        enemies: [E(23, 13, 130), E(37, 9, 160, "wisp"), E(54, 10, 140, "ember"), E(70, 9, 150), E(83, 4, 160, "ember"), E(94, 7, 140, "wisp"), E(110, 8, 150)],
+        springs: [S(73, 9)],
+        hazards: [H(40, 9, 2, 1), H(127, 7, 2, 1)],
+        moving: [M(13, 14, 3, 3, 110, "x"), M(30, 12, 3, 3, 90, "y"), M(60, 11, 3, 4, 120, "x"), M(117, 9, 3, 3, 110, "x")],
+      },
+      {
+        id: "herdsmanfield",
+        world: W4,
+        name: "第十九章 牵牛星野",
+        vibe: "牵牛星野",
+        hint: "星野上顺风逆风交替，罡风之中鹊桥更短，扶摇风托你越过断崖。",
+        width: 146 * TILE,
+        height: 20 * TILE,
+        start: { x: 100, y: 16 * TILE - 80 },
+        goal: goalOn(140, 8),
+        palette: ["#080c1c", "#1e2e52", "#c4dcff", "#fff4dc"],
+        wind: [{ x: 26 * TILE, y: 0, w: 12 * TILE, h: 20 * TILE, force: 330 }, { x: 79 * TILE, y: 0, w: 12 * TILE, h: 20 * TILE, force: -320 }],
+        platforms: [
+          P(0, 16, 14, 4), P(17, 15, 9, 5), P(30, 14, 6, 6), P(44, 13, 10, 7), P(58, 7, 10, 13),
+          P(71, 9, 8, 11), P(81, 9, 6, 11), P(95, 10, 10, 10), P(109, 5, 9, 15), P(121, 7, 8, 13),
+          P(133, 8, 13, 12),
+          P(46, 9, 3, 1, "stone"), P(62, 3, 3, 1, "stone"),
+        ],
+        bridges: [Q(36, 14, 4), Q(40, 14, 4), Q(87, 9, 4), Q(91, 9, 4), Q(129, 7, 4)],
+        updrafts: [U(54, 2, 4, 18), U(105, 1, 4, 19)],
+        coins: [
+          C(6, 14), C(10, 14), C(20, 13), C(28, 11), C(33, 12), C(38, 12), C(42, 12), C(47, 7, "gem"),
+          C(51, 11), C(55, 9), C(55, 5), C(63, 1, "gem"), C(66, 5), C(75, 7), C(84, 7), C(89, 7),
+          C(93, 7), C(99, 8), C(106, 7), C(106, 3), C(113, 3), C(125, 5), C(131, 5), C(138, 6, "gem"),
+        ],
+        powerups: [F(19, 13, "bell"), F(60, 5, "core"), F(97, 8, "moon"), F(122, 5, "heart")],
+        enemies: [E(20, 14, 140), E(47, 12, 150, "ember"), E(61, 6, 160, "wisp"), E(74, 8, 140), E(98, 9, 150, "ember"), E(112, 4, 160), E(124, 6, 140, "wisp")],
+        springs: [S(50, 12)],
+        hazards: [H(23, 14, 2, 1), H(101, 9, 2, 1)],
+        moving: [],
+      },
+      {
+        id: "tiangoumoon",
+        world: W4,
+        name: "第二十章 天狗食月",
+        vibe: "天狗食月",
+        hint: "银汉尽头，天狗衔月而来。踏散的鹊桥、扶摇的风与最后的星门，都在这一夜。",
+        width: 160 * TILE,
+        height: 22 * TILE,
+        start: { x: 100, y: 19 * TILE - 80 },
+        goal: goalOn(152, 12),
+        palette: ["#06081a", "#1a1f48", "#ffd9a8", "#fff4dc"],
+        wind: [{ x: 88 * TILE, y: 0, w: 12 * TILE, h: 22 * TILE, force: 320 }],
+        platforms: [
+          P(0, 19, 12, 3), P(20, 18, 9, 4), P(33, 12, 9, 10), P(45, 13, 7, 9), P(59, 12, 8, 10),
+          P(79, 11, 9, 11), P(91, 11, 6, 11), P(101, 10, 9, 12), P(114, 6, 8, 16), P(124, 9, 6, 13),
+          P(132, 12, 28, 10),
+          P(37, 8, 3, 1, "stone"), P(105, 6, 3, 1, "stone"),
+        ],
+        bridges: [Q(12, 19, 4), Q(16, 19, 4), Q(67, 12, 4), Q(71, 12, 4), Q(75, 12, 4), Q(97, 11, 4)],
+        updrafts: [U(29, 4, 4, 18), U(110, 3, 4, 19)],
+        coins: [
+          C(6, 17), C(14, 17), C(18, 17), C(23, 16), C(30, 12), C(30, 7), C(38, 6, "gem"), C(42, 10),
+          C(48, 11), C(55, 10), C(62, 10), C(69, 10), C(73, 10), C(77, 10), C(84, 9), C(92, 9),
+          C(99, 9), C(104, 8), C(111, 8), C(111, 4), C(118, 4, "gem"), C(127, 7), C(140, 10), C(146, 10, "gem"),
+        ],
+        powerups: [F(22, 16, "berry"), F(61, 10, "bell"), F(103, 8, "core"), F(126, 7, "heart")],
+        enemies: [E(23, 17, 140), E(36, 11, 160, "ember"), E(48, 12, 120, "wisp"), E(62, 11, 140), E(83, 10, 150, "ember"), E(104, 9, 150), E(117, 5, 150, "wisp")],
+        springs: [S(40, 11)],
+        hazards: [H(25, 17, 2, 1), H(85, 10, 2, 1)],
+        moving: [M(53, 13, 3, 3, 110, "x")],
+      },
     ];
 
     // v2.0.0 — chapter tuning applied after authoring so the level literals above
@@ -649,6 +806,10 @@
       tidecorridor: { par: 36, marrow: [62, 10], extra: [A(64, 13, 180)] },
       moonmirrorbreak: { par: 40, marrow: [109, 9], extra: [T(82, 13)] },
       twinstarclocktower: { par: 42, marrow: [75, 10], extra: [A(80, 12, 190)] },
+      riverford: { par: 32, marrow: [58, 8], extra: [T(110, 9)] },
+      magpiebridge: { par: 38, marrow: [59, 4], extra: [A(86, 10, 150)] },
+      weaverloom: { par: 44, marrow: [56, 5], extra: [T(86, 4), A(127, 7, 190)] },
+      herdsmanfield: { par: 48, marrow: [63, 1], extra: [A(99, 9, 160), T(116, 4)] },
       phasetidecourt: {
         par: 78,
         marrow: [82, 11],
@@ -666,6 +827,23 @@
           sigil: "鲲",
         },
       },
+      tiangoumoon: {
+        par: 70,
+        marrow: [106, 4],
+        extra: [A(84, 10, 150), T(119, 5)],
+        warden: {
+          id: "tiangouwarden",
+          name: "天狗",
+          title: "第四星域 · 银汉守望",
+          profile: "river",
+          palette: "river",
+          health: 26,
+          arena: { x: 136 * TILE, w: 22 * TILE },
+          ground: 12 * TILE,
+          home: { x: 148 * TILE, y: 6 * TILE },
+          sigil: "月",
+        },
+      },
     };
 
     // Warden difficulty ramps by remaining health: each stage speeds the cadence
@@ -681,6 +859,11 @@
         { above: 0.66, cadence: 2.5, patterns: ["sweep", "volley"] },
         { above: 0.33, cadence: 2.05, patterns: ["sweep", "summon", "volley"] },
         { above: 0, cadence: 1.7, patterns: ["volley", "summon", "sweep", "rain"] },
+      ],
+      river: [
+        { above: 0.66, cadence: 2.2, patterns: ["volley", "rain"] },
+        { above: 0.33, cadence: 1.85, patterns: ["sweep", "rain", "volley"] },
+        { above: 0, cadence: 1.5, patterns: ["volley", "summon", "rain", "sweep"] },
       ],
       tide: [
         { above: 0.66, cadence: 2.3, patterns: ["rain", "volley"] },

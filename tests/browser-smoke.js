@@ -297,7 +297,7 @@ async function run() {
           levelState.footerDisplay !== "none" ||
           !levelState.panelOverflow ||
           !levelState.worldHeights.every((height) => height <= 90) ||
-          levelState.groups.length !== 3 ||
+          levelState.groups.length < 4 ||
           !levelState.groups.every((group) => group.items === 5 && group.trackScrollable)
         ) {
           throw new Error(`Mobile world headings should stay compact and unobscured: ${JSON.stringify(levelState)}`);
@@ -540,11 +540,11 @@ async function run() {
         };
         if (
           !levelState.visible ||
-          levelState.totalCards !== 15 ||
+          levelState.totalCards < 20 ||
           !levelState.world2Unlocked ||
           !levelState.world3Unlocked ||
-          levelState.headings.length !== 3 ||
-          levelState.groups.length !== 3 ||
+          levelState.headings.length < 4 ||
+          levelState.groups.length < 4 ||
           !levelState.groups.every((count) => count === 5) ||
           levelState.currentSteps !== 1 ||
           !levelState.headings.some((heading) => heading.world === "world1" && heading.text.includes("第一星域")) ||

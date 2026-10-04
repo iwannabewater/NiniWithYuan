@@ -961,6 +961,175 @@
     }
   }
 
+  // --- magpie bridges ---------------------------------------------------------------
+
+  const MAGPIE_INK = "#14171f";
+  const MAGPIE_SHEEN = "#3d5a8c";
+  const MAGPIE_BELLY = "#eef0f4";
+  const RIBBON = "rgba(232,236,255,0.55)";
+
+  /** One magpie, wings spread, facing +x; `flap` in [-1, 1]. */
+  function drawMagpie(ctx, x, y, size, flap, facing) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(facing * size, size);
+    // Wings.
+    ctx.fillStyle = MAGPIE_INK;
+    ctx.beginPath();
+    ctx.moveTo(-2, -1);
+    ctx.quadraticCurveTo(-8, -6 - flap * 4, -13, -3 - flap * 5);
+    ctx.quadraticCurveTo(-7, -1, -2, 1);
+    ctx.moveTo(2, -1);
+    ctx.quadraticCurveTo(7, -6 - flap * 4, 12, -3 - flap * 5);
+    ctx.quadraticCurveTo(6, -1, 2, 1);
+    ctx.fill();
+    ctx.fillStyle = MAGPIE_SHEEN;
+    ctx.beginPath();
+    ctx.moveTo(-9, -3.6 - flap * 4.4);
+    ctx.lineTo(-13, -3 - flap * 5);
+    ctx.lineTo(-10, -2.2 - flap * 3);
+    ctx.moveTo(9, -3.6 - flap * 4.4);
+    ctx.lineTo(12, -3 - flap * 5);
+    ctx.lineTo(9.5, -2.2 - flap * 3);
+    ctx.fill();
+    // Body, belly, tail, and head.
+    ctx.fillStyle = MAGPIE_INK;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 5, 2.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-4, 0);
+    ctx.lineTo(-11, 1.6);
+    ctx.lineTo(-10.5, 0.2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(5.2, -0.8, 1.9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = MAGPIE_BELLY;
+    ctx.beginPath();
+    ctx.ellipse(0.6, 1, 2.6, 1.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /**
+   * Magpie bridges. `bridge.state` and `bridge.timer` come from the simulation:
+   * rest (wings beating gently), tremble (shaking, beating fast), and gone
+   * (the flock bursts skyward, then flies back in as `timer` runs out).
+   */
+  function drawBridges(ctx, bridges, rect, time, options = {}) {
+    if (!bridges?.length) return;
+    const goneFor = Number(options.goneFor) || 2.2;
+    const still = options.reducedMotion === true;
+    for (let index = 0; index < bridges.length; index += 1) {
+      const b = bridges[index];
+      if (!visible(rect, { x: b.x, y: b.y - 60, w: b.w, h: b.h + 60 })) continue;
+      const count = Math.max(2, Math.round(b.w / 20));
+      const spacing = b.w / count;
+      const state = b.state || "rest";
+      const size = 1.55;
+      const before = ctx.globalAlpha;
+      if (state === "gone") {
+        const elapsed = goneFor - Math.max(0, b.timer || 0);
+        const out = Math.min(1, elapsed / 0.8);
+        const back = Math.max(0, 1 - (b.timer || 0) / 0.55);
+        // Where the span will return: a faint dashed ribbon.
+        ctx.globalAlpha = before * (0.18 + back * 0.3);
+        ctx.strokeStyle = RIBBON;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash(GHOST_DASH);
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y + 2);
+        ctx.lineTo(b.x + b.w, b.y + 2);
+        ctx.stroke();
+        ctx.setLineDash(NO_DASH);
+        const spread = back > 0 ? 1 - back : out;
+        const fade = back > 0 ? back : 1 - out;
+        if (fade > 0.02) {
+          ctx.globalAlpha = before * fade;
+          for (let i = 0; i < count; i += 1) {
+            const side = i % 2 ? 1 : -1;
+            const bx = b.x + spacing * (i + 0.5) + side * spread * (40 + (i * 13) % 30);
+            const by = b.y - 4 - spread * (70 + (i * 29) % 50);
+            drawMagpie(ctx, bx, by, size, Math.sin(time * 22 + i), side);
+          }
+        }
+        ctx.globalAlpha = before;
+        continue;
+      }
+      const trembling = state === "tremble";
+      const shake = trembling && !still ? Math.sin(time * 60 + index) * 1.4 : 0;
+      // A silver ribbon of starlight carries the birds and marks the walkable top.
+      ctx.globalAlpha = before * 0.6;
+      ctx.fillStyle = "rgba(200,212,255,0.32)";
+      ctx.fillRect(b.x, b.y + 1, b.w, 10);
+      ctx.globalAlpha = before;
+      ctx.strokeStyle = RIBBON;
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(b.x + 1, b.y + 0.7 + shake * 0.3);
+      ctx.lineTo(b.x + b.w - 1, b.y + 0.7 - shake * 0.3);
+      ctx.stroke();
+      for (let i = 0; i < count; i += 1) {
+        const pace = trembling ? 26 : 6;
+        const flap = still ? 0.2 : Math.sin(time * pace + i * 1.3) * (trembling ? 1 : 0.35);
+        const bob = still ? 0 : Math.sin(time * 3 + i * 0.9) * 0.8;
+        drawMagpie(ctx, b.x + spacing * (i + 0.5) + shake, b.y + 9 + bob, size, flap, i % 2 ? 1 : -1);
+      }
+    }
+  }
+
+  // --- updrafts ------------------------------------------------------------------------
+
+  /** Rising silk and upward chevrons: direction reads even when motion is reduced. */
+  function drawUpdrafts(ctx, updrafts, rect, time, options = {}) {
+    if (!updrafts?.length) return;
+    const still = options.reducedMotion === true;
+    for (const u of updrafts) {
+      if (!visible(rect, u)) continue;
+      const top = Math.max(u.y, rect.y - 40);
+      const bottom = Math.min(u.y + u.h, rect.y + rect.h + 40);
+      if (bottom <= top) continue;
+      const before = ctx.globalAlpha;
+      ctx.fillStyle = "rgba(220,230,255,0.05)";
+      ctx.fillRect(u.x, top, u.w, bottom - top);
+      ctx.lineCap = "round";
+      ctx.setLineDash(UPDRAFT_DASH);
+      const lanes = Math.max(2, Math.round(u.w / 28));
+      for (let lane = 0; lane < lanes; lane += 1) {
+        const x = u.x + ((lane + 0.5) / lanes) * u.w;
+        ctx.lineDashOffset = still ? lane * 11 : time * 140 + lane * 23;
+        ctx.strokeStyle = lane % 2 ? "rgba(238,231,213,0.3)" : "rgba(200,212,255,0.26)";
+        ctx.lineWidth = lane % 2 ? 1.2 : 1.8;
+        ctx.beginPath();
+        for (let y = bottom; y >= top; y -= 24) {
+          const px = x + Math.sin(y * 0.03 + lane + (still ? 0 : time * 1.5)) * 5;
+          if (y === bottom) ctx.moveTo(px, y);
+          else ctx.lineTo(px, y);
+        }
+        ctx.stroke();
+      }
+      ctx.setLineDash(NO_DASH);
+      // Upward chevrons.
+      ctx.fillStyle = "rgba(238,231,213,0.55)";
+      const phase = still ? 0 : (time * 60) % 90;
+      for (let y = bottom - 30 - phase; y > top + 10; y -= 90) {
+        const cx = u.x + u.w / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, y - 10);
+        ctx.lineTo(cx + 9, y + 4);
+        ctx.lineTo(cx, y);
+        ctx.lineTo(cx - 9, y + 4);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalAlpha = before;
+    }
+  }
+
+  const UPDRAFT_DASH = Object.freeze([28, 22]);
+
   const api = {
     TILE,
     MATERIALS,
@@ -973,6 +1142,8 @@
     drawHazards,
     drawSpring,
     drawSprings,
+    drawBridges,
+    drawUpdrafts,
   };
 
   root.NiniYuanTerrain = api;

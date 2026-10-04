@@ -135,7 +135,7 @@ for (const phase of ["telegraph", "recover"]) {
 /* -- stage profiles --------------------------------------------------------- */
 
 const wardenLevels = chapters().filter((level) => level.warden);
-assert.deepEqual(wardenLevels.map((level) => level.id), ["auroracitadel", "islandstarcore", "phasetidecourt"]);
+assert.deepEqual(wardenLevels.map((level) => level.id), ["auroracitadel", "islandstarcore", "phasetidecourt", "tiangoumoon"]);
 for (const level of wardenLevels) {
   const stages = level.warden.stages;
   assert.equal(stages.length, 3, `${level.id} escalates through three stages`);
@@ -145,7 +145,7 @@ for (const level of wardenLevels) {
 assert.deepEqual(chapterById("auroracitadel").warden.stages.map((s) => s.patterns), [["volley", "sweep"], ["volley", "rain", "sweep"], ["rain", "sweep", "volley", "summon"]]);
 assert.deepEqual(chapterById("islandstarcore").warden.stages.map((s) => s.patterns), [["sweep", "volley"], ["sweep", "summon", "volley"], ["volley", "summon", "sweep", "rain"]]);
 assert.deepEqual(chapterById("phasetidecourt").warden.stages.map((s) => s.patterns), [["rain", "volley"], ["rain", "sweep", "volley"], ["rain", "volley", "summon", "sweep"]]);
-assert.equal(new Set(wardenLevels.map((level) => level.warden.stages.map((s) => s.cadence).join())).size, 3, "each guardian owns its cadence curve");
+assert.equal(new Set(wardenLevels.map((level) => level.warden.stages.map((s) => s.cadence).join())).size, wardenLevels.length, "each guardian owns its cadence curve");
 
 {
   // Driving a real fight: the guardian cycles through telegraph and recovery,

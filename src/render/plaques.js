@@ -29,6 +29,8 @@
     phase: Object.freeze({ name: "潮相桥", hint: "随潮隐现" }),
     aurora: Object.freeze({ name: "极光琉璃", hint: "坚可立足" }),
     wind: Object.freeze({ name: "罡风", hint: "顺逆有别" }),
+    magpie: Object.freeze({ name: "鹊桥", hint: "落足即散" }),
+    updraft: Object.freeze({ name: "扶摇", hint: "乘风而上" }),
     portal: Object.freeze({ name: "铜镜门", hint: "两镜相通" }),
     lantern: Object.freeze({ name: "星灯", hint: "点亮续行" }),
     marrow: Object.freeze({ name: "星髓", hint: "秘藏之宝" }),
@@ -73,6 +75,10 @@
         return pick(level.platforms, (p) => p.type === kind && !p.broken);
       case "wind":
         return pick(level.wind, () => true);
+      case "magpie":
+        return pick(level.bridges, (b) => b.state !== "gone");
+      case "updraft":
+        return pick(level.updrafts, () => true);
       case "portal":
         return pick(level.portals, () => true);
       case "lantern":

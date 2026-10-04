@@ -9,6 +9,8 @@
   //                    with a star gem set in its brow.
   //   tide warden   -> Kun, the leviathan of the northern dark, curled in a
   //                    scroll of breaking waves with a pearl in its jaws.
+  //   river warden  -> Tiangou, the celestial hound that swallows the moon,
+  //                    leaping across the Silver River with the moon in its jaws.
   //   sentry        -> a bronze taotie beacon that spits star fire.
   //   warder        -> a stone bixi tortoise; star bolts glance off its shell.
   //   lantern       -> a palace lantern on a bamboo pole (checkpoint).
@@ -24,6 +26,7 @@
     aurora: Object.freeze({ shell: "#5b6486", core: "#c3a468", trim: "#b87b86", glow: "rgba(195,164,104,.5)", body: "#6b5c9a", belly: "#e2c4a8", flame: "#ffcf7a" }),
     core: Object.freeze({ shell: "#3f6a63", core: "#6da895", trim: "#c3a468", glow: "rgba(109,168,149,.5)", body: "#4d6f5e", belly: "#c8b98f", flame: "#9fe8cf" }),
     tide: Object.freeze({ shell: "#3d5468", core: "#7893a4", trim: "#c3a468", glow: "rgba(120,147,164,.5)", body: "#3f6c8c", belly: "#cfe3ea", flame: "#e9f6ff" }),
+    river: Object.freeze({ shell: "#2a2848", core: "#ffd9a8", trim: "#e2a24a", glow: "rgba(255,217,168,.5)", body: "#2b2950", belly: "#6a5a9a", flame: "#ffd9a8" }),
   });
 
   const INK = "rgba(10,12,16,0.85)";
@@ -384,9 +387,122 @@
     ctx.restore();
   }
 
+  function drawTiangou(ctx, r, palette, state) {
+    const t = state.time;
+    const gallop = Math.sin(t * 3.2);
+    ctx.save();
+    ctx.scale(state.facing, 1);
+    // Flame tail streaming behind.
+    ctx.fillStyle = palette.trim;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.5, -r * 0.06);
+    ctx.bezierCurveTo(-r * 0.86, -r * 0.2 + gallop * 4, -r * 0.98, -r * 0.62, -r * 0.7, -r * 0.7);
+    ctx.bezierCurveTo(-r * 0.78, -r * 0.4, -r * 0.62, -r * 0.24, -r * 0.44, -r * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = palette.flame;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.5, -r * 0.1);
+    ctx.bezierCurveTo(-r * 0.74, -r * 0.24, -r * 0.82, -r * 0.48, -r * 0.68, -r * 0.56);
+    ctx.bezierCurveTo(-r * 0.7, -r * 0.36, -r * 0.6, -r * 0.24, -r * 0.48, -r * 0.18);
+    ctx.closePath();
+    ctx.fill();
+    // Legs in a flying gallop.
+    ctx.strokeStyle = palette.body;
+    ctx.lineCap = "round";
+    ctx.lineWidth = r * 0.12;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.36, r * 0.12);
+    ctx.lineTo(-r * 0.62 - gallop * r * 0.06, r * 0.38);
+    ctx.moveTo(-r * 0.24, r * 0.14);
+    ctx.lineTo(-r * 0.44 + gallop * r * 0.06, r * 0.42);
+    ctx.moveTo(r * 0.3, r * 0.1);
+    ctx.lineTo(r * 0.62 + gallop * r * 0.06, r * 0.26);
+    ctx.moveTo(r * 0.2, r * 0.14);
+    ctx.lineTo(r * 0.46 - gallop * r * 0.06, r * 0.38);
+    ctx.stroke();
+    // Body: a long arched hound of night sky.
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.52, -r * 0.04);
+    ctx.bezierCurveTo(-r * 0.46, -r * 0.34, r * 0.18, -r * 0.36, r * 0.42, -r * 0.18);
+    ctx.bezierCurveTo(r * 0.5, r * 0.04, r * 0.24, r * 0.2, -r * 0.1, r * 0.18);
+    ctx.bezierCurveTo(-r * 0.36, r * 0.16, -r * 0.54, r * 0.1, -r * 0.52, -r * 0.04);
+    ctx.closePath();
+    const coat = ctx.createLinearGradient(0, -r * 0.34, 0, r * 0.2);
+    coat.addColorStop(0, "#3a3770");
+    coat.addColorStop(0.7, palette.body);
+    coat.addColorStop(1, palette.belly);
+    ctx.fillStyle = coat;
+    ctx.fill();
+    wash(ctx, state.flash);
+    ctx.strokeStyle = INK;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    // Star spots in the coat.
+    ctx.fillStyle = "rgba(255,243,220,0.75)";
+    for (const [x, y] of [[-0.3, -0.12], [-0.08, -0.2], [0.12, -0.14], [-0.18, 0.02], [0.26, -0.06]]) {
+      ctx.beginPath();
+      ctx.arc(x * r, y * r, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Flame mane along the neck.
+    ctx.fillStyle = palette.trim;
+    ctx.beginPath();
+    ctx.moveTo(r * 0.06, -r * 0.3);
+    for (let i = 0; i < 5; i += 1) {
+      const x = r * (0.08 + i * 0.08);
+      const lick = r * (0.16 + ((i * 3) % 4) * 0.03) + Math.sin(t * 9 + i) * 2;
+      ctx.quadraticCurveTo(x, -r * 0.3 - lick, x + r * 0.05, -r * 0.3 - lick * 0.3);
+    }
+    ctx.lineTo(r * 0.46, -r * 0.24);
+    ctx.closePath();
+    ctx.fill();
+    // Head with open jaws.
+    const jaw = state.open ? 0.4 : 0.12 + state.charge * 0.15;
+    ctx.save();
+    ctx.translate(r * 0.5, -r * 0.2);
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.1, -r * 0.1);
+    ctx.quadraticCurveTo(r * 0.02, -r * 0.2, r * 0.16, -r * 0.1);
+    ctx.lineTo(r * 0.3, -r * 0.04);
+    ctx.lineTo(r * 0.12, 0);
+    ctx.lineTo(-r * 0.06, r * 0.08);
+    ctx.closePath();
+    ctx.fill();
+    wash(ctx, state.flash);
+    ctx.strokeStyle = INK;
+    ctx.stroke();
+    ctx.save();
+    ctx.rotate(jaw);
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.04, r * 0.04);
+    ctx.lineTo(r * 0.26, r * 0.01);
+    ctx.lineTo(r * 0.08, r * 0.1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.moveTo(-r * 0.02, -r * 0.14);
+    ctx.lineTo(r * 0.02, -r * 0.3);
+    ctx.lineTo(r * 0.08, -r * 0.14);
+    ctx.fill();
+    ctx.fillStyle = state.charge > 0.05 ? "#ffd27a" : "#f3e6d0";
+    ellipse(ctx, r * 0.1, -r * 0.08, 2.4, 1.6, -0.2);
+    ctx.fill();
+    // The stolen moon between its teeth: the weak point.
+    drawWeakPoint(ctx, r * 0.3, r * 0.02 + jaw * r * 0.12, 4.4, palette, state);
+    ctx.restore();
+    ctx.restore();
+  }
+
   function drawWardenIdentity(ctx, name, radius, palette, state) {
     if (name === "core") drawAo(ctx, radius, palette, state);
     else if (name === "tide") drawKun(ctx, radius, palette, state);
+    else if (name === "river") drawTiangou(ctx, radius, palette, state);
     else drawZhulong(ctx, radius, palette, state);
   }
 

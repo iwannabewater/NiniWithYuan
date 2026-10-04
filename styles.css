@@ -6295,11 +6295,42 @@
 
   .level-item .level-title {
     display: grid;
+    gap: 0;
+  }
+
+  /* Four worlds share one atlas: cards keep their content but drop slack. */
+  .level-item,
+  .level-item.featured {
+    min-height: 0;
+    gap: 4px;
+    padding: 8px 12px;
+  }
+
+  .level-world {
+    min-height: 0;
+  }
+
+  #levelScreen.panel {
+    padding-block: 26px;
+    gap: 16px;
+  }
+
+  .level-list {
+    gap: 8px;
+  }
+
+  .level-item .level-copy {
     gap: 2px;
   }
 
+  .level-item .level-marks > * {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
+  }
+
   .level-item .level-ordinal {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     letter-spacing: 0.18em;
     color: var(--c-gold-200, #e2c27d);
@@ -6312,4 +6343,14 @@
     text-overflow: ellipsis;
   }
 
+}
+
+@media (max-height: 820px) {
+  @layer component {
+    /* Short screens keep the four-world atlas on one page: the secondary
+       place name yields first. */
+    .level-item .level-vibe {
+      display: none;
+    }
+  }
 }

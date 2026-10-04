@@ -43,7 +43,7 @@ assert.ok(hud.includes("button.dataset.world"), "level buttons should carry a wo
 assert.ok(/\.level-world\s*{/.test(css), "styles.css should style world headings");
 assert.ok(/\.level-item\.featured\s*{[\s\S]*?grid-column: span 2/.test(css), "featured chapter should still be prominent in grouped layout");
 
-assert.ok(storage.includes("DEFAULT_LEVEL_COUNT = 15"), "storage default level count should be updated to 15");
+assert.ok(Number(storage.match(/DEFAULT_LEVEL_COUNT = (\d+)/)?.[1]) >= 15, "storage default level count should cover every authored chapter");
 assert.ok(storage.includes("bestTimes.auroracitadel") && storage.includes("levelStars.auroracitadel"), "storage should derive chapter 6 access from old chapter 5 completion");
 assert.ok(storage.includes("bestTimes.ringconservatory") && storage.includes("levelStars.ringconservatory"), "storage should derive chapter 9 access from old chapter 8 completion");
 

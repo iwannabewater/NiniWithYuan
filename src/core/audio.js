@@ -34,6 +34,10 @@
     combo_end: { wave: "sine", freq: [520, 380], attack: 6, release: 130, gain: 0.26 },
     marrow: { wave: "sine", freq: [660, 1480], attack: 12, release: 320, gain: 0.6, osc2: { detune: 1200, mix: 0.42 } },
     lantern: { wave: "sine", freq: [520, 780], attack: 10, release: 240, gain: 0.44, osc2: { detune: 400, mix: 0.3 } },
+    // v3.0.0 — the Silver River. A bridge flutters before it breaks, then the
+    // flock lifts away in a bright rising sweep.
+    bridge_tremble: { wave: "triangle", freq: [1180, 1320], attack: 3, release: 70, gain: 0.26 },
+    bridge_scatter: { wave: "sine", freq: [700, 1560], attack: 6, release: 260, gain: 0.42, osc2: { detune: 1200, mix: 0.3 } },
   };
 
   function createAudioBus(options = {}) {

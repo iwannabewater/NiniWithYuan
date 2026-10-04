@@ -313,6 +313,13 @@
     if (input.jumpReleased && player.vy < JUMP_CUT_THRESHOLD) player.vy *= JUMP_CUT_MULTIPLIER;
 
     player.vy = Math.min(ch.maxFall, player.vy + gravity * dt);
+    const updraft = Mechanics.updraftAt(world, player);
+    if (updraft) {
+      // The column cancels gravity, then lifts with its own net acceleration.
+      player.vy = Math.max(-updraft.max, player.vy - (gravity + updraft.force) * dt);
+      if (player.vy < 0) player.onGround = false;
+      player.updraftTimer = 0.2;
+    }
     if (yuan && player.skillTimer > 0) breakCrystalsInDashPath(world, dt);
     const solids = World.solids(world);
     const onGrounded = landOnPlatform(world);

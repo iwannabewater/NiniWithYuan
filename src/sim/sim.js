@@ -46,6 +46,7 @@
     player.elapsed += dt;
     World.refreshTide(world);
     Mechanics.updateMoving(world, dt);
+    Mechanics.updateBridges(world, dt);
     const wasOnGround = player.onGround;
     player.prevVy = player.vy;
     PlayerSim.updatePlayer(world, input, dt);
@@ -94,6 +95,8 @@
     WIND_AIR_DRIFT: PlayerSim.WIND_AIR_DRIFT,
     WIND_MAX_SPEED: PlayerSim.WIND_MAX_SPEED,
     PORTAL_COOLDOWN: Mechanics.PORTAL_COOLDOWN,
+    BRIDGE_HOLD: Mechanics.BRIDGE_HOLD,
+    BRIDGE_GONE: Mechanics.BRIDGE_GONE,
     GOAL_REACH_X: Mechanics.GOAL_REACH_X,
     GOAL_REACH_Y: Mechanics.GOAL_REACH_Y,
     ENEMY_HIT_FLASH_DURATION: Enemies.ENEMY_HIT_FLASH_DURATION,

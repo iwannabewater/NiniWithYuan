@@ -27,7 +27,7 @@
   const COMBO_MAX_MULTIPLIER = 5;
   const COMBO_STEP = 3;
 
-  const WORLD_IDS = Object.freeze(["world1", "world2", "world3"]);
+  const WORLD_IDS = Object.freeze(["world1", "world2", "world3", "world4"]);
 
   function finiteNumber(value, fallback = 0) {
     const number = Number(value);
@@ -118,18 +118,20 @@
     { id: "world1", group: "journey", name: "心石重聚", desc: "完成第一星域全部五章。", test: (c) => c.worldClears.world1 >= 5 },
     { id: "world2", group: "journey", name: "群岛归位", desc: "完成第二星域全部五章。", test: (c) => c.worldClears.world2 >= 5 },
     { id: "world3", group: "journey", name: "星潮止息", desc: "完成第三星域全部五章。", test: (c) => c.worldClears.world3 >= 5 },
-    { id: "allclear", group: "journey", name: "星穹回响", desc: "完成全部十五章。", test: (c) => c.levelCount > 0 && c.clearedCount >= c.levelCount },
+    { id: "world4", group: "journey", name: "鹊桥重连", desc: "完成第四星域全部五章。", test: (c) => c.worldClears.world4 >= 5 },
+    { id: "allclear", group: "journey", name: "星穹回响", desc: "完成全部章节。", test: (c) => c.levelCount > 0 && c.clearedCount >= c.levelCount },
 
     // 守望 — wardens
     { id: "warden1", group: "warden", name: "极光落幕", desc: "令极光守望烛龙归位。", test: (c) => c.wardens.auroracitadel === true },
     { id: "warden2", group: "warden", name: "星核平息", desc: "令群岛守望巨鳌归位。", test: (c) => c.wardens.islandstarcore === true },
     { id: "warden3", group: "warden", name: "潮汐终章", desc: "令星潮守望鲲归位。", test: (c) => c.wardens.phasetidecourt === true },
+    { id: "warden4", group: "warden", name: "天狗还月", desc: "令银汉守望天狗归位。", test: (c) => c.wardens.tiangoumoon === true },
     { id: "wardenflawless", group: "warden", name: "无瑕之战", desc: "在未受伤的情况下击败任意一位守望者。", test: (c) => c.stats.wardenFlawless >= 1 },
 
     // 收集 — collection
     { id: "marrow1", group: "collect", name: "初拾星髓", desc: "找到第一枚隐藏星髓。", test: (c) => c.marrowCount >= 1 },
     { id: "marrow5", group: "collect", name: "星髓五枚", desc: "收集五枚隐藏星髓。", test: (c) => c.marrowCount >= 5 },
-    { id: "marrow15", group: "collect", name: "星髓大全", desc: "收集全部十五枚隐藏星髓。", test: (c) => c.levelCount > 0 && c.marrowCount >= c.levelCount },
+    { id: "marrow15", group: "collect", name: "星髓大全", desc: "收集全部章节的隐藏星髓。", test: (c) => c.levelCount > 0 && c.marrowCount >= c.levelCount },
     { id: "stars3", group: "collect", name: "三星初绽", desc: "任意章节取得三星收藏评级。", test: (c) => c.threeStarCount >= 1 },
     { id: "stars15", group: "collect", name: "满天星斗", desc: "全部章节取得三星收藏评级。", test: (c) => c.levelCount > 0 && c.threeStarCount >= c.levelCount },
     { id: "dew1000", group: "collect", name: "星露千滴", desc: "累计获得 1000 星露。", test: (c) => c.totalCoins >= 1000 },
@@ -138,7 +140,7 @@
     // 试炼 — trials
     { id: "medal1", group: "trial", name: "初获星章", desc: "任意章节达成星章时限。", test: (c) => c.medalCounts.star >= 1 },
     { id: "medal5", group: "trial", name: "星章五枚", desc: "五个章节达成星章时限。", test: (c) => c.medalCounts.star >= 5 },
-    { id: "medal15", group: "trial", name: "星章十五枚", desc: "全部章节达成星章时限。", test: (c) => c.levelCount > 0 && c.medalCounts.star >= c.levelCount },
+    { id: "medal15", group: "trial", name: "星章满录", desc: "全部章节达成星章时限。", test: (c) => c.levelCount > 0 && c.medalCounts.star >= c.levelCount },
     { id: "swift", group: "trial", name: "疾风之路", desc: "在 30 秒内完成任意章节。", test: (c) => c.fastestClear > 0 && c.fastestClear <= 30 },
 
     // 技巧 — mastery
@@ -158,7 +160,7 @@
 
   const ACHIEVEMENT_GROUPS = Object.freeze([
     { id: "journey", name: "征程", desc: "沿星图走完的路" },
-    { id: "warden", name: "守望", desc: "三位星域守望者" },
+    { id: "warden", name: "守望", desc: "四方星域守望者" },
     { id: "collect", name: "收集", desc: "星露、星髓与评级" },
     { id: "trial", name: "试炼", desc: "时限与章印" },
     { id: "mastery", name: "技巧", desc: "连星、无瑕与双璧" },
@@ -184,14 +186,14 @@
     const stats = save.stats || {};
     const clears = save.clears || {};
 
-    const worldClears = { world1: 0, world2: 0, world3: 0 };
+    const worldClears = { world1: 0, world2: 0, world3: 0, world4: 0 };
     const medalCounts = { star: 0, moon: 0, dew: 0 };
     let clearedCount = 0;
     let threeStarCount = 0;
     let fastestClear = 0;
     let assistFreeWorld = false;
 
-    const worldTotals = { world1: 0, world2: 0, world3: 0 };
+    const worldTotals = { world1: 0, world2: 0, world3: 0, world4: 0 };
     for (const level of list) {
       const worldId = typeof level?.world === "object" ? level.world?.id : level?.world;
       if (worldId && worldTotals[worldId] !== undefined) worldTotals[worldId] += 1;
@@ -229,6 +231,7 @@
         auroracitadel: wardens.auroracitadel === 1 || wardens.auroracitadel === true,
         islandstarcore: wardens.islandstarcore === 1 || wardens.islandstarcore === true,
         phasetidecourt: wardens.phasetidecourt === 1 || wardens.phasetidecourt === true,
+        tiangoumoon: wardens.tiangoumoon === 1 || wardens.tiangoumoon === true,
       },
       clears: {
         nini: countRecord(clears.nini),

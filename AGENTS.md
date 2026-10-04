@@ -29,6 +29,7 @@ This is a single-context repository. See `docs/agents/domain.md`.
 - `src/render/creature-material.js` paints chapter creatures as beings from Chinese myth (Jade Toad, Huodou, Lantern Wraith) and owns their in-game names (`NAMES`).
 - `src/render/warden.js` owns stateless Canvas drawing for the mythic wardens (Zhulong, Ao, Kun), hostile projectiles, sentries, warders, lanterns, and star marrow. Every warden keeps the same readable signals: a weak point that swells on telegraph and blazes open on recovery, a pale hit wash, and cracks at low health. Encounter state and collision stay in `src/sim/`.
 - `src/render/plaques.js` introduces each creature and fixture once per session with a Chinese name seal and a four-character hint. Every name and hint is runtime copy, so run `npm run build:fonts` after changing the catalogue.
+- `tests/content/reachability.test.js` proves every chapter's goal is reachable for both protagonists with their own kit (ballistic jumps, Yuan's minimum dash, Nini's air jump, springs, updrafts, gates, moving platforms, magpie bridges). New or edited chapters must pass it.
 - `tests/unit/` covers pure modules, `tests/render/` covers render contracts against recording canvases (`tests/helpers/canvas.js`), `tests/sim/` drives the headless simulation with scripted input, `tests/content/` validates authored chapter data, and `tests/browser-smoke.js` owns the cross-viewport Playwright smoke path. Remaining interface and release guards live in adjacent `tests/*.js` files.
 
 ## Verification

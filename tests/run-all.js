@@ -38,9 +38,11 @@ const tests = [
   "tests/sim/combat.test.js",
   "tests/sim/mechanics.test.js",
   "tests/sim/warden.test.js",
+  "tests/sim/sky.test.js",
   "tests/sim/boundaries.test.js",
   // Authored content.
   "tests/content/chapters.test.js",
+  "tests/content/reachability.test.js",
   // Render modules.
   "tests/render/playfield.test.js",
   "tests/render/scenery.test.js",

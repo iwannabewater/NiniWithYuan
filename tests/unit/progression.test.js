@@ -102,8 +102,8 @@ assert.equal(Progression.comboReward(-5, 9), 0);
 
 /* -- achievements ---------------------------------------------------------- */
 
-assert.equal(Progression.ACHIEVEMENTS.length, 30);
-assert.equal(new Set(Progression.ACHIEVEMENT_IDS).size, 30, "achievement ids must be unique");
+assert.equal(Progression.ACHIEVEMENTS.length, 32);
+assert.equal(new Set(Progression.ACHIEVEMENT_IDS).size, Progression.ACHIEVEMENTS.length, "achievement ids must be unique");
 for (const entry of Progression.ACHIEVEMENTS) {
   assert.match(entry.id, /^[a-z0-9]+$/, `achievement id ${entry.id} must be storage-key safe`);
   assert.ok(entry.name && entry.desc, `achievement ${entry.id} needs display copy`);

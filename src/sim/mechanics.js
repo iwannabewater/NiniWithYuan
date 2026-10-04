@@ -52,6 +52,74 @@
     }
   }
 
+  // --- magpie bridges and updrafts (World 4) ---------------------------------
+  //
+  // A magpie bridge is a flock holding a span of sky. Standing on it starts a
+  // tremble; after BRIDGE_HOLD the birds scatter and the span is gone for
+  // BRIDGE_GONE, then they regather once the player is clear of the span.
+  // An updraft cancels gravity for a body inside it and lifts it with a net
+  // upward acceleration (`force`) toward a capped rising speed (`max`).
+
+  const BRIDGE_HOLD = 0.6;
+  const BRIDGE_GONE = 2.2;
+  const STAND_TOLERANCE = 1.5;
+
+  function standingOn(player, b) {
+    return (
+      player.onGround &&
+      Math.abs(player.y + player.h - b.y) <= STAND_TOLERANCE &&
+      player.x + player.w > b.x + 2 &&
+      player.x < b.x + b.w - 2
+    );
+  }
+
+  function updateBridges(world, dt) {
+    const player = world.player;
+    for (const b of world.level.bridges) {
+      if (!b.state) {
+        b.state = "rest";
+        b.timer = 0;
+        b.solid = true;
+      }
+      if (b.state === "rest") {
+        if (standingOn(player, b)) {
+          b.state = "tremble";
+          b.timer = BRIDGE_HOLD;
+          World.emit(world, "cue", { name: "bridge_tremble" });
+        }
+      } else if (b.state === "tremble") {
+        b.timer -= dt;
+        if (b.timer <= 0) {
+          b.state = "gone";
+          b.timer = BRIDGE_GONE;
+          b.solid = false;
+          World.invalidateSolids(world);
+          World.emit(world, "bridgeScatter", { x: b.x + b.w / 2, y: b.y, w: b.w });
+          World.emit(world, "cue", { name: "bridge_scatter" });
+        }
+      } else if (b.state === "gone") {
+        b.timer -= dt;
+        if (b.timer <= 0 && !Physics.rectsOverlap(player, b)) {
+          b.state = "rest";
+          b.timer = 0;
+          b.solid = true;
+          World.invalidateSolids(world);
+          World.emit(world, "bridgeReform", { x: b.x + b.w / 2, y: b.y, w: b.w });
+        }
+      }
+    }
+  }
+
+  /** The strongest updraft containing `body`, or null. */
+  function updraftAt(world, body) {
+    let zone = null;
+    for (const u of world.level.updrafts) {
+      if (!Physics.bodyOverlaps(body, u)) continue;
+      if (!zone || u.force > zone.force) zone = u;
+    }
+    return zone;
+  }
+
   function applySprings(world) {
     const player = world.player;
     for (const spring of world.level.springs) {
@@ -258,7 +326,11 @@
     GOAL_REACH_X,
     GOAL_REACH_Y,
     POWERUP_LABELS,
+    BRIDGE_HOLD,
+    BRIDGE_GONE,
     updateMoving,
+    updateBridges,
+    updraftAt,
     applySprings,
     activePortal,
     pairedPortal,

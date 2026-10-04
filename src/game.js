@@ -124,6 +124,7 @@
   let presentationDt = 0;
   // Reused per frame: the padded world rectangle on screen, and draw options.
   const cullRect = { x: 0, y: 0, w: 0, h: 0 };
+  const bridgeFrame = { goneFor: SIM.BRIDGE_GONE, reducedMotion: false };
   const propFrame = { time: 0, reducedMotion: false, fx: true, rect: cullRect, color: "", sealed: false, arrowSpacing: WIND_ARROW_SPACING, arrowSpeed: WIND_ARROW_SPEED };
   let lastRenderAt = performance.now();
   let presentation = {
@@ -444,6 +445,14 @@
         case "landing":
           GameFeel?.landingPuff?.(spawnDust, event.x, event.y, event.intensity, save.settings.fx);
           break;
+        case "bridgeScatter":
+          burst(event.x, event.y + 6, "#1a1d26", Math.round(event.w / 14), { shape: "petal", gravity: -60, drag: 1.6 });
+          burst(event.x, event.y + 6, "#eef0f4", Math.round(event.w / 22), { shape: "petal", gravity: -40, drag: 1.8 });
+          shake(3);
+          break;
+        case "bridgeReform":
+          burst(event.x, event.y, "#c8d4ff", Math.round(event.w / 24), { shape: "orb", gravity: 0, drag: 3 });
+          break;
         case "hurt":
           if (!view.reducedMotion) Effects.triggerFlash(screenFlash, CANVAS_MATERIAL.danger, 0.16, 5);
           break;
@@ -633,6 +642,7 @@
     propFrame.time = time;
     propFrame.reducedMotion = view.reducedMotion;
     propFrame.fx = save.settings.fx;
+    bridgeFrame.reducedMotion = view.reducedMotion;
     renderWorld(activeLevel);
     Effects.draw(ctx, particles, cullRect);
     renderPlayer({ x: playerX, y: playerY });
@@ -754,7 +764,9 @@
         WardenArt?.drawLantern?.(ctx, lantern, { time });
       }
     }
+    Terrain.drawUpdrafts(ctx, level.updrafts, rect, time, propFrame);
     Terrain.draw(ctx, terrain, rect, time, isActivePhase, propFrame.fx);
+    Terrain.drawBridges(ctx, level.bridges, rect, time, bridgeFrame);
     Terrain.drawHazards(ctx, terrain, rect, time, isActivePhase, propFrame.fx);
     Terrain.drawSprings(ctx, level.springs, rect, time, propFrame.fx);
     for (const portal of level.portals || []) {
